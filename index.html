@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#636363" />
+<title>Matura 2027</title>
+<style>
+  :root{
+    --gray:#636363;
+    --gray-d:#4a4a4a;
+    --gray-l:#8a8a8a;
+    --bg:#f4f4f3;
+    --card:#ffffff;
+    --line:#e3e3e1;
+    --text:#2e2e2e;
+    --muted:#7a7a7a;
+    --todo:#d8d8d6;
+    --todo-t:#8a8a8a;
+    --doing:#e8a33d;
+    --doing-bg:#fbf0db;
+    --done:#5a8a63;
+    --done-bg:#e6efe7;
+    --radius:14px;
+    --shadow:0 1px 2px rgba(0,0,0,.06),0 1px 8px rgba(0,0,0,.04);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg);color:var(--text);
+    line-height:1.5;font-size:15px;
+    padding-bottom:calc(72px + env(safe-area-inset-bottom));
+  }
+  a{color:var(--gray-d);}
+  h1,h2,h3,h4{margin:0;font-weight:700;color:var(--text);}
+  .wrap{max-width:760px;margin:0 auto;padding:14px;}
+
+  /* Top bar */
+  header.topbar{
+    position:sticky;top:0;z-index:50;
+    background:var(--gray);color:#fff;
+    padding:12px 14px;padding-top:calc(12px + env(safe-area-inset-top));
+    box-shadow:var(--shadow);
+  }
+  .topbar-inner{max-width:760px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:10px;}
+  .topbar h1{color:#fff;font-size:18px;letter-spacing:.3px;}
+  .topbar .sub{font-size:12px;opacity:.85;font-weight:400;}
+  .countdown{background:rgba(255,255,255,.15);border-radius:10px;padding:6px 10px;text-align:center;line-height:1.1;}
+  .countdown b{font-size:18px;display:block;}
+  .countdown span{font-size:10px;opacity:.9;text-transform:uppercase;letter-spacing:.5px;}
+
+  /* Desktop nav */
+  nav.topnav{display:none;background:#fff;border-bottom:1px solid var(--line);}
+  nav.topnav .topnav-inner{max-width:760px;margin:0 auto;display:flex;gap:4px;padding:6px;}
+  nav.topnav button{
+    flex:1;background:none;border:none;padding:10px 8px;border-radius:10px;
+    font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;
+  }
+  nav.topnav button.active{background:var(--bg);color:var(--gray-d);}
+
+  /* Bottom nav (mobile) */
+  nav.bottomnav{
+    position:fixed;bottom:0;left:0;right:0;z-index:50;
+    background:#fff;border-top:1px solid var(--line);
+    display:flex;padding-bottom:env(safe-area-inset-bottom);
+    box-shadow:0 -1px 8px rgba(0,0,0,.05);
+  }
+  nav.bottomnav button{
+    flex:1;background:none;border:none;padding:8px 2px 6px;cursor:pointer;
+    display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--todo-t);font-size:10px;font-weight:600;
+  }
+  nav.bottomnav button .ico{font-size:20px;line-height:1;}
+  nav.bottomnav button.active{color:var(--gray-d);}
+
+  /* Cards & sections */
+  .section-title{font-size:13px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin:22px 4px 10px;font-weight:700;}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:14px;margin-bottom:10px;}
+  .card.pad0{padding:0;overflow:hidden;}
+
+  /* Progress bars */
+  .pbar{height:10px;background:var(--todo);border-radius:99px;overflow:hidden;}
+  .pbar > i{display:block;height:100%;background:var(--gray);border-radius:99px;transition:width .35s ease;}
+  .pbar.done > i{background:var(--done);}
+  .pbar.big{height:14px;}
+  .prow{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
+  .prow .lab{font-weight:600;font-size:14px;}
+  .prow .val{font-variant-numeric:tabular-nums;color:var(--muted);font-weight:700;font-size:13px;}
+  .mini-grid{display:grid;grid-template-columns:1fr;gap:12px;}
+
+  /* Topic rows */
+  .acc{margin-bottom:10px;}
+  .acc-head{
+    display:flex;align-items:center;justify-content:space-between;gap:10px;
+    background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    padding:13px 14px;cursor:pointer;box-shadow:var(--shadow);
+  }
+  .acc-head .ttl{font-weight:700;font-size:15px;display:flex;align-items:center;gap:8px;}
+  .acc-head .ttl .chev{transition:transform .25s;color:var(--muted);font-size:12px;}
+  .acc.open .acc-head .ttl .chev{transform:rotate(90deg);}
+  .acc-head .meta{display:flex;align-items:center;gap:10px;}
+  .acc-head .cnt{font-size:12px;color:var(--muted);font-weight:700;font-variant-numeric:tabular-nums;}
+  .acc-head .ring{width:34px;height:34px;flex:0 0 34px;}
+  .acc-body{display:none;padding:6px 2px 2px;}
+  .acc.open .acc-body{display:block;}
+
+  .topic{
+    display:flex;align-items:center;gap:11px;background:var(--card);
+    border:1px solid var(--line);border-radius:12px;padding:11px 12px;margin-top:8px;
+  }
+  .topic .stat{
+    flex:0 0 26px;width:26px;height:26px;border-radius:8px;border:2px solid var(--todo);
+    display:flex;align-items:center;justify-content:center;font-size:14px;cursor:pointer;background:#fff;color:transparent;
+    transition:.15s;user-select:none;
+  }
+  .topic.s50 .stat{border-color:var(--doing);background:var(--doing-bg);color:var(--doing);}
+  .topic.s100 .stat{border-color:var(--done);background:var(--done);color:#fff;}
+  .topic .body{flex:1;min-width:0;}
+  .topic{cursor:pointer;}
+  .topic .name{font-weight:600;font-size:14px;}
+  .topic.s100 .name{color:var(--muted);}
+  .topic .note{font-size:12px;color:var(--muted);margin-top:1px;}
+  .topic .lnk{font-size:12px;color:var(--gray-d);text-decoration:none;margin-top:3px;display:inline-block;font-weight:600;}
+  .topic .lnk:after{content:" ↗";opacity:.6;}
+  .topic.bold .name:before{content:"★ ";color:var(--doing);}
+
+  /* Pills / chips */
+  .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
+  .chip{font-size:12px;background:var(--bg);border:1px solid var(--line);border-radius:99px;padding:4px 10px;color:var(--muted);font-weight:600;}
+
+  /* Tables */
+  table{width:100%;border-collapse:collapse;font-size:13px;}
+  th,td{text-align:left;padding:8px 6px;border-bottom:1px solid var(--line);}
+  th{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);}
+  td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;}
+  tr.total td{font-weight:800;border-bottom:none;border-top:2px solid var(--gray);}
+
+  /* Counter */
+  .counter{display:flex;align-items:center;gap:10px;justify-content:space-between;margin-top:10px;}
+  .counter .btn{width:42px;height:42px;border-radius:12px;border:1px solid var(--line);background:#fff;font-size:22px;font-weight:700;color:var(--gray-d);cursor:pointer;line-height:1;}
+  .counter .num{font-size:26px;font-weight:800;font-variant-numeric:tabular-nums;}
+  .counter .num small{font-size:14px;color:var(--muted);font-weight:600;}
+  input[type=range]{width:100%;accent-color:var(--gray);margin-top:10px;}
+
+  /* Timeline */
+  .phase{position:relative;padding-left:26px;margin-bottom:14px;}
+  .phase:before{content:"";position:absolute;left:7px;top:6px;bottom:-14px;width:2px;background:var(--line);}
+  .phase:last-child:before{display:none;}
+  .phase .dot{position:absolute;left:0;top:4px;width:16px;height:16px;border-radius:99px;background:#fff;border:3px solid var(--todo);}
+  .phase.current .dot{border-color:var(--gray);background:var(--gray);box-shadow:0 0 0 4px rgba(99,99,99,.15);}
+  .phase.done .dot{border-color:var(--done);background:var(--done);}
+  .phase .when{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);font-weight:700;}
+  .phase .pttl{font-size:16px;font-weight:800;margin:2px 0 2px;}
+  .badge-now{display:inline-block;background:var(--gray);color:#fff;font-size:10px;padding:2px 8px;border-radius:99px;margin-left:8px;vertical-align:middle;letter-spacing:.5px;}
+  .check{display:flex;align-items:flex-start;gap:9px;padding:7px 0;border-bottom:1px solid var(--line);}
+  .check:last-child{border-bottom:none;}
+  .check .box{flex:0 0 22px;width:22px;height:22px;border:2px solid var(--todo);border-radius:7px;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;margin-top:1px;}
+  .check.on .box{background:var(--done);border-color:var(--done);}
+  .check .txt{flex:1;font-size:13.5px;}
+  .check.on .txt{color:var(--muted);text-decoration:line-through;}
+  .checkpoint{background:var(--bg);border-radius:10px;padding:9px 11px;font-size:12.5px;margin-top:10px;border-left:3px solid var(--gray);}
+
+  /* Shopping */
+  .shop{display:flex;align-items:center;gap:11px;padding:11px 0;border-bottom:1px solid var(--line);}
+  .shop:last-child{border-bottom:none;}
+  .shop .box{flex:0 0 24px;width:24px;height:24px;border:2px solid var(--todo);border-radius:7px;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;}
+  .shop.on .box{background:var(--done);border-color:var(--done);}
+  .shop .body{flex:1;min-width:0;}
+  .shop .nm{font-size:14px;font-weight:600;}
+  .shop.on .nm{color:var(--muted);text-decoration:line-through;}
+  .shop .pr{font-weight:800;white-space:nowrap;font-variant-numeric:tabular-nums;color:var(--gray-d);}
+  .budget{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px;}
+  .budget .box2{flex:1;min-width:140px;background:var(--bg);border-radius:12px;padding:12px;text-align:center;}
+  .budget .box2 b{display:block;font-size:22px;font-weight:800;}
+  .budget .box2 span{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;}
+
+  /* Links */
+  .link{display:block;text-decoration:none;color:inherit;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:9px;box-shadow:var(--shadow);}
+  .link .nm{font-weight:700;font-size:14px;color:var(--gray-d);}
+  .link .ds{font-size:12.5px;color:var(--muted);margin-top:2px;}
+  .link .url{font-size:11px;color:var(--gray-l);margin-top:4px;word-break:break-all;}
+
+  .note{font-size:12.5px;color:var(--muted);background:var(--bg);border-radius:10px;padding:10px 12px;margin-top:10px;}
+  .note b{color:var(--text);}
+
+  .btn-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;}
+  .btn-line{flex:1;min-width:120px;padding:11px;border-radius:11px;border:1px solid var(--line);background:#fff;font-weight:700;font-size:13px;color:var(--gray-d);cursor:pointer;}
+  .btn-line.danger{color:#b04a4a;border-color:#e8cccc;}
+
+  .view{display:none;}
+  .view.active{display:block;animation:fade .2s ease;}
+  @keyframes fade{from{opacity:.4;transform:translateY(4px);}to{opacity:1;transform:none;}}
+
+  @media(min-width:760px){
+    nav.topnav{display:block;}
+    nav.bottomnav{display:none;}
+    body{padding-bottom:30px;}
+    .mini-grid{grid-template-columns:repeat(3,1fr);}
+  }
+  .hint{text-align:center;font-size:11px;color:var(--gray-l);margin:18px 0 6px;}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <div>
+      <h1>Matura 2027</h1>
+      <div class="sub">Cel: ALK — Prawo / Zarządzanie · 360+ pkt</div>
+    </div>
+    <div class="countdown">
+      <b id="cd-days">—</b>
+      <span>dni do matury</span>
+    </div>
+  </div>
+</header>
+
+<nav class="topnav">
+  <div class="topnav-inner" id="topnav"></div>
+</nav>
+
+<main class="wrap">
+  <section class="view active" id="view-dash"></section>
+  <section class="view" id="view-map"></section>
+  <section class="view" id="view-time"></section>
+  <section class="view" id="view-shop"></section>
+  <section class="view" id="view-links"></section>
+</main>
+
+<nav class="bottomnav" id="bottomnav"></nav>
+
+<script>
+"use strict";
+
+/* ===== KONFIGURACJA ===== */
+const MATURA_DATE = "2027-05-04";
+const STORAGE_KEY = "matura2027";
+
+/* ===== DANE ===== */
+
+// Matematyka — podstawa
+const MAT_PP = [
+  ["mat-pp-01","Liczby rzeczywiste","Działania, potęgi, pierwiastki, logarytmy, procenty, notacja naukowa.","Pi-stacja: „Liczby rzeczywiste”","https://pistacja.tv"],
+  ["mat-pp-02","Wyrażenia algebraiczne","Wzory skróconego mnożenia, przekształcanie.","Pi-stacja: „Wyrażenia algebraiczne”","https://pistacja.tv"],
+  ["mat-pp-03","Równania i nierówności","Liniowe i kwadratowe.","Pi-stacja: „Równania i nierówności”","https://pistacja.tv"],
+  ["mat-pp-04","Układy równań","Liniowe, metody rozwiązywania.","Pi-stacja: „Układy równań”","https://pistacja.tv"],
+  ["mat-pp-05","Funkcje — własności ogólne","Dziedzina, miejsca zerowe, monotoniczność, odczyt z wykresu.","Pi-stacja: „Funkcje”","https://pistacja.tv"],
+  ["mat-pp-06","Funkcja liniowa","","Pi-stacja: „Funkcja liniowa”","https://pistacja.tv"],
+  ["mat-pp-07","Funkcja kwadratowa","Postacie, wykres, zadania.","Pi-stacja: „Funkcja kwadratowa”","https://pistacja.tv"],
+  ["mat-pp-08","Funkcja wykładnicza i logarytmiczna","","Pi-stacja: „Funkcja wykładnicza / logarytmy”","https://pistacja.tv"],
+  ["mat-pp-09","Ciągi","Arytmetyczny i geometryczny.","Pi-stacja: „Ciągi”","https://pistacja.tv"],
+  ["mat-pp-10","Trygonometria (trójkąt prostokątny)","","Pi-stacja: „Trygonometria”","https://pistacja.tv"],
+  ["mat-pp-11","Planimetria","Figury płaskie, pola, obwody, twierdzenia.","Pi-stacja: „Planimetria”","https://pistacja.tv"],
+  ["mat-pp-12","Geometria analityczna (prosta)","Odległości, równanie prostej.","Pi-stacja: „Geometria analityczna”","https://pistacja.tv"],
+  ["mat-pp-13","Stereometria","Bryły, objętości, pola, kąty.","Pi-stacja: „Stereometria”","https://pistacja.tv"],
+  ["mat-pp-14","Kombinatoryka","Reguła mnożenia/dodawania, permutacje, kombinacje.","Pi-stacja: „Kombinatoryka”","https://pistacja.tv"],
+  ["mat-pp-15","Rachunek prawdopodobieństwa","","Pi-stacja: „Prawdopodobieństwo”","https://pistacja.tv"],
+  ["mat-pp-16","Statystyka","Średnia, mediana, dominanta, odchylenie.","Pi-stacja: „Statystyka”","https://pistacja.tv"],
+];
+
+// Matematyka — rozszerzenie
+const MAT_PR = [
+  ["mat-pr-01","Wartość bezwzględna","Równania i nierówności z |x|.","Pi-stacja PR","https://pistacja.tv"],
+  ["mat-pr-02","Wielomiany","Twierdzenie Bézouta, pierwiastki, parametry.","Pi-stacja PR","https://pistacja.tv"],
+  ["mat-pr-03","Funkcje wymierne","Wykresy, równania, nierówności.","Pi-stacja PR","https://pistacja.tv"],
+  ["mat-pr-04","Ciągi i granice","Granica ciągu, własności.","Pi-stacja PR","https://pistacja.tv"],
+  ["mat-pr-05","Rachunek różniczkowy","Pochodne, badanie funkcji, optymalizacja (kluczowe!).","Pi-stacja PR / eTrapez","https://etrapez.pl"],
+  ["mat-pr-06","Trygonometria rozszerzona","Tożsamości, wzory sumacyjne, równania trygonometryczne.","Pi-stacja PR","https://pistacja.tv"],
+  ["mat-pr-07","Geometria analityczna z okręgiem","","Pi-stacja PR","https://pistacja.tv"],
+  ["mat-pr-08","Planimetria z dowodami","","Pi-stacja PR","https://pistacja.tv"],
+  ["mat-pr-09","Stereometria zaawansowana","Kąty, przekroje.","Pi-stacja PR","https://pistacja.tv"],
+  ["mat-pr-10","Prawdopodobieństwo warunkowe i kombinatoryka rozsz.","","Pi-stacja PR","https://pistacja.tv"],
+  ["mat-pr-11","Indukcja matematyczna i dowody algebraiczne","","Pi-stacja PR","https://pistacja.tv"],
+];
+
+// Polski — formy
+const POL_FORM = [
+  ["pol-form-01","Rozprawka problemowa","Min. 300 słów — schemat i ćwiczenie.","Baba od polskiego / Pracownia Literacka","https://babaodpolskiego.pl"],
+  ["pol-form-02","Interpretacja wiersza","Schemat.","Baba od polskiego","https://babaodpolskiego.pl"],
+  ["pol-form-03","Notatka syntetyzująca","Egzamin „język w użyciu”.","Baba od polskiego","https://babaodpolskiego.pl"],
+  ["pol-form-04","Test historycznoliteracki","Trening.","Arkusze CKE","https://cke.gov.pl"],
+];
+
+// Polski — lektury LO (★ = priorytet)
+const POL_LEKT = [
+  ["pol-lekt-01","Biblia (fragmenty)",false],
+  ["pol-lekt-02","Parandowski — Mitologia (część grecka)",false],
+  ["pol-lekt-03","Homer — Iliada (fragmenty)",false],
+  ["pol-lekt-04","Sofokles — Antygona",false],
+  ["pol-lekt-05","Lament świętokrzyski",false],
+  ["pol-lekt-06","Rozmowa Mistrza Polikarpa ze Śmiercią",false],
+  ["pol-lekt-07","Pieśń o Rolandzie",false],
+  ["pol-lekt-08","Szekspir — Makbet",false],
+  ["pol-lekt-09","Molier — Skąpiec",false],
+  ["pol-lekt-10","Krasicki — wybrana satyra",false],
+  ["pol-lekt-11","Mickiewicz — ballady (+ Romantyczność)",false],
+  ["pol-lekt-12","Mickiewicz — Dziady cz. III",true],
+  ["pol-lekt-13","Prus — Lalka",true],
+  ["pol-lekt-14","Sienkiewicz — Potop (fragmenty)",false],
+  ["pol-lekt-15","Dostojewski — Zbrodnia i kara",true],
+  ["pol-lekt-16","Wyspiański — Wesele",true],
+  ["pol-lekt-17","Reymont — Chłopi (tom I „Jesień”)",false],
+  ["pol-lekt-18","Żeromski — Przedwiośnie",true],
+  ["pol-lekt-19","Gombrowicz — Ferdydurke (fragmenty)",false],
+  ["pol-lekt-20","Borowski — Proszę państwa do gazu",false],
+  ["pol-lekt-21","Herling-Grudziński — Inny świat (fragmenty)",false],
+  ["pol-lekt-22","Krall — Zdążyć przed Panem Bogiem",false],
+  ["pol-lekt-23","Camus — Dżuma",false],
+  ["pol-lekt-24","Orwell — Rok 1984",false],
+  ["pol-lekt-25","Mrożek — Tango",false],
+  ["pol-lekt-26","Nowakowski — Górą „Edek”",false],
+  ["pol-lekt-27","Stasiuk — Miejsce",false],
+  ["pol-lekt-28","Tokarczuk — Profesor Andrews w Warszawie",false],
+  ["pol-lekt-29","Kapuściński — Podróże z Herodotem",false],
+];
+
+// Polski — lektury z podstawówki
+const POL_LEKT_PP = [
+  ["pol-lektpp-30","Krasicki — Bajki (wybór)"],
+  ["pol-lektpp-31","Mickiewicz — Dziady cz. II"],
+  ["pol-lektpp-32","Mickiewicz — Pan Tadeusz (I, II, IV, X, XI, XII)"],
+  ["pol-lektpp-33","Słowacki — Balladyna"],
+  ["pol-lektpp-34","Fredro — Zemsta"],
+];
+
+// Angielski
+const ANG_GRAM = [
+  ["ang-gram-01","Czasy (Present / Past / Perfect / Future)","Przegląd i użycie.","Destination B2","https://www.bbc.co.uk/learningenglish"],
+  ["ang-gram-02","Tryby warunkowe (0–3 + mixed)","","Destination B2/C1","https://www.bbc.co.uk/learningenglish"],
+  ["ang-gram-03","Mowa zależna","","Destination B2","https://www.bbc.co.uk/learningenglish"],
+  ["ang-gram-04","Strona bierna","","Destination B2","https://www.bbc.co.uk/learningenglish"],
+  ["ang-gram-05","Inwersja i emfaza (C1)","","Destination C1","https://www.bbc.co.uk/learningenglish"],
+  ["ang-gram-06","Czasowniki frazowe i kolokacje","","English Phrasal Verbs in Use / Po Cudzemu","https://www.diki.pl"],
+];
+const ANG_EGZ = [
+  ["ang-egz-07","Słuchanie","","BBC „6 Minute English” + nagrania CKE","https://www.bbc.co.uk/learningenglish"],
+  ["ang-egz-08","Czytanie ze zrozumieniem","","Arkusze CKE","https://cke.gov.pl"],
+  ["ang-egz-09","Use of English — transformacje","Ze słowem-kluczem (5 dziennie).","Destination B2/C1","https://angielskidlamaturzysty.pl"],
+  ["ang-egz-10","Use of English — słowotwórstwo i parafrazy","","Destination C1","https://angielskidlamaturzysty.pl"],
+];
+const ANG_PIS = [
+  ["ang-pis-11","PP: e-mail / list prywatny","100–150 słów.","Angielski dla maturzysty","https://angielskidlamaturzysty.pl"],
+  ["ang-pis-12","PP: wpis na blogu / forum","","Angielski dla maturzysty","https://angielskidlamaturzysty.pl"],
+  ["ang-pis-13","PR: rozprawka „za i przeciw”","200–250 słów.","Angielski dla maturzysty","https://angielskidlamaturzysty.pl"],
+  ["ang-pis-14","PR: opinion essay","","Angielski dla maturzysty","https://angielskidlamaturzysty.pl"],
+  ["ang-pis-15","PR: artykuł publicystyczny","","Angielski dla maturzysty","https://angielskidlamaturzysty.pl"],
+];
+const ANG_USTNY = [
+  ["ang-ustny-16","Opis ilustracji + 3 pytania","","Angielski dla maturzysty","https://angielskidlamaturzysty.pl"],
+  ["ang-ustny-17","Rozmowa z odgrywaniem ról","","Angielski dla maturzysty","https://angielskidlamaturzysty.pl"],
+  ["ang-ustny-18","Wypowiedź na podst. materiału stymulującego","","Angielski dla maturzysty","https://angielskidlamaturzysty.pl"],
+];
+
+// Lista wszystkich tematów (do liczenia postępu)
+function allTopicIds(){
+  const lo = POL_LEKT.map(x=>x[0]);
+  const lopp = POL_LEKT_PP.map(x=>x[0]);
+  return [
+    ...MAT_PP.map(x=>x[0]), ...MAT_PR.map(x=>x[0]),
+    ...POL_FORM.map(x=>x[0]), ...lo, ...lopp,
+    ...ANG_GRAM.map(x=>x[0]), ...ANG_EGZ.map(x=>x[0]), ...ANG_PIS.map(x=>x[0]), ...ANG_USTNY.map(x=>x[0]),
+  ];
+}
+
+// Oś czasu
+const PHASES = [
+  {id:"faza-1",when:"Lipiec–Sierpień 2026 · ~5 h/dzień",title:"Faza 1 — Fundamenty",start:"2026-07-01",end:"2026-08-31",
+   tasks:[
+     ["f1-01","Diagnostyka: arkusz CKE matma PP 2024 + angielski PP 2024 — zapisz wynik (punkt zero)."],
+     ["f1-02","Matematyka PP: działy 1–7 (liczby → funkcja kwadratowa). ~40% podstawy."],
+     ["f1-03","Angielski: czasy + warunkowe + bierna + mowa zależna (Destination B2 r. 1–10); pierwsze 30 transformacji."],
+     ["f1-04","Polski: 15 lektur przeczytanych (priorytet ★)."],
+   ],
+   checkpoint:"Checkpoint (koniec sierpnia): matma PP do funkcji kwadratowej; 15/29 lektur; angielski PP ~80% na próbnym."},
+  {id:"faza-2",when:"Wrzesień–Grudzień 2026 · ~3,5 h/dzień + weekend",title:"Faza 2 — Budowanie",start:"2026-09-01",end:"2026-12-31",
+   tasks:[
+     ["f2-01","Wrzesień: sprawdź cke.gov.pl pod komunikaty o zmianach na rocznik 2027."],
+     ["f2-02","Matematyka PP: działy 8–16 (dokończenie podstawy do końca listopada)."],
+     ["f2-03","Matematyka PR: działy 1–4 (wartość bezwzględna → ciągi i granice)."],
+     ["f2-04","Angielski: Use of English 50%; transformacje 5 dziennie; 2 wypracowania PR w Write & Improve."],
+     ["f2-05","Polski: wszystkie 29 lektur do końca listopada; 30/76 pytań jawnych; 2 wypracowania."],
+   ],
+   checkpoint:"Checkpoint (połowa grudnia — pierwszy pełny próbny): matma PP 50%, PR 25%, polski 60%, ang PP 80%, ang PR 65%. Po nim: kup eTrapez i ew. kurs polskiego."},
+  {id:"faza-3",when:"Styczeń–Marzec 2027 · ~4 h/dzień",title:"Faza 3 — Intensyfikacja i arkusze",start:"2027-01-01",end:"2027-03-31",
+   tasks:[
+     ["f3-01","Matematyka PR: pozostałe działy — pochodne i optymalizacja, prawdop. warunkowe, geometria z okręgiem, dowody."],
+     ["f3-02","Angielski: Use of English ukończony; 8–10 wypracowań PR; start Destination C1&C2."],
+     ["f3-03","Polski: wszystkie 76 pytań jawnych opracowane; 6–8 wypracowań."],
+     ["f3-04","Arkusze: min. 6 pełnych z każdego przedmiotu, w warunkach egzaminacyjnych (weekendy)."],
+   ],
+   checkpoint:"Checkpoint (marzec): matma PP 65%, PR 45%, polski 70%, ang PP 90%, ang PR 80%."},
+  {id:"faza-4",when:"Kwiecień–Maj 2027 · ~3,5 h/dzień",title:"Faza 4 — Polerowanie",start:"2027-04-01",end:"2027-05-04",
+   tasks:[
+     ["f4-01","Zero nowego materiału — tylko utrwalanie i symulacje."],
+     ["f4-02","2–3 pełne arkusze tygodniowo + analiza błędów."],
+     ["f4-03","Pytania jawne polski: codziennie 30 min na głos (nagrywaj, słuchaj, poprawiaj)."],
+     ["f4-04","Ustny angielski: 3× 30 min/tydz. symulacje."],
+     ["f4-05","Karta wzorów matematyka: 15 min dziennie."],
+     ["f4-06","Powtórka lektur: 1 dziennie (kwiecień) — notatka + cytaty + motywy."],
+     ["f4-07","Ostatnie 7 dni: STOP nowemu materiałowi, sen 8 h, karta wzorów, własne notatki."],
+   ],
+   checkpoint:"Cel końcowy: matma PR 45–80%, ang rozsz. 78–90%, polski 60–85% → 360–600+ pkt."},
+];
+
+// Lista zakupów
+const SHOP = [
+  {grp:"Kup teraz (czerwiec) — minimum, by ruszyć 1 lipca · ~200 zł", items:[
+    ["shop-cze-01","Tablice maturalne CKE — drukowane (matematyka)",15],
+    ["shop-cze-02","NOWA Teraz matura. Matematyka. Vademecum PP (Nowa Era)",60],
+    ["shop-cze-03","Zbiór zadań PP — matematyka (Nowa Era / Kurczab kl.1)",45],
+    ["shop-cze-04","4–5 lektur GREG „z opracowaniem” (Lalka, Przedwiośnie, Dziady III, Zbrodnia i kara, Wesele)",80],
+  ]},
+  {grp:"Lipiec–Sierpień · ~330 zł", items:[
+    ["shop-lato-01","Destination B2 — Grammar & Vocabulary (Macmillan)",110],
+    ["shop-lato-02","Repetytorium maturalne PP+PR — angielski (Macmillan)",110],
+    ["shop-lato-03","GREG — repetytorium polski: pisemny + ustny (76 pytań jawnych)",110],
+  ]},
+  {grp:"Jesień (po pierwszym próbnym arkuszu) · ~230 zł + opcje", items:[
+    ["shop-jes-01","Kurczab — Zbiór zadań kl. 4 LO, zakres rozszerzony (Pazdro)",50],
+    ["shop-jes-02","Operon — Repetytorium matematyka PR 2027",50],
+    ["shop-jes-03","eTrapez — kurs Matura Rozszerzona (formuła 2023)",130],
+    ["shop-jes-04","(opcja) Destination C1 & C2",140],
+    ["shop-jes-05","(opcja) English Vocabulary in Use: Advanced",120],
+  ]},
+];
+const SHOP_FREE = [
+  ["shop-free-01","Arkusze CKE 2023–2025 (cke.gov.pl)"],
+  ["shop-free-02","Karta wzorów PDF (cke.gov.pl)"],
+  ["shop-free-03","Lista 76 pytań jawnych (cke.gov.pl)"],
+];
+
+// Linkownia
+const LINKS = [
+  {grp:"Matematyka", items:[
+    ["Pi-stacja","600+ darmowych wideolekcji od podstawówki do PR. Start nr 1.","https://pistacja.tv"],
+    ["Matemaks","„Łopatologiczny”, ogromna baza zadań.","https://www.matemaks.pl"],
+    ["Khan Academy PL","Uzupełnianie braków z podstawówki.","https://pl.khanacademy.org"],
+    ["eTrapez","Płatny kurs PR (po próbnym arkuszu).","https://etrapez.pl"],
+  ]},
+  {grp:"Język polski", items:[
+    ["Baba od polskiego","Wszystkie lektury + 76 pytań jawnych.","https://babaodpolskiego.pl"],
+    ["Baba od polskiego (YouTube)","Omówienia lektur i form.","https://www.youtube.com/c/babaodpolskiego"],
+    ["Pracownia Literacka (YouTube)","Krótko i treściwie.","https://www.youtube.com/channel/UCSxpUEkzqF5Xdh83feNAn4w"],
+  ]},
+  {grp:"Język angielski", items:[
+    ["Angielski dla maturzysty","Egzaminatorka OKE, schematy form.","https://angielskidlamaturzysty.pl"],
+    ["BBC Learning English","Słuchanie B2+.","https://www.bbc.co.uk/learningenglish"],
+    ["Cambridge Write & Improve","DARMOWE sprawdzanie wypracowań przez AI Cambridge.","https://writeandimprove.com"],
+    ["Diki","Słownik z wymową i kolokacjami.","https://www.diki.pl"],
+  ]},
+  {grp:"Narzędzia / powtórki", items:[
+    ["Anki","Fiszki z powtórką odstępową (słownictwo C1, cytaty).","https://apps.ankiweb.net"],
+    ["Quizlet","Gotowe zestawy maturalne.","https://quizlet.com"],
+    ["CKE","Arkusze, karta wzorów, pytania jawne.","https://cke.gov.pl"],
+    ["Arkusze archiwalne","Baza arkuszy z poprzednich lat.","https://arkusze.pl"],
+  ]},
+];
+
+/* ===== STAN ===== */
+let state = loadState();
+
+function defaultState(){
+  const topics = {};
+  allTopicIds().forEach(id=>topics[id]=0);
+  return {topics, jawne:0, checks:{}, shop:{}, free:{}, openAcc:{}};
+}
+function loadState(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(!raw) return defaultState();
+    const s = JSON.parse(raw);
+    const d = defaultState();
+    return {
+      topics: Object.assign(d.topics, s.topics||{}),
+      jawne: typeof s.jawne==="number"?s.jawne:0,
+      checks: s.checks||{}, shop: s.shop||{}, free: s.free||{}, openAcc: s.openAcc||{},
+    };
+  }catch(e){ return defaultState(); }
+}
+function save(){ try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){} }
+
+/* ===== POMOCNICZE ===== */
+const $ = (s,el=document)=>el.querySelector(s);
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
+
+function avg(arr){ return arr.length? Math.round(arr.reduce((a,b)=>a+b,0)/arr.length) : 0; }
+function topicPcts(ids){ return ids.map(id=>state.topics[id]||0); }
+
+function mathProgress(){ return avg(topicPcts([...MAT_PP.map(x=>x[0]),...MAT_PR.map(x=>x[0])])); }
+function polishProgress(){
+  const ids = [...POL_FORM.map(x=>x[0]),...POL_LEKT.map(x=>x[0]),...POL_LEKT_PP.map(x=>x[0])];
+  const arr = topicPcts(ids);
+  arr.push(Math.round(state.jawne/76*100)); // pytania jawne jako jeden ważony element
+  return avg(arr);
+}
+function englishProgress(){
+  return avg(topicPcts([...ANG_GRAM.map(x=>x[0]),...ANG_EGZ.map(x=>x[0]),...ANG_PIS.map(x=>x[0]),...ANG_USTNY.map(x=>x[0])]));
+}
+function overallProgress(){
+  const arr = topicPcts(allTopicIds());
+  arr.push(Math.round(state.jawne/76*100));
+  return avg(arr);
+}
+function groupProgress(ids){ return avg(topicPcts(ids)); }
+
+function pbar(pct,big){
+  const done = pct>=100;
+  return `<div class="pbar${big?" big":""}${done?" done":""}"><i style="width:${pct}%"></i></div>`;
+}
+function ringSvg(pct){
+  const r=14,c=2*Math.PI*r,off=c*(1-pct/100);
+  const col = pct>=100?"var(--done)":(pct>0?"var(--gray)":"var(--todo)");
+  return `<svg class="ring" viewBox="0 0 34 34"><circle cx="17" cy="17" r="${r}" fill="none" stroke="var(--todo)" stroke-width="4"/>
+    <circle cx="17" cy="17" r="${r}" fill="none" stroke="${col}" stroke-width="4" stroke-linecap="round"
+      stroke-dasharray="${c.toFixed(1)}" stroke-dashoffset="${off.toFixed(1)}" transform="rotate(-90 17 17)"/>
+    <text x="17" y="20" text-anchor="middle" font-size="9" font-weight="700" fill="var(--gray-d)">${pct}</text></svg>`;
+}
+
+/* ===== ODLICZANIE ===== */
+function updateCountdown(){
+  const today = new Date(); today.setHours(0,0,0,0);
+  const m = new Date(MATURA_DATE+"T00:00:00");
+  const days = Math.round((m-today)/86400000);
+  $("#cd-days").textContent = days>0?days:(days===0?"0":"—");
+}
+
+/* ===== NAWIGACJA ===== */
+const VIEWS = [
+  {id:"dash",ico:"🎯",lab:"Cele"},
+  {id:"map",ico:"🗺️",lab:"Mapa"},
+  {id:"time",ico:"📅",lab:"Oś czasu"},
+  {id:"shop",ico:"🛒",lab:"Zakupy"},
+  {id:"links",ico:"🔗",lab:"Linki"},
+];
+let currentView = "dash";
+function buildNav(){
+  $("#bottomnav").innerHTML = VIEWS.map(v=>`<button data-v="${v.id}"><span class="ico">${v.ico}</span>${v.lab}</button>`).join("");
+  $("#topnav").innerHTML = VIEWS.map(v=>`<button data-v="${v.id}"><span>${v.ico}</span>${v.lab}</button>`).join("");
+  document.querySelectorAll("nav button[data-v]").forEach(b=>b.addEventListener("click",()=>switchView(b.dataset.v)));
+  switchView(currentView);
+}
+function switchView(v){
+  currentView=v;
+  document.querySelectorAll(".view").forEach(s=>s.classList.toggle("active",s.id==="view-"+v));
+  document.querySelectorAll("nav button[data-v]").forEach(b=>b.classList.toggle("active",b.dataset.v===v));
+  window.scrollTo(0,0);
+}
+
+/* ===== RENDER: DASHBOARD ===== */
+const GOALS = [
+  ["Język angielski","rozszerzony","78%","×2","156"],
+  ["Matematyka","rozszerzony","45%","×3","135"],
+  ["Język polski","podstawowy","60%","×1,5","90"],
+];
+function renderDash(){
+  const ov=overallProgress(), m=mathProgress(), p=polishProgress(), a=englishProgress();
+  const el=$("#view-dash");
+  el.innerHTML = `
+  <div class="card">
+    <div class="prow"><div class="lab">Postęp ogólny</div><div class="val">${ov}%</div></div>
+    ${pbar(ov,true)}
+    <div class="mini-grid" style="margin-top:14px">
+      <div><div class="prow"><div class="lab" style="font-size:13px">Matematyka</div><div class="val">${m}%</div></div>${pbar(m)}</div>
+      <div><div class="prow"><div class="lab" style="font-size:13px">Polski</div><div class="val">${p}%</div></div>${pbar(p)}</div>
+      <div><div class="prow"><div class="lab" style="font-size:13px">Angielski</div><div class="val">${a}%</div></div>${pbar(a)}</div>
+    </div>
+  </div>
+
+  <div class="section-title">Cel rekrutacyjny</div>
+  <div class="card">
+    <div style="font-weight:700;font-size:15px">Akademia Leona Koźmińskiego</div>
+    <div style="color:var(--muted);font-size:13px;margin-top:2px">Prawo (jednolite mgr) oraz Zarządzanie (licencjat)</div>
+    <div class="chips">
+      <span class="chip">Próg: 300 pkt</span>
+      <span class="chip">Cel osobisty: 360+ pkt</span>
+      <span class="chip">Plan: ~381 pkt (bufor)</span>
+    </div>
+  </div>
+
+  <div class="section-title">Plan punktowy</div>
+  <div class="card">
+    <table>
+      <thead><tr><th>Przedmiot</th><th>Poziom</th><th class="num">Cel</th><th class="num">×</th><th class="num">Pkt</th></tr></thead>
+      <tbody>
+        ${GOALS.map(g=>`<tr><td>${g[0]}</td><td style="color:var(--muted)">${g[1]}</td><td class="num">${g[2]}</td><td class="num">${g[3]}</td><td class="num">${g[4]}</td></tr>`).join("")}
+        <tr class="total"><td colspan="4">RAZEM</td><td class="num">381 pkt</td></tr>
+      </tbody>
+    </table>
+    <div class="note"><b>Wzór ALK:</b> liczą się 3 dowolne przedmioty pisemne. Za każdy 1%: podstawa ×1,5 pkt, rozszerzenie ×2 pkt, <b>matematyka rozszerzona ×3 pkt</b>. Oliwier ma dokładnie 3 przedmioty pisemne (polski, matematyka, angielski) — wszystkie się liczą.</div>
+  </div>
+
+  <div class="section-title">Egzaminy „tylko zdać” (próg 30%, 0 pkt do ALK)</div>
+  <div class="card">
+    <div class="chips">
+      <span class="chip">Polski ustny</span>
+      <span class="chip">Angielski ustny</span>
+      <span class="chip">Matematyka podstawowa</span>
+      <span class="chip">Angielski podstawowy</span>
+    </div>
+  </div>
+
+  <div class="section-title">Plan B</div>
+  <div class="card">
+    <div class="note" style="margin-top:0">Jeśli matma nie wejdzie — dociągnij <b>angielski rozsz. do 85%</b> (×2 = 170) i <b>polski do 70%</b> (×1,5 = 105); wtedy matma rozsz. 35% (×3 = 105) nadal daje <b>380 pkt</b>.</div>
+  </div>
+
+  <div class="section-title">Kopia zapasowa</div>
+  <div class="card">
+    <div style="font-size:13px;color:var(--muted)">Zapisz lub przywróć cały postęp (JSON). Reset czyści wszystko.</div>
+    <div class="btn-row">
+      <button class="btn-line" id="btn-export">⬇︎ Eksportuj</button>
+      <button class="btn-line" id="btn-import">⬆︎ Importuj</button>
+      <button class="btn-line danger" id="btn-reset">⟲ Reset</button>
+    </div>
+    <input type="file" id="file-import" accept="application/json" style="display:none" />
+  </div>
+  <div class="hint">Postęp zapisuje się automatycznie na tym urządzeniu.</div>
+  `;
+  $("#btn-export").addEventListener("click",exportJSON);
+  $("#btn-import").addEventListener("click",()=>$("#file-import").click());
+  $("#file-import").addEventListener("change",importJSON);
+  $("#btn-reset").addEventListener("click",resetAll);
+}
+
+/* ===== RENDER: MAPA TEMATÓW ===== */
+function topicRow(t){
+  const [id,name,note,resName,url]=t;
+  const st=state.topics[id]||0;
+  const cls = st===100?"s100":(st===50?"s50":"");
+  const icon = st===100?"✓":(st===50?"◑":"");
+  return `<div class="topic ${cls}" data-topic="${id}">
+    <div class="stat" data-toggle="${id}">${icon}</div>
+    <div class="body">
+      <div class="name">${esc(name)}</div>
+      ${note?`<div class="note" style="background:none;padding:0;margin:2px 0 0">${esc(note)}</div>`:""}
+      ${resName?`<a class="lnk" href="${url}" target="_blank" rel="noopener">${esc(resName)}</a>`:""}
+    </div>
+  </div>`;
+}
+function lektRow(item){
+  const [id,name,bold]=item;
+  const st=state.topics[id]||0;
+  const cls = (st===100?"s100":(st===50?"s50":"")) + (bold?" bold":"");
+  const icon = st===100?"✓":(st===50?"◑":"");
+  return `<div class="topic ${cls}" data-topic="${id}">
+    <div class="stat" data-toggle="${id}">${icon}</div>
+    <div class="body"><div class="name">${esc(name)}</div></div>
+  </div>`;
+}
+function accordion(key,title,subnote,ids,bodyHtml){
+  const pct=groupProgress(ids);
+  const open=!!state.openAcc[key];
+  const doneCount=ids.filter(id=>(state.topics[id]||0)===100).length;
+  return `<div class="acc${open?" open":""}" data-acc="${key}">
+    <div class="acc-head" data-acchead="${key}">
+      <div class="ttl"><span class="chev">▶</span>${esc(title)}</div>
+      <div class="meta"><span class="cnt">${doneCount}/${ids.length}</span>${ringSvg(pct)}</div>
+    </div>
+    <div class="acc-body">
+      ${subnote?`<div class="note">${subnote}</div>`:""}
+      ${bodyHtml}
+    </div>
+  </div>`;
+}
+function renderMap(){
+  const el=$("#view-map");
+  const matPpIds=MAT_PP.map(x=>x[0]), matPrIds=MAT_PR.map(x=>x[0]);
+  const polFormIds=POL_FORM.map(x=>x[0]), polLektIds=POL_LEKT.map(x=>x[0]), polLektPpIds=POL_LEKT_PP.map(x=>x[0]);
+  const angG=ANG_GRAM.map(x=>x[0]),angE=ANG_EGZ.map(x=>x[0]),angP=ANG_PIS.map(x=>x[0]),angU=ANG_USTNY.map(x=>x[0]);
+
+  const jawnePct=Math.round(state.jawne/76*100);
+
+  el.innerHTML = `
+  <div class="section-title">📐 Matematyka</div>
+  ${accordion("mat-pp","Poziom podstawowy (od zera)",
+    "Główny zasób: <b>Pi-stacja</b> + Khan Academy PL na braki z podstawówki. Zbiór zadań: Nowa Era / Kurczab. Zasada: 1 film = min. 3 zadania po nim.",
+    matPpIds, MAT_PP.map(topicRow).join(""))}
+  ${accordion("mat-pr","Poziom rozszerzony (dźwignia ×3)",
+    "Dokładamy warstwowo od jesieni, gdy podstawa siedzi. Zasób: <b>Pi-stacja PR</b> + eTrapez (po pierwszym próbnym). 45% = 135 pkt — nie chodzi o perfekcję.",
+    matPrIds, MAT_PR.map(topicRow).join(""))}
+
+  <div class="section-title">📖 Język polski</div>
+  <div class="card">
+    <div class="prow"><div class="lab">Pytania jawne (ustny)</div><div class="val">${state.jawne}/76 · ${jawnePct}%</div></div>
+    ${pbar(jawnePct)}
+    <div class="counter">
+      <button class="btn" id="jw-minus">−</button>
+      <div class="num">${state.jawne}<small>/76</small></div>
+      <button class="btn" id="jw-plus">+</button>
+    </div>
+    <input type="range" id="jw-range" min="0" max="76" value="${state.jawne}" />
+    <div class="note">Opracowuj 1 dziennie od września → wszystkie do końca listopada. Lista i komunikat: <a href="https://cke.gov.pl" target="_blank" rel="noopener">cke.gov.pl</a>.</div>
+  </div>
+  ${accordion("pol-form","Formy wypracowań i zadań","", polFormIds, POL_FORM.map(topicRow).join(""))}
+  ${accordion("pol-lekt","Lektury obowiązkowe (LO)","★ = najwięcej pytań jawnych, czytaj pierwsze.", polLektIds, POL_LEKT.map(lektRow).join(""))}
+  ${accordion("pol-lektpp","Lektury z podstawówki (też obowiązują)","", polLektPpIds, POL_LEKT_PP.map(i=>lektRow([i[0],i[1],false])).join(""))}
+
+  <div class="section-title">🇬🇧 Język angielski</div>
+  <div class="card" style="padding:12px 14px"><div class="note" style="margin:0">Najmocniejsza strona — kotwica psychologiczna. Zasoby: Angielski dla maturzysty, Destination B2/C1, BBC, Po Cudzemu / English with Lucy. Sprawdzanie: Cambridge Write & Improve (darmowe).</div></div>
+  ${accordion("ang-gram","Gramatyka (B2/C1)","", angG, ANG_GRAM.map(topicRow).join(""))}
+  ${accordion("ang-egz","Części egzaminu — trening","", angE, ANG_EGZ.map(topicRow).join(""))}
+  ${accordion("ang-pis","Formy pisemne","", angP, ANG_PIS.map(topicRow).join(""))}
+  ${accordion("ang-ustny","Ustny","", angU, ANG_USTNY.map(topicRow).join(""))}
+  <div class="hint">Dotknij kartę tematu: do zrobienia → w trakcie → zrobione.</div>
+  `;
+
+  // accordion toggles
+  el.querySelectorAll("[data-acchead]").forEach(h=>h.addEventListener("click",()=>{
+    const k=h.dataset.acchead; state.openAcc[k]=!state.openAcc[k]; save();
+    el.querySelector(`[data-acc="${k}"]`).classList.toggle("open",state.openAcc[k]);
+  }));
+  // topic toggles — kliknięcie w kartę przełącza status (poza linkiem do zasobu)
+  el.querySelectorAll("[data-topic]").forEach(row=>row.addEventListener("click",(e)=>{
+    if(e.target.closest("a")) return; // nie przełączaj, gdy klik w link
+    const id=row.dataset.topic;
+    state.topics[id]=((state.topics[id]||0)+50)%150; // 0->50->100->0
+    save(); renderMap(); renderDashIfActive();
+  }));
+  // jawne controls
+  const setJ=(v)=>{ state.jawne=Math.max(0,Math.min(76,v)); save(); renderMap(); renderDashIfActive(); };
+  $("#jw-minus").addEventListener("click",()=>setJ(state.jawne-1));
+  $("#jw-plus").addEventListener("click",()=>setJ(state.jawne+1));
+  $("#jw-range").addEventListener("input",(e)=>setJ(parseInt(e.target.value,10)));
+}
+function renderDashIfActive(){ if(currentView==="dash") renderDash(); }
+
+/* ===== RENDER: OŚ CZASU ===== */
+function currentPhaseId(){
+  const today=new Date(); today.setHours(0,0,0,0);
+  for(const ph of PHASES){
+    const s=new Date(ph.start+"T00:00:00"), e=new Date(ph.end+"T00:00:00");
+    if(today>=s && today<=e) return ph.id;
+  }
+  if(today < new Date(PHASES[0].start+"T00:00:00")) return null;
+  return PHASES[PHASES.length-1].id;
+}
+function renderTime(){
+  const el=$("#view-time");
+  const curId=currentPhaseId();
+  const today=new Date(); today.setHours(0,0,0,0);
+  let html=`<div class="section-title">Oś czasu — 4 fazy</div>`;
+  PHASES.forEach(ph=>{
+    const done = today > new Date(ph.end+"T00:00:00");
+    const isCur = ph.id===curId;
+    const total=ph.tasks.length;
+    const ck=ph.tasks.filter(t=>state.checks[t[0]]).length;
+    html+=`<div class="phase ${isCur?"current":""} ${done&&!isCur?"done":""}">
+      <div class="dot"></div>
+      <div class="when">${esc(ph.when)}</div>
+      <div class="pttl">${esc(ph.title)}${isCur?'<span class="badge-now">TERAZ</span>':''}</div>
+      <div class="card" style="margin-top:8px">
+        <div class="prow"><div class="lab" style="font-size:13px">Zadania</div><div class="val">${ck}/${total}</div></div>
+        ${pbar(total?Math.round(ck/total*100):0)}
+        <div style="margin-top:8px">
+          ${ph.tasks.map(t=>`<div class="check ${state.checks[t[0]]?"on":""}" data-check="${t[0]}">
+            <div class="box">${state.checks[t[0]]?"✓":""}</div><div class="txt">${esc(t[1])}</div></div>`).join("")}
+        </div>
+        <div class="checkpoint">${esc(ph.checkpoint)}</div>
+      </div>
+    </div>`;
+  });
+  el.innerHTML=html;
+  el.querySelectorAll("[data-check]").forEach(c=>c.addEventListener("click",()=>{
+    const id=c.dataset.check; state.checks[id]=!state.checks[id]; save(); renderTime();
+  }));
+}
+
+/* ===== RENDER: ZAKUPY ===== */
+function renderShop(){
+  const el=$("#view-shop");
+  let total=0, spent=0;
+  SHOP.forEach(g=>g.items.forEach(it=>{ total+=it[2]; if(state.shop[it[0]]) spent+=it[2]; }));
+  const left=total-spent;
+
+  let html=`<div class="section-title">Budżet</div>
+  <div class="card">
+    <div class="budget">
+      <div class="box2"><b>${spent} zł</b><span>Wydane</span></div>
+      <div class="box2"><b>${left} zł</b><span>Pozostało</span></div>
+      <div class="box2"><b>${total} zł</b><span>Razem</span></div>
+    </div>
+    ${pbar(total?Math.round(spent/total*100):0,true)}
+    <div class="note">Minimum ~<b>760 zł</b>, komfortowo ~<b>1140 zł</b>. Dla kontekstu: stypendium 100% czesnego na ALK (za ≥600 pkt) = oszczędność ok. 10 000 zł/semestr.</div>
+  </div>`;
+
+  SHOP.forEach(g=>{
+    html+=`<div class="section-title">${esc(g.grp)}</div><div class="card">`;
+    html+=g.items.map(it=>`<div class="shop ${state.shop[it[0]]?"on":""}" data-shop="${it[0]}">
+      <div class="box">${state.shop[it[0]]?"✓":""}</div>
+      <div class="body"><div class="nm">${esc(it[1])}</div></div>
+      <div class="pr">~${it[2]} zł</div>
+    </div>`).join("");
+    html+=`</div>`;
+  });
+
+  html+=`<div class="section-title">Darmowe — do pobrania (0 zł)</div><div class="card">`;
+  html+=SHOP_FREE.map(it=>`<div class="shop ${state.free[it[0]]?"on":""}" data-free="${it[0]}">
+    <div class="box">${state.free[it[0]]?"✓":""}</div>
+    <div class="body"><div class="nm">${esc(it[1])}</div></div>
+    <div class="pr">0 zł</div>
+  </div>`).join("");
+  html+=`</div>`;
+
+  html+=`<div class="card"><div class="note" style="margin:0"><b>Gdzie kupić:</b> taniaksiazka.pl (najtaniej, rabaty 20–40%), allegro.pl (używane ~50%), bookcity.pl (podręczniki językowe), pazdro.com.pl, empik.com.</div></div>`;
+
+  el.innerHTML=html;
+  el.querySelectorAll("[data-shop]").forEach(s=>s.addEventListener("click",()=>{
+    const id=s.dataset.shop; state.shop[id]=!state.shop[id]; save(); renderShop();
+  }));
+  el.querySelectorAll("[data-free]").forEach(s=>s.addEventListener("click",()=>{
+    const id=s.dataset.free; state.free[id]=!state.free[id]; save(); renderShop();
+  }));
+}
+
+/* ===== RENDER: LINKI ===== */
+function renderLinks(){
+  const el=$("#view-links");
+  let html="";
+  LINKS.forEach(g=>{
+    html+=`<div class="section-title">${esc(g.grp)}</div>`;
+    html+=g.items.map(l=>`<a class="link" href="${l[2]}" target="_blank" rel="noopener">
+      <div class="nm">${esc(l[0])} ↗</div>
+      <div class="ds">${esc(l[1])}</div>
+      <div class="url">${esc(l[2])}</div>
+    </a>`).join("");
+  });
+  el.innerHTML=html;
+}
+
+/* ===== EKSPORT / IMPORT / RESET ===== */
+function exportJSON(){
+  const blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");
+  a.href=url; a.download="matura2027-backup-"+new Date().toISOString().slice(0,10)+".json";
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+function importJSON(e){
+  const file=e.target.files[0]; if(!file) return;
+  const r=new FileReader();
+  r.onload=()=>{
+    try{
+      const s=JSON.parse(r.result);
+      const d=defaultState();
+      state={
+        topics:Object.assign(d.topics,s.topics||{}),
+        jawne:typeof s.jawne==="number"?s.jawne:0,
+        checks:s.checks||{}, shop:s.shop||{}, free:s.free||{}, openAcc:s.openAcc||{},
+      };
+      save(); renderAll();
+      alert("Postęp został zaimportowany ✓");
+    }catch(err){ alert("Nie udało się wczytać pliku — sprawdź, czy to poprawny backup JSON."); }
+  };
+  r.readAsText(file);
+  e.target.value="";
+}
+function resetAll(){
+  if(confirm("Na pewno wyczyścić cały postęp? Tego nie można cofnąć.")){
+    state=defaultState(); save(); renderAll();
+  }
+}
+
+/* ===== START ===== */
+function renderAll(){ renderDash(); renderMap(); renderTime(); renderShop(); renderLinks(); }
+function init(){
+  updateCountdown();
+  buildNav();
+  renderAll();
+}
+init();
+</script>
+</body>
+</html>
