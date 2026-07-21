@@ -1,6 +1,7 @@
 # Secrets & local config — NEVER commit these
 .env
 .env.*
+!.env.example          # the template must stay in the repo
 config/settings.yaml
 *.key
 *.pem
