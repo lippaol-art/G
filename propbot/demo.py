@@ -20,7 +20,7 @@ from propbot.risk import RiskLimits, RiskManager, SymbolSpec
 from propbot.schema import Candle, OrderIntent, SetupState
 from propbot.state import PlanStore, StateMachine
 from propbot.strategy.orb import (ORBConfig, build_opening_range,
-                                  make_orb_plans, ny_session_open_ts)
+                                  make_orb_plans, session_open_ts)
 from propbot.telegram.cards import (format_confirmed_card,
                                     format_execution_report, format_setup_card)
 from propbot.watcher import Watcher
@@ -30,7 +30,7 @@ NY = ZoneInfo("America/New_York")
 
 def build_breakout_session() -> list[Candle]:
     day = datetime(2026, 7, 21, 12, 0, tzinfo=NY)
-    open_ts = ny_session_open_ts(int(day.timestamp()))
+    open_ts = session_open_ts(int(day.timestamp()))
     base = 40000.0
     candles = [
         Candle(open_ts, base, base + 50, base - 50, base + 10),

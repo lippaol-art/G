@@ -11,9 +11,11 @@ from __future__ import annotations
 
 import argparse
 
-from ..config import load_settings, resolve_risk_limits, slippage_buffer
+from dataclasses import replace
+
+from ..config import (load_settings, resolve_orb_config, resolve_risk_limits,
+                      slippage_buffer)
 from ..risk import SymbolSpec
-from ..strategy.orb import ORBConfig
 from .runner import BacktestRunner, load_candles_csv
 
 
@@ -36,9 +38,12 @@ def main() -> None:
     print(f"Loaded {len(candles)} candles | firm={settings.prop_firm} "
           f"| DD={limits.drawdown_type} | balance={balance}")
 
+    # Start from the configured session (broker server clock) and let CLI
+    # flags override the tunables.
+    orb_cfg = replace(resolve_orb_config(settings),
+                      range_minutes=args.range_min, target_r=args.target_r)
     runner = BacktestRunner(
-        limits, spec,
-        ORBConfig(range_minutes=args.range_min, target_r=args.target_r),
+        limits, spec, orb_cfg,
         initial_balance=balance,
         slippage_points=slippage_buffer(settings),
         symbol=args.symbol)

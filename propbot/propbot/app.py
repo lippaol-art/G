@@ -19,12 +19,13 @@ import asyncio
 import os
 from datetime import datetime, timezone
 
-from .config import Settings, load_settings, resolve_risk_limits
+from .config import (Settings, load_settings, resolve_orb_config,
+                     resolve_risk_limits)
 from .engine import Engine, EngineEvent
 from .execution import MockAdapter
 from .risk import RiskManager
 from .state import PlanStore
-from .strategy.orb import ORBConfig, ny_session_open_ts, session_cutoff_ts
+from .strategy.orb import session_cutoff_ts, session_open_ts
 
 
 def build_adapter(settings: Settings):
@@ -54,7 +55,7 @@ def build_engine(settings: Settings, adapter=None) -> Engine:
         except Exception as e:   # missing SDK / key -> engine falls back to grade B
             print(f"[app] LLM disabled: {e}")
     return Engine(adapter, risk, store, settings, analyst=analyst,
-                  calendar=calendar, orb_cfg=ORBConfig(),
+                  calendar=calendar, orb_cfg=resolve_orb_config(settings),
                   news_fail_closed=settings.news_fail_closed)
 
 
@@ -88,22 +89,38 @@ class App:
             else:
                 await self.bot.notify(ev.text)
 
+    def _server_now(self) -> int | None:
+        """Broker server time (epoch). MT5 stamps candles on the server wall
+        clock, and every session comparison must use that same clock — never
+        local UTC, which is offset from it (see propbot/strategy/orb.py). We
+        read it off the newest candle; None until the feed has warmed up."""
+        latest = 0
+        for symbol in self.settings.symbols:
+            cs = self.engine.adapter.candles(symbol, self.settings.timeframe, 1)
+            if cs:
+                latest = max(latest, cs[-1].time)
+        return latest or None
+
     async def _trading_loop(self) -> None:
         """One tick per minute: analyse at the session window, watch each M15
         close, monitor in between. New broker day resets the daily reference."""
         last_day = None
         while True:
-            now = int(datetime.now(tz=timezone.utc).timestamp())
-            day_key = datetime.now(tz=timezone.utc).strftime("%Y-%m-%d")
+            now = self._server_now()
+            if now is None:                     # feed not ready yet
+                await self._emit(self.engine.monitor())
+                await asyncio.sleep(60)
+                continue
+            day_key = datetime.fromtimestamp(now, tz=timezone.utc).strftime("%Y-%m-%d")
             if day_key != last_day:
                 self.engine.new_trading_day()
                 self._analysed_today.clear()
                 last_day = day_key
 
             for symbol in self.settings.symbols:
-                open_ts = ny_session_open_ts(now)
+                open_ts = session_open_ts(now, self.engine.orb_cfg)
                 range_end = open_ts + self.engine.orb_cfg.range_minutes * 60
-                cutoff = session_cutoff_ts(now)
+                cutoff = session_cutoff_ts(now, self.engine.orb_cfg)
                 # analyse once, just after the opening range forms
                 if symbol not in self._analysed_today and range_end <= now < cutoff:
                     await self._emit(self.engine.run_daily_analysis(symbol))

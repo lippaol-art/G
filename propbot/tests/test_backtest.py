@@ -5,14 +5,14 @@ from zoneinfo import ZoneInfo
 from propbot.backtest import BacktestRunner
 from propbot.risk import RiskLimits, SymbolSpec
 from propbot.schema import Candle
-from propbot.strategy.orb import ORBConfig, ny_session_open_ts
+from propbot.strategy.orb import ORBConfig, session_open_ts
 
 NY = ZoneInfo("America/New_York")
 
 
 def build_day(day: datetime, breakout: bool) -> list[Candle]:
     """One synthetic NY session. If breakout, price runs up after the range."""
-    open_ts = ny_session_open_ts(int(day.timestamp()))
+    open_ts = session_open_ts(int(day.timestamp()))
     base = 40000.0
     candles = [
         Candle(open_ts, base, base + 50, base - 50, base + 10),

@@ -3,8 +3,8 @@
 Evidence-backed core strategy (Zarattini/Barbon/Aziz, SSRN 4729284; ~56% WR,
 R:R 1.8 on 15-min S&P ORB). Rules are fully deterministic:
 
-  * Opening range = high/low of the first `range_minutes` of the NY session
-    (09:30 America/New_York, DST-aware via zoneinfo).
+  * Opening range = high/low of the first `range_minutes` of the US cash
+    session, measured on the BROKER SERVER CLOCK (see below).
   * LONG plan above the range high, SHORT plan below the range low.
   * Confirmation = M15 candle CLOSE beyond the range edge (handled by the
     watcher, not here).
@@ -12,31 +12,47 @@ R:R 1.8 on 15-min S&P ORB). Rules are fully deterministic:
   * TP = `target_r` multiples of the risk.
   * Plans expire at session cutoff — no overnight risk from this strategy.
 
+Clock note (important): MetaTrader stamps every candle with the *broker's
+server wall-clock* (typically GMT+2/+3), stored as a Unix timestamp with NO
+offset — so `datetime.fromtimestamp(t, tz=utc)` on an MT5 candle yields the
+server wall-clock, not real UTC. On such a feed the US cash open (New York
+09:30) lands at server 16:30 year-round: both the US and the EU shift DST, so
+the New-York-to-server gap stays a constant 7h. We therefore locate the
+opening range by the server clock (default 16:30 open, 22:00 cutoff, tz=UTC)
+rather than converting through America/New_York — which would land in the
+wrong window and skip every day. Brokers on a different server offset can
+override the hours via config (market.session_* in settings.yaml).
+
 The LLM does not invent entries. It grades the day (A+/A/B/skip) and its grade
 feeds the risk manager's yellow-zone gate.
 """
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Sequence
 from zoneinfo import ZoneInfo
 
 from ..schema import Candle, ConfirmationRule, Direction, TradePlan
 
-NY = ZoneInfo("America/New_York")
-
 
 @dataclass
 class ORBConfig:
-    range_minutes: int = 30          # opening range window (09:30-10:00 NY)
-    session_open_hour: int = 9
+    range_minutes: int = 30          # opening range window (server 16:30-17:00)
+    # Session times are on the broker server clock (see module docstring).
+    # Defaults suit a GMT+2/+3 MT5 feed where the US open is server 16:30.
+    session_open_hour: int = 16
     session_open_minute: int = 30
-    cutoff_hour: int = 15            # no confirmations after 15:00 NY
+    cutoff_hour: int = 22            # no confirmations after server 22:00
+    session_tz: str = "UTC"          # how candle timestamps are interpreted
     target_r: float = 1.5            # TP = 1.5R
     max_sl_atr: float = 1.5          # SL distance cap in ATR units
     min_range_atr: float = 0.3       # skip degenerate ranges (< 0.3 ATR)
     max_range_atr: float = 3.0       # skip blown-out ranges (> 3 ATR)
+
+    @property
+    def tz(self) -> ZoneInfo:
+        return ZoneInfo(self.session_tz)
 
 
 @dataclass
@@ -55,21 +71,29 @@ class OpeningRange:
         return (self.high + self.low) / 2
 
 
-def ny_session_open_ts(day_ts: int, cfg: ORBConfig | None = None) -> int:
-    """Epoch seconds of the NY session open on the trading day containing day_ts.
+def session_open_ts(day_ts: int, cfg: ORBConfig | None = None) -> int:
+    """Epoch seconds of the session open on the trading day containing day_ts.
 
-    zoneinfo handles EST/EDT, so 09:30 New York is correct year-round.
+    Interpreted on the broker server clock (cfg.tz, default UTC = how MT5
+    stamps candles). Default hour/minute = 16:30, the US cash open on a
+    GMT+2/+3 feed. See the module docstring for why this is not a NY
+    conversion.
     """
     cfg = cfg or ORBConfig()
-    dt = datetime.fromtimestamp(day_ts, tz=NY)
+    dt = datetime.fromtimestamp(day_ts, tz=cfg.tz)
     open_dt = dt.replace(hour=cfg.session_open_hour, minute=cfg.session_open_minute,
                          second=0, microsecond=0)
     return int(open_dt.timestamp())
 
 
+# Backwards-compatible alias: the session clock is no longer NY-based, but
+# callers/tests written before the fix still import this name.
+ny_session_open_ts = session_open_ts
+
+
 def session_cutoff_ts(day_ts: int, cfg: ORBConfig | None = None) -> int:
     cfg = cfg or ORBConfig()
-    dt = datetime.fromtimestamp(day_ts, tz=NY)
+    dt = datetime.fromtimestamp(day_ts, tz=cfg.tz)
     cut = dt.replace(hour=cfg.cutoff_hour, minute=0, second=0, microsecond=0)
     return int(cut.timestamp())
 
@@ -79,7 +103,7 @@ def build_opening_range(candles: Sequence[Candle], day_ts: int,
     """High/low of candles fully inside the opening window, or None if the
     window isn't fully covered by closed candles yet."""
     cfg = cfg or ORBConfig()
-    start = ny_session_open_ts(day_ts, cfg)
+    start = session_open_ts(day_ts, cfg)
     end = start + cfg.range_minutes * 60
     window = [c for c in candles if start <= c.time < end]
     if not window:

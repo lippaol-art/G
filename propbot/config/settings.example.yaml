@@ -26,6 +26,20 @@ market:
   # (US30 / DJI30 / DE40 / GER40 / NAS100 / USTEC ...). Verify with the broker.
   symbols: [US30, NAS100]
   timeframe: M15             # decision / confirmation timeframe
+  # --- Opening-range session (BROKER SERVER CLOCK) -------------------------
+  # MT5 stamps every candle with the broker's server wall-clock (usually
+  # GMT+2/+3), stored as an offset-less epoch — so times must be compared on
+  # that clock, not local UTC. On such a feed the US cash open (New York
+  # 09:30) lands at server 16:30 all year (US + EU shift DST together), and
+  # these defaults are already correct. Change them ONLY if `check_mt5.py`
+  # shows your broker uses a different server offset — run it, note the server
+  # time it prints vs. real UTC, and shift session_open_hour accordingly.
+  session_open_hour: 16      # server hour the opening range starts
+  session_open_minute: 30
+  cutoff_hour: 22            # no new confirmations after this server hour
+  range_minutes: 30          # opening-range length (09:30-10:00 NY)
+  target_r: 1.5              # take-profit as a multiple of risk
+  # session_tz: UTC          # how candle timestamps are read (MT5 = UTC epoch)
   # Correlation groups: symbols in the same group count as shared exposure.
   # US indices move together, so one directional shock hits both at once.
   correlation_groups:

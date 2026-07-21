@@ -130,6 +130,30 @@ def load_settings(settings_path: Optional[str] = None,
     )
 
 
+def resolve_orb_config(settings: Settings):
+    """Build an ORBConfig from settings.yaml's `market` block.
+
+    Session hours are on the BROKER SERVER CLOCK (see propbot/strategy/orb.py).
+    Defaults suit a GMT+2/+3 MT5 feed (US open at server 16:30); override
+    market.session_open_hour / session_open_minute / cutoff_hour / session_tz
+    only if your broker uses a different server offset.
+    """
+    from .strategy.orb import ORBConfig
+
+    market = settings.raw.get("market", {}) or {}
+    defaults = ORBConfig()
+    return ORBConfig(
+        range_minutes=int(market.get("range_minutes", defaults.range_minutes)),
+        session_open_hour=int(market.get("session_open_hour",
+                                         defaults.session_open_hour)),
+        session_open_minute=int(market.get("session_open_minute",
+                                           defaults.session_open_minute)),
+        cutoff_hour=int(market.get("cutoff_hour", defaults.cutoff_hour)),
+        session_tz=str(market.get("session_tz", defaults.session_tz)),
+        target_r=float(market.get("target_r", defaults.target_r)),
+    )
+
+
 def resolve_risk_limits(settings: Settings) -> RiskLimits:
     firms = settings.firms_raw
     firm = (firms.get("firms", {}) or {}).get(settings.prop_firm)

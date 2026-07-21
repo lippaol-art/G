@@ -9,21 +9,21 @@ from propbot.execution.replay import ReplayAdapter
 from propbot.risk import RiskManager
 from propbot.schema import Candle, SetupState
 from propbot.state import PlanStore
-from propbot.strategy.orb import ORBConfig, ny_session_open_ts, session_cutoff_ts
+from propbot.strategy.orb import ORBConfig, session_open_ts, session_cutoff_ts
 
 NY = ZoneInfo("America/New_York")
 
 
 def quiet_day(day, base=42000.0):
     """A flat warmup day so the next day has ATR history + >=20 candles."""
-    open_ts = ny_session_open_ts(int(day.timestamp()))
+    open_ts = session_open_ts(int(day.timestamp()))
     return [Candle(open_ts + i * 900, base, base + 15, base - 15, base + 3)
             for i in range(0, 26)]
 
 
 def breakout_day(day, base=42000.0, then_tp=True):
     """Opening range 60pt, breaks up, then runs to TP (or reverses to SL)."""
-    open_ts = ny_session_open_ts(int(day.timestamp()))
+    open_ts = session_open_ts(int(day.timestamp()))
     c = [Candle(open_ts, base, base + 30, base - 30, base + 10),
          Candle(open_ts + 900, base + 10, base + 25, base - 25, base + 5)]
     for i in range(2, 26):
@@ -58,7 +58,7 @@ class TestReplayAdapter(unittest.TestCase):
         closes = []
         for day in days_candles:
             eng.new_trading_day()
-            open_ts = ny_session_open_ts(day[0].time, self.orb)
+            open_ts = session_open_ts(day[0].time, self.orb)
             range_end = open_ts + self.orb.range_minutes * 60
             cutoff = session_cutoff_ts(day[0].time, self.orb)
             analysed = False

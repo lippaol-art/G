@@ -20,7 +20,7 @@ from ..risk.risk_manager import RiskLimits, RiskManager, SymbolSpec
 from ..schema import AccountState, Candle, Direction, SetupState
 from ..state.machine import StateMachine
 from ..strategy.orb import (ORBConfig, build_opening_range, make_orb_plans,
-                            ny_session_open_ts, session_cutoff_ts)
+                            session_cutoff_ts)
 
 
 def load_candles_csv(path: str) -> list[Candle]:
@@ -135,7 +135,6 @@ class BacktestRunner:
 
         for day_key, day_candles in sorted(self._group_days(candles).items()):
             day_start_equity = equity
-            open_ts = ny_session_open_ts(day_candles[0].time, self.orb_cfg)
             cutoff = session_cutoff_ts(day_candles[0].time, self.orb_cfg)
 
             # ATR from the trailing window before today

@@ -26,13 +26,13 @@ from datetime import datetime, timezone
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from propbot.backtest.runner import load_candles_csv
-from propbot.config import load_settings, resolve_risk_limits
+from propbot.config import (load_settings, resolve_orb_config,
+                            resolve_risk_limits)
 from propbot.engine import Engine
 from propbot.execution.replay import ReplayAdapter
 from propbot.risk import RiskManager, SymbolSpec
 from propbot.state import PlanStore
-from propbot.strategy.orb import (ORBConfig, ny_session_open_ts,
-                                  session_cutoff_ts)
+from propbot.strategy.orb import session_cutoff_ts, session_open_ts
 from propbot.telegram.bot import PropBot
 
 
@@ -57,7 +57,7 @@ class Replay:
         self.days = group_by_day(candles)
         self.adapter = ReplayAdapter(symbol, candles, point_value,
                                      self.settings.initial_balance)
-        self.orb_cfg = ORBConfig()
+        self.orb_cfg = resolve_orb_config(self.settings)
         self.engine = Engine(
             self.adapter, RiskManager(resolve_risk_limits(self.settings)),
             PlanStore(f"state/replay_{symbol}.json"), self.settings,
@@ -91,7 +91,7 @@ class Replay:
 
         for day_key, day_candles in self.days.items():
             self.engine.new_trading_day()
-            open_ts = ny_session_open_ts(day_candles[0].time, self.orb_cfg)
+            open_ts = session_open_ts(day_candles[0].time, self.orb_cfg)
             range_end = open_ts + self.orb_cfg.range_minutes * 60
             cutoff = session_cutoff_ts(day_candles[0].time, self.orb_cfg)
             analysed = False

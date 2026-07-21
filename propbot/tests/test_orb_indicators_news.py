@@ -6,7 +6,7 @@ from propbot.market.indicators import atr, ema, rsi, sma
 from propbot.market.news import NewsCalendar, NewsEvent, news_gate
 from propbot.schema import Candle, Direction
 from propbot.strategy.orb import (ORBConfig, build_opening_range,
-                                  make_orb_plans, ny_session_open_ts)
+                                  make_orb_plans, session_open_ts)
 
 NY = ZoneInfo("America/New_York")
 
@@ -37,8 +37,8 @@ class TestIndicators(unittest.TestCase):
 
 class TestORB(unittest.TestCase):
     def _session_candles(self, day, base=40000.0):
-        """Build M15 candles for a NY session day."""
-        open_ts = ny_session_open_ts(int(day.timestamp()))
+        """Build M15 candles for a session day (broker server clock)."""
+        open_ts = session_open_ts(int(day.timestamp()))
         out = []
         # opening range 09:30-10:00 -> 2 M15 candles, high 40050 low 39950
         out.append(Candle(open_ts, base, base + 50, base - 50, base + 10))
@@ -49,17 +49,26 @@ class TestORB(unittest.TestCase):
             out.append(Candle(t, base, base + 20, base - 20, base + 5))
         return out
 
-    def test_ny_open_is_dst_aware(self):
-        # July -> EDT (UTC-4): 09:30 NY = 13:30 UTC
-        summer = datetime(2026, 7, 15, 12, 0, tzinfo=NY)
-        ts = ny_session_open_ts(int(summer.timestamp()))
-        utc = datetime.fromtimestamp(ts, tz=timezone.utc)
-        self.assertEqual((utc.hour, utc.minute), (13, 30))
-        # January -> EST (UTC-5): 09:30 NY = 14:30 UTC
-        winter = datetime(2026, 1, 15, 12, 0, tzinfo=NY)
-        ts2 = ny_session_open_ts(int(winter.timestamp()))
-        utc2 = datetime.fromtimestamp(ts2, tz=timezone.utc)
-        self.assertEqual((utc2.hour, utc2.minute), (14, 30))
+    def test_session_open_uses_server_clock(self):
+        # MT5 stamps candles on the broker server clock, stored as an
+        # offset-less epoch. The session open must land at the configured
+        # server hour (default 16:30 = US cash open on a GMT+2/+3 feed),
+        # NOT be re-derived through a New York conversion. This holds
+        # year-round because both the US and EU shift DST together.
+        for month in (1, 7):   # winter (EST/EET) and summer (EDT/EEST)
+            day = datetime(2026, month, 15, 8, 0, tzinfo=timezone.utc)
+            ts = session_open_ts(int(day.timestamp()))
+            got = datetime.fromtimestamp(ts, tz=timezone.utc)
+            self.assertEqual((got.hour, got.minute), (16, 30))
+
+    def test_session_hours_are_configurable(self):
+        # A broker on a different server offset can move the window.
+        day = datetime(2026, 7, 15, 8, 0, tzinfo=timezone.utc)
+        cfg = ORBConfig(session_open_hour=15, session_open_minute=30,
+                        cutoff_hour=21)
+        ts = session_open_ts(int(day.timestamp()), cfg)
+        got = datetime.fromtimestamp(ts, tz=timezone.utc)
+        self.assertEqual((got.hour, got.minute), (15, 30))
 
     def test_build_range(self):
         day = datetime(2026, 7, 15, 12, 0, tzinfo=NY)

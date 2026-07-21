@@ -10,7 +10,7 @@ from propbot.execution import MockAdapter
 from propbot.risk import RiskManager
 from propbot.schema import Candle, SetupState
 from propbot.state import PlanStore
-from propbot.strategy.orb import ORBConfig, ny_session_open_ts
+from propbot.strategy.orb import ORBConfig, session_open_ts
 
 NY = ZoneInfo("America/New_York")
 
@@ -18,7 +18,7 @@ NY = ZoneInfo("America/New_York")
 def breakout_session(day, base=40000.0):
     """Realistic proportions: 60-pt opening range, ~38-pt follow-through candles
     (so ATR ~ 0.6x the range -> ORB accepts it), trending up through the high."""
-    open_ts = ny_session_open_ts(int(day.timestamp()))
+    open_ts = session_open_ts(int(day.timestamp()))
     candles = [
         Candle(open_ts, base, base + 30, base - 30, base + 10),
         Candle(open_ts + 900, base + 10, base + 25, base - 25, base + 5),
