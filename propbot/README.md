@@ -54,9 +54,11 @@ Target: **The5ers High Stakes 2-Step, $10k** (self-authored EA allowed, 1:100,
 penalises HFT — fits this design). Rules live in `config/prop_firms.yaml` and are
 just parameters; other firms (E8, FTMO, FundedNext, FundingPips) are included.
 
-- **Daily loss** 5% and **max loss** 10% (static) → floors in the risk manager,
-  with a safety buffer (α=0.80) so we stop before the hard limit to survive
-  slippage.
+- **Daily loss** 5% and **max loss** 10% (**trailing** — rides the equity
+  high-water mark) → floors in the risk manager, with a safety buffer (α=0.80)
+  so we stop before the hard limit to survive slippage. The trailing floor
+  never lowers, so the "trailing drawdown trap" from the research is handled
+  explicitly.
 - **Graduated Recovery Protocol**: 🟢 0–2% dd → 1% risk · 🟡 2–3.5% → 0.5%, A/A+
   only · 🔴 >3.5% → flat & block for the day.
 - **News blackout** ±2 min around high-impact events (fail-closed if the
@@ -73,16 +75,19 @@ propbot/
     settings.example.yaml    # account + market + execution settings
   propbot/
     schema.py                # TradePlan / AccountState / order contracts
+    config.py                # settings.yaml + prop_firms.yaml -> RiskLimits/specs
+    engine.py                # orchestration: analysis→watch→approve→execute→monitor
+    app.py                   # live VPS entrypoint: Engine + Telegram + scheduler
     risk/                    # deterministic RMS: zones, floors, sizing, veto
     state/                   # setup state machine + durable JSON store
-    market/                  # indicators (EMA/SMA/RSI/ATR) + news blackout
+    market/                  # indicators, news blackout, calendar (FF CSV->JSON)
     strategy/orb.py          # opening-range detection + conditional plans
     watcher/                 # candle-close watcher (arms/confirms/expires)
     llm/                     # analysis pack, prompt, Claude client, parser
     execution/               # base interface, mock, MT5, lifecycle+reconcile
     telegram/                # card formatting (pure) + bot runtime
     backtest/                # runner using the SAME risk + watcher as live
-  tests/                     # 57 stdlib unittest cases
+  tests/                     # 70 stdlib unittest cases
   demo.py                    # end-to-end flow on the mock adapter
 ```
 
@@ -98,12 +103,20 @@ survive a VPS/process restart.
 
 ## Run it
 
-Core + tests need **only the Python standard library** (3.11+):
+Core + tests need **only the Python standard library** (3.11+); PyYAML is the
+one extra for config loading:
 
 ```bash
-python3 -m unittest discover -s tests   # 57 tests
+python3 -m unittest discover -s tests   # 70 tests
 python3 demo.py                          # end-to-end flow, mock adapter
+python3 -m propbot.app                   # live loop (needs MT5/Telegram/API on the VPS)
 ```
+
+**Sizing sanity check (US30, $10k, 1% risk):** at the common $1/point-per-lot
+spec, 1% ($100) with a 40–100 pt stop = **1–2.5 lots**, margin ~$400–1050 (of
+$10k). Min lot 0.1 = $4–10 risk (0.04–0.1%), so index CFDs fit the small account
+with large headroom. Verify the point value on the platform; the risk manager
+sizes from whatever `symbol_specs` you set.
 
 Backtest (bring your own M15 CSV: `time,open,high,low,close[,volume]`):
 
@@ -142,7 +155,9 @@ into the prop account:
 
 ## Not yet built
 
-- Orchestrator (`app.py`) wiring the daily LLM call → watcher loop → Telegram.
-- Economic-calendar fetcher (currently a hand-maintained JSON).
-- Fully-autonomous mode (LLM via API on candle close) — deliberately deferred
-  until the human-approval flow proves out.
+- **Economic-calendar downloader.** `market/calendar.py` converts a Forex
+  Factory CSV export → the blackout JSON and validates it; automating the
+  weekly download on the VPS is left as an ops cron (kept out of the trading
+  process on purpose).
+- **Fully-autonomous mode** (LLM via API with no human tap) — deliberately
+  deferred until the human-approval flow proves out.

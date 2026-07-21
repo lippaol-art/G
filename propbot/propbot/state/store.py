@@ -22,10 +22,18 @@ class PlanStore:
         self._load()
 
     def _load(self) -> None:
-        if not os.path.exists(self.path):
+        if not os.path.exists(self.path) or os.path.getsize(self.path) == 0:
             return
         with open(self.path, "r", encoding="utf-8") as f:
-            raw = json.load(f)
+            content = f.read().strip()
+        if not content:
+            return
+        try:
+            raw = json.loads(content)
+        except json.JSONDecodeError:
+            # corrupt/partial state file — start clean rather than crash the bot;
+            # the atomic flush will overwrite it on the next upsert.
+            return
         self._plans = {pid: TradePlan.from_dict(d) for pid, d in raw.items()}
 
     def _flush(self) -> None:

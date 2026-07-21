@@ -1,3 +1,3 @@
-from .watcher import Watcher, evaluate_confirmation
+from .watcher import Watcher, WatchEvent, evaluate_confirmation
 
-__all__ = ["Watcher", "evaluate_confirmation"]
+__all__ = ["Watcher", "WatchEvent", "evaluate_confirmation"]

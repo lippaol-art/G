@@ -54,16 +54,19 @@ firms:
     profit_target_p2: 0.05               # Step 2 = 5%
     daily_loss_limit: 0.05               # 5% of balance
     max_drawdown: 0.10                   # Max Loss $1000 on $10k = 10%
-    drawdown_type: static                # VERIFY: static floor (initial - max loss)
+    drawdown_type: trailing              # Max Loss trails the equity high-water mark
     min_trading_days: 0                  # High Stakes: unlimited time / no min days (VERIFY)
     news_window_min: 2                   # no execution +/-2 min; no bracketing
     weekend_holding: true                # indices & FX
     min_trade_duration_sec: 300          # swing/intraday oriented, no HFT
     leverage: 100
     notes: >-
-      Chosen for the test ($10k / $69). Self-authored EA allowed, 1:100 leverage,
-      penalizes HFT/scalping. VERIFY index CFD contract specs (min lot & point
-      value) fit the small budget, and confirm Max Loss is static not trailing.
+      Chosen for the test ($10k / $69). Self-authored EA allowed (own source
+      code only — third-party/shared EAs, HFT, tick-scalping and external copy
+      are prohibited); our code + human approval is within policy. 1:100 leverage.
+      Max Loss is TRAILING (rides the equity high-water mark) — the risk manager
+      raises the floor as equity peaks, never lowers it. Sizing verified: US30 at
+      1% risk = ~1-2.5 lots, min-lot 0.1 fits with huge headroom.
 
   ftmo:
     label: "FTMO"

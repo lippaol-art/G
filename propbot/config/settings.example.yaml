@@ -8,10 +8,14 @@ account:
   currency: USD
   # Broker instrument specs for sizing. For an index CFD a "pip" is one index
   # point: set pip_size to the point size and pip_value_per_lot to the money
-  # value of a 1.0-lot 1-point move. VERIFY these with your broker's contract spec.
+  # value of a 1.0-lot 1-point move.
+  # VERIFY on the platform: right-click symbol -> Specification -> read contract
+  # size, min/step volume, tick value. Defaults below assume $1/point per 1.0 lot
+  # (contract size 1) — the most common case. Sizing at 1% risk on $10k then
+  # gives ~1-2.5 lots on US30; min lot 0.1 fits with huge headroom.
   symbol_specs:
-    US30:   { pip_size: 1.0, pip_value_per_lot: 1.0, volume_min: 0.01, volume_step: 0.01, digits: 1 }
-    NAS100: { pip_size: 1.0, pip_value_per_lot: 1.0, volume_min: 0.01, volume_step: 0.01, digits: 1 }
+    US30:   { pip_size: 1.0, pip_value_per_lot: 1.0, volume_min: 0.1, volume_step: 0.01, digits: 1 }
+    NAS100: { pip_size: 1.0, pip_value_per_lot: 1.0, volume_min: 0.1, volume_step: 0.01, digits: 1 }
 
 market:
   # Index CFDs (futures-like) on MT5. Symbol names vary per broker
