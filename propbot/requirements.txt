@@ -1,0 +1,17 @@
+# Core runtime is pure standard library (dataclasses, json, unittest, zoneinfo).
+# These are needed only for the LIVE deployment on the Windows VPS.
+
+# Config loading
+PyYAML>=6.0
+
+# Claude API (LLM day-analysis layer)
+anthropic>=0.116.0
+
+# Telegram bot (human approval loop)
+python-telegram-bot>=21.0
+
+# MetaTrader 5 bridge (Windows only — execution adapter)
+MetaTrader5>=5.0.45 ; platform_system == "Windows"
+
+# --- optional, for backtest data wrangling ---
+# pandas>=2.0
