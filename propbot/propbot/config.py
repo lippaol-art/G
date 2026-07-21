@@ -47,6 +47,30 @@ class Settings:
         return {symbol}
 
 
+def load_env_file(path: Optional[str] = None) -> None:
+    """Minimal .env loader (no python-dotenv dependency).
+
+    Reads KEY=VALUE lines and populates os.environ WITHOUT overwriting vars
+    already set in the shell. Lets the operator paste the token/key once into
+    .env (in an editor, where pasting is reliable) instead of wrestling with
+    PowerShell quoting. Values are stripped of surrounding quotes and
+    whitespace, so a stray trailing newline can't sneak in.
+    """
+    path = path or os.path.join(os.path.dirname(_CONFIG_DIR), ".env")
+    if not os.path.exists(path):
+        return
+    with open(path, "r", encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            key, _, val = line.partition("=")
+            key = key.strip()
+            val = val.strip().strip('"').strip("'").strip()
+            if key and key not in os.environ:
+                os.environ[key] = val
+
+
 def _load_yaml(path: str) -> dict:
     with open(path, "r", encoding="utf-8") as f:
         return yaml.safe_load(f) or {}
@@ -54,6 +78,7 @@ def _load_yaml(path: str) -> dict:
 
 def load_settings(settings_path: Optional[str] = None,
                   firms_path: Optional[str] = None) -> Settings:
+    load_env_file()   # populate os.environ from .env before anything reads it
     settings_path = settings_path or os.path.join(_CONFIG_DIR, "settings.yaml")
     if not os.path.exists(settings_path):
         # fall back to the example so the loader is usable out of the box

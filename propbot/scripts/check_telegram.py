@@ -20,9 +20,23 @@ import os
 import sys
 import urllib.request
 
-# .strip() tolerates a stray newline/space from a multi-line paste, which
-# otherwise crashes with "URL can't contain control characters".
-TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "").strip()
+
+def _token_from_env_file() -> str:
+    """Fallback: read TELEGRAM_BOT_TOKEN from ../.env so you don't have to set
+    a PowerShell env var (pasting into .env in an editor is more reliable)."""
+    path = os.path.join(os.path.dirname(os.path.dirname(__file__)), ".env")
+    if not os.path.exists(path):
+        return ""
+    with open(path, "r", encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if line.startswith("TELEGRAM_BOT_TOKEN=") and "=" in line:
+                return line.partition("=")[2].strip().strip('"').strip("'").strip()
+    return ""
+
+
+# .strip() tolerates a stray newline/space from a paste; fall back to .env.
+TOKEN = (os.environ.get("TELEGRAM_BOT_TOKEN") or _token_from_env_file()).strip()
 
 
 def api(method: str, params: dict | None = None) -> dict:
