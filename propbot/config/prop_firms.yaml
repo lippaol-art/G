@@ -1,0 +1,126 @@
+# Prop firm rule sets.
+#
+# Numbers are typical/representative values distilled from public rules and the
+# feasibility research in docs/. THEY CHANGE OFTEN and differ per account type.
+# ALWAYS re-verify against the firm's current rulebook before trading real money.
+#
+# All percentages are fractions of the reference balance (0.05 == 5%).
+#
+# automation:
+#   full      - fully automated execution allowed
+#   ea_owned  - EA allowed but you must own/author the code
+#   assist    - only risk/assist EAs, no automated decisions
+#   forbidden - no automation
+#
+# drawdown_type: static | trailing
+# news_window_min: minutes around high-impact news where execution is blocked
+#                  on funded accounts (0 == allowed)
+
+defaults:
+  # Safety buffer (alpha) from the research: stop new risk well before the hard
+  # limit to survive slippage / spread widening on forced close. 0.80 => we treat
+  # 80% of the real daily-loss limit as our own hard stop.
+  safety_buffer: 0.80
+  # Graduated Recovery Protocol zones (drawdown fraction of day-start equity).
+  zones:
+    green:  { max_dd: 0.020, risk_per_trade: 0.010 }   # 0-2%   drawdown -> 1.0% risk
+    yellow: { max_dd: 0.035, risk_per_trade: 0.005 }   # 2-3.5% drawdown -> 0.5% risk, A+ only
+    red:    { max_dd: 1.000, risk_per_trade: 0.000 }   # >3.5%  -> flat & block for the day
+  max_concurrent_positions: 2
+  max_correlated_exposure: 1          # positions sharing a correlation group
+  slippage_pips_buffer: 3             # reserve for slippage in sizing/limits
+
+firms:
+  e8_markets:
+    label: "E8 Markets"
+    automation: full
+    copy_trading: own_accounts
+    profit_target_p1: 0.08
+    profit_target_p2: 0.05
+    daily_loss_limit: 0.05
+    max_drawdown: 0.08
+    drawdown_type: trailing
+    min_trading_days: 3
+    news_window_min: 5          # SimFi Performance (funded)
+    weekend_holding: true       # E8 Pro; forbidden on Signature
+    min_trade_duration_sec: 0
+    notes: "Most permissive for systematic traders. Full automation allowed."
+
+  the5ers_high_stakes:
+    label: "The5ers - High Stakes 2-Step"
+    automation: ea_owned
+    copy_trading: own_accounts_limited   # High Stakes / Hyper Growth up to 500k
+    profit_target_p1: 0.10               # Step 1 = 10% (per checkout screen)
+    profit_target_p2: 0.05               # Step 2 = 5%
+    daily_loss_limit: 0.05               # 5% of balance
+    max_drawdown: 0.10                   # Max Loss $1000 on $10k = 10%
+    drawdown_type: static                # VERIFY: static floor (initial - max loss)
+    min_trading_days: 0                  # High Stakes: unlimited time / no min days (VERIFY)
+    news_window_min: 2                   # no execution +/-2 min; no bracketing
+    weekend_holding: true                # indices & FX
+    min_trade_duration_sec: 300          # swing/intraday oriented, no HFT
+    leverage: 100
+    notes: >-
+      Chosen for the test ($10k / $69). Self-authored EA allowed, 1:100 leverage,
+      penalizes HFT/scalping. VERIFY index CFD contract specs (min lot & point
+      value) fit the small budget, and confirm Max Loss is static not trailing.
+
+  ftmo:
+    label: "FTMO"
+    automation: ea_owned
+    copy_trading: own_accounts_max2
+    profit_target_p1: 0.10
+    profit_target_p2: 0.05
+    daily_loss_limit: 0.05
+    max_drawdown: 0.10
+    drawdown_type: static
+    min_trading_days: 4
+    news_window_min: 5          # Standard funded
+    weekend_holding: false      # Standard; allowed on Swing
+    min_trade_duration_sec: 0
+    notes: "3rd-party EA risks parameter convergence / group-trading flag."
+
+  fundednext:
+    label: "FundedNext"
+    automation: ea_owned        # MT4/MT5 with fee; blocked on cTrader/Match-Trader
+    copy_trading: own_accounts
+    profit_target_p1: 0.08
+    profit_target_p2: 0.06
+    daily_loss_limit: 0.05
+    max_drawdown: 0.10
+    drawdown_type: static
+    min_trading_days: 5
+    news_window_min: 3
+    weekend_holding: true
+    min_trade_duration_sec: 0
+    notes: "No HFT/grid/martingale. Bots built to pass challenges are banned."
+
+  fundingpips:
+    label: "FundingPips"
+    automation: ea_owned        # must prove code authorship
+    copy_trading: own_accounts
+    profit_target_p1: 0.08
+    profit_target_p2: 0.05
+    daily_loss_limit: 0.05
+    max_drawdown: 0.10
+    drawdown_type: trailing
+    min_trading_days: 3
+    news_window_min: 2
+    weekend_holding: false      # allowed only on swing accounts
+    min_trade_duration_sec: 0
+    notes: "Requires source code / live logic demo. No tick scalping."
+
+  alpha_capital:
+    label: "Alpha Capital Group"
+    automation: assist          # NO automated decisions; helper EAs only
+    copy_trading: external_verified
+    profit_target_p1: 0.08
+    profit_target_p2: 0.05
+    daily_loss_limit: 0.05
+    max_drawdown: 0.10
+    drawdown_type: static
+    min_trading_days: 3
+    news_window_min: 2          # Pro; 5 on One/Three
+    weekend_holding: false      # Pro soft-breach
+    min_trade_duration_sec: 120 # avg trade duration must exceed 2 min
+    notes: "Fully automated entries FORBIDDEN. Human-in-the-loop only."

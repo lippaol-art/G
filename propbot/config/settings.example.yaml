@@ -1,0 +1,48 @@
+# Copy to settings.yaml and fill in. settings.yaml is gitignored (never commit it).
+# Secrets (tokens, passwords) go in .env, NOT here.
+
+prop_firm: the5ers_high_stakes   # key from config/prop_firms.yaml
+phase: p1                        # p1 | p2 | funded
+account:
+  initial_balance: 10000         # The5ers High Stakes $10k test account
+  currency: USD
+  # Broker instrument specs for sizing. For an index CFD a "pip" is one index
+  # point: set pip_size to the point size and pip_value_per_lot to the money
+  # value of a 1.0-lot 1-point move. VERIFY these with your broker's contract spec.
+  symbol_specs:
+    US30:   { pip_size: 1.0, pip_value_per_lot: 1.0, volume_min: 0.01, volume_step: 0.01, digits: 1 }
+    NAS100: { pip_size: 1.0, pip_value_per_lot: 1.0, volume_min: 0.01, volume_step: 0.01, digits: 1 }
+
+market:
+  # Index CFDs (futures-like) on MT5. Symbol names vary per broker
+  # (US30 / DJI30 / DE40 / GER40 / NAS100 / USTEC ...). Verify with the broker.
+  symbols: [US30, NAS100]
+  timeframe: M15             # decision / confirmation timeframe
+  # Correlation groups: symbols in the same group count as shared exposure.
+  # US indices move together, so one directional shock hits both at once.
+  correlation_groups:
+    us_indices: [US30, NAS100, SPX500]
+
+execution:
+  adapter: mock              # mock | mt5   (mock = paper trading, no real orders)
+  deviation_points: 15       # max slippage tolerated on order send
+  magic_base: 20260101       # base magic number (randomised per instance)
+
+llm:
+  provider: anthropic
+  model: claude-opus-4-8
+  # Interval-based analysis is fine on M15/H1. Avoid sub-minute (HFT rules).
+  analyze_on_candle_close: true
+
+confirmation:
+  # Require a technical confirmation before pinging Telegram for approval.
+  require_technical: true
+  # Optionally ask the LLM one final yes/no when the technical trigger fires.
+  require_llm_final_check: true
+  # Add stochastic entry delay to avoid group-trading correlation flags (ms).
+  entry_jitter_ms: [500, 5000]
+
+telegram:
+  enabled: true
+  # chat_id the bot is allowed to talk to (your own). Token lives in .env.
+  allowed_chat_ids: []

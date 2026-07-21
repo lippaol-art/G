@@ -1,0 +1,22 @@
+# Secrets & local config — NEVER commit these
+.env
+.env.*
+config/settings.yaml
+*.key
+*.pem
+
+# Runtime state
+*.db
+*.sqlite
+state/*.json
+data/
+logs/
+*.log
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
