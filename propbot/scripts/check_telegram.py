@@ -20,7 +20,9 @@ import os
 import sys
 import urllib.request
 
-TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "")
+# .strip() tolerates a stray newline/space from a multi-line paste, which
+# otherwise crashes with "URL can't contain control characters".
+TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "").strip()
 
 
 def api(method: str, params: dict | None = None) -> dict:

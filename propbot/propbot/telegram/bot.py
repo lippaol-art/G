@@ -50,7 +50,8 @@ class PropBot:
         if not HAS_TELEGRAM:
             raise RuntimeError("python-telegram-bot not installed "
                                "(pip install -r requirements.txt on the VPS)")
-        self.token = token or os.environ["TELEGRAM_BOT_TOKEN"]
+        # strip() guards against a stray newline/space from a shell paste
+        self.token = (token or os.environ["TELEGRAM_BOT_TOKEN"]).strip()
         self.allowed_chat_ids = allowed_chat_ids or set()
         self.on_approve = on_approve
         self.on_cancel = on_cancel
