@@ -45,10 +45,14 @@ def main() -> None:
         if not info.visible:
             mt5.symbol_select(sym, True)
             info = mt5.symbol_info(sym)
-        # value of a 1.0-lot, 1-point move in account currency
+        # Value of a 1.0-lot move of ONE FULL PRICE UNIT (e.g. one index point,
+        # like 52196 -> 52197) in account currency. Our strategy expresses SL/TP
+        # distances in raw price units, not in the broker's minimal tick, so we
+        # must NOT multiply by info.point (the tick size) here — that undercounts
+        # by 100x on brokers quoting with 2 decimals (point=0.01, digits=2).
         pip_value_per_lot = None
         if info.trade_tick_size:
-            pip_value_per_lot = info.trade_tick_value / info.trade_tick_size * info.point
+            pip_value_per_lot = info.trade_tick_value / info.trade_tick_size
         print(f"── {sym} ──")
         print(f"   point={info.point} digits={info.digits} "
               f"contract_size={info.trade_contract_size}")
@@ -56,8 +60,10 @@ def main() -> None:
         print(f"   volume_min={info.volume_min} step={info.volume_step} "
               f"max={info.volume_max}")
         if pip_value_per_lot:
-            print(f"   => pip_value_per_lot (1pt @ 1.0 lot) ≈ "
+            print(f"   => pip_value_per_lot (1 full price unit @ 1.0 lot) ≈ "
                   f"{pip_value_per_lot:.4f} {acct.currency if acct else ''}")
+            print(f"   => put in settings.yaml: pip_size: 1.0, "
+                  f"pip_value_per_lot: {pip_value_per_lot:.4f}")
             # quick sizing sanity for 1% on this account
             if acct:
                 risk = acct.equity * 0.01

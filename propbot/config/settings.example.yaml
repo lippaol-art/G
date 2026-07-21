@@ -10,12 +10,16 @@ account:
   # point: set pip_size to the point size and pip_value_per_lot to the money
   # value of a 1.0-lot 1-point move.
   # VERIFY on the platform: right-click symbol -> Specification -> read contract
-  # size, min/step volume, tick value. Defaults below assume $1/point per 1.0 lot
-  # (contract size 1) — the most common case. Sizing at 1% risk on $10k then
-  # gives ~1-2.5 lots on US30; min lot 0.1 fits with huge headroom.
+  # size, min/step volume, tick value, OR run `python scripts/check_mt5.py
+  # <symbol>` which prints exactly these values. Confirmed on a MetaQuotes-Demo
+  # account 2026-07-22: US30 contract_size=1.0, tick_size=tick_value=0.01 (2
+  # decimal quoting) -> pip_value_per_lot = tick_value/tick_size = $1.00 per
+  # index point per 1.0 lot. volume_min=0.1, step=0.1. At 1% risk on $10k this
+  # gives ~1-2.5 lots on a 40-100pt stop; min lot 0.1 fits with huge headroom.
+  # Re-verify per broker — these numbers vary.
   symbol_specs:
-    US30:   { pip_size: 1.0, pip_value_per_lot: 1.0, volume_min: 0.1, volume_step: 0.01, digits: 1 }
-    NAS100: { pip_size: 1.0, pip_value_per_lot: 1.0, volume_min: 0.1, volume_step: 0.01, digits: 1 }
+    US30:   { pip_size: 1.0, pip_value_per_lot: 1.0, volume_min: 0.1, volume_step: 0.1, digits: 2 }
+    NAS100: { pip_size: 1.0, pip_value_per_lot: 1.0, volume_min: 0.1, volume_step: 0.1, digits: 2 }
 
 market:
   # Index CFDs (futures-like) on MT5. Symbol names vary per broker
