@@ -17,7 +17,13 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import os
+import sys
 from datetime import datetime, timezone
+
+# Make the project root importable when run as `python scripts/replay.py`
+# (running a script by path puts scripts/ on sys.path, not the project root).
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from propbot.backtest.runner import load_candles_csv
 from propbot.config import load_settings, resolve_risk_limits
