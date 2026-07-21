@@ -112,7 +112,7 @@ class Watcher:
                 produced.append(ev); self.on_event(ev)
                 continue
 
-            # 3. Zone tracking.
+            # 3. Zone tracking (arming is a "price approaching" heads-up).
             in_zone = plan.price_in_zone(last.close)
             if plan.state is SetupState.WAITING_FOR_PRICE and in_zone:
                 StateMachine.transition(plan, SetupState.ARMED,
@@ -120,23 +120,29 @@ class Watcher:
                 self.store.upsert(plan)
                 ev = WatchEvent("armed", plan)
                 produced.append(ev); self.on_event(ev)
-                # fall through: confirmations may already hold on this candle
 
-            # 4. Confirmations (only when armed).
-            if plan.state is SetupState.ARMED:
-                if all(evaluate_confirmation(r, candles) for r in plan.confirmations):
-                    StateMachine.transition(plan, SetupState.CONFIRMED,
-                                            "all confirmations satisfied", now=ts)
-                    self.store.upsert(plan)
-                    ev = WatchEvent("confirmed", plan,
-                                    detail=f"close={last.close}")
-                    produced.append(ev); self.on_event(ev)
-                elif not in_zone and not plan.confirmations:
-                    # zone-only plans that drift out just disarm
-                    StateMachine.transition(plan, SetupState.WAITING_FOR_PRICE,
-                                            "price left zone", now=ts)
-                    self.store.upsert(plan)
-                    ev = WatchEvent("disarmed", plan)
-                    produced.append(ev); self.on_event(ev)
+            # 4. Confirmations. A close beyond the edge confirms even if it
+            #    overshot the zone (a strong breakout candle) — so we check from
+            #    WAITING too, not only ARMED, or we'd miss explosive moves.
+            if plan.state in (SetupState.WAITING_FOR_PRICE, SetupState.ARMED) \
+                    and plan.confirmations \
+                    and all(evaluate_confirmation(r, candles)
+                            for r in plan.confirmations):
+                if plan.state is SetupState.WAITING_FOR_PRICE:
+                    StateMachine.transition(plan, SetupState.ARMED,
+                                            "confirmed on arrival", now=ts)
+                StateMachine.transition(plan, SetupState.CONFIRMED,
+                                        "all confirmations satisfied", now=ts)
+                self.store.upsert(plan)
+                ev = WatchEvent("confirmed", plan, detail=f"close={last.close}")
+                produced.append(ev); self.on_event(ev)
+            elif plan.state is SetupState.ARMED and not in_zone \
+                    and not plan.confirmations:
+                # zone-only plans that drift out just disarm
+                StateMachine.transition(plan, SetupState.WAITING_FOR_PRICE,
+                                        "price left zone", now=ts)
+                self.store.upsert(plan)
+                ev = WatchEvent("disarmed", plan)
+                produced.append(ev); self.on_event(ev)
 
         return produced
