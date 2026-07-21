@@ -54,7 +54,8 @@ def build_engine(settings: Settings, adapter=None) -> Engine:
         except Exception as e:   # missing SDK / key -> engine falls back to grade B
             print(f"[app] LLM disabled: {e}")
     return Engine(adapter, risk, store, settings, analyst=analyst,
-                  calendar=calendar, orb_cfg=ORBConfig())
+                  calendar=calendar, orb_cfg=ORBConfig(),
+                  news_fail_closed=settings.news_fail_closed)
 
 
 class App:

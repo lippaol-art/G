@@ -35,6 +35,11 @@ execution:
   adapter: mock              # mock | mt5   (mock = paper trading, no real orders)
   deviation_points: 15       # max slippage tolerated on order send
   magic_base: 20260101       # base magic number (randomised per instance)
+  # news_fail_closed: block execution when no/stale news calendar is loaded.
+  # false = demo/paper can trade without a calendar (fine on demo — no payout).
+  # ⚠️ SET true (and load data/calendar.json) BEFORE the real challenge —
+  # The5ers penalises execution within ±2 min of high-impact news.
+  news_fail_closed: false
 
 llm:
   provider: anthropic

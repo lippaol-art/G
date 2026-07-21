@@ -32,6 +32,7 @@ class Settings:
     adapter: str
     deviation_points: int
     magic_base: int
+    news_fail_closed: bool
     entry_jitter_ms: tuple[int, int]
     require_llm_final_check: bool
     telegram_enabled: bool
@@ -92,6 +93,9 @@ def load_settings(settings_path: Optional[str] = None,
         adapter=execu.get("adapter", "mock"),
         deviation_points=int(execu.get("deviation_points", 15)),
         magic_base=int(execu.get("magic_base", 20260101)),
+        # default False = demo-friendly (no calendar needed to trade); the
+        # example config documents flipping it true for the real challenge.
+        news_fail_closed=bool(execu.get("news_fail_closed", False)),
         entry_jitter_ms=(int(jitter[0]), int(jitter[1])),
         require_llm_final_check=bool(conf.get("require_llm_final_check", False)),
         telegram_enabled=bool(tg.get("enabled", False)),
