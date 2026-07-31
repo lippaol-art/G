@@ -1,9 +1,9 @@
 # Sanity-report danych — MNQ 1m
 
-Wygenerowano: 2026-07-31T21:43:58  
+Wygenerowano: 2026-07-31T22:21:28  
 Plik: `data/clean/mnq_1m_cont.parquet`  
-SHA-256: `394b6ce3b19c2576b22ae394f193626edbc87707048034c748a27c804cc53fdc`  
-Rozmiar: 47.8 MB
+SHA-256: `7b9be5aa8cccb1e0debfcf8291bfd1c4c6a12138e723c074fdd4ffb31400f4c2`  
+Rozmiar: 35.2 MB
 
 ## Podstawowe liczby
 
