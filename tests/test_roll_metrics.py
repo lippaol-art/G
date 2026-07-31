@@ -39,32 +39,60 @@ from engine.roll import (
 
 class TestRoll:
     def _dwa_kontrakty(self):
-        """MNQH5 traci plynnosc, MNQM5 ja przejmuje 2025-03-13."""
+        """MNQH5 traci plynnosc, MNQM5 przejmuje ja od 2025-03-13.
+
+        MNQH5 wygasa w trzeci piatek marca 2025 (2025-03-21), wiec wszystkie
+        te dni leza w oknie poszukiwania. Przewaga MNQM5 trwa TRZY kolejne dni
+        (13, 14, 17 marca) — tyle wymaga `min_consecutive`.
+        """
         h5 = [
             ContractDay(date(2025, 3, 11), "MNQH5", 20000.0, 900_000),
             ContractDay(date(2025, 3, 12), "MNQH5", 20010.0, 700_000),
             ContractDay(date(2025, 3, 13), "MNQH5", 20020.0, 300_000),
             ContractDay(date(2025, 3, 14), "MNQH5", 20030.0, 100_000),
+            ContractDay(date(2025, 3, 17), "MNQH5", 20040.0, 50_000),
         ]
         m5 = [
             ContractDay(date(2025, 3, 11), "MNQM5", 20100.0, 100_000),
             ContractDay(date(2025, 3, 12), "MNQM5", 20110.0, 400_000),
             ContractDay(date(2025, 3, 13), "MNQM5", 20125.0, 800_000),
             ContractDay(date(2025, 3, 14), "MNQM5", 20135.0, 950_000),
+            ContractDay(date(2025, 3, 17), "MNQM5", 20145.0, 990_000),
         ]
         return {"MNQH5": h5, "MNQM5": m5}
 
-    def test_rolowanie_w_dniu_przewagi_wolumenu(self):
-        """Regula wolumenowa, nie kalendarzowa — odzwierciedla migracje plynnosci."""
+    def test_rolowanie_w_pierwszym_dniu_trwalej_przewagi(self):
+        """Regula wolumenowa, nie kalendarzowa. Data = PIERWSZY dzien serii."""
         ev = find_roll_dates(self._dwa_kontrakty(), ["MNQH5", "MNQM5"])
         assert len(ev) == 1
         assert ev[0].roll_date == date(2025, 3, 13)
         assert ev[0].spread == pytest.approx(20125.0 - 20020.0)   # +105
 
+    def test_jednodniowy_skok_wolumenu_nie_wyzwala_rolowania(self):
+        """Zabezpieczenie z audytu: pojedyncza transakcja pakietowa nie moze
+        przesadzac o dacie rolowania."""
+        dane = self._dwa_kontrakty()
+        m5 = list(dane["MNQM5"])
+        # przewaga tylko w jednym dniu (13.03), potem znowu slabo
+        m5[3] = ContractDay(date(2025, 3, 14), "MNQM5", 20135.0, 10_000)
+        m5[4] = ContractDay(date(2025, 3, 17), "MNQM5", 20145.0, 10_000)
+        dane["MNQM5"] = m5
+        assert find_roll_dates(dane, ["MNQH5", "MNQM5"]) == []
+
+    def test_przewaga_poza_oknem_wygasniecia_ignorowana(self):
+        """Kontrakty listuja sie ponad rok wczesniej. Przewaga wolumenu
+        dziesiec miesiecy przed wygasnieciem to artefakt rzadkiego handlu,
+        nie rolowanie — na realnych danych dawala spready rzedu setek punktow.
+        """
+        dawno = [date(2024, 5, 6), date(2024, 5, 7), date(2024, 5, 8)]
+        h5 = [ContractDay(d, "MNQH5", 18000.0, 5) for d in dawno]
+        m5 = [ContractDay(d, "MNQM5", 18400.0, 50) for d in dawno]
+        assert find_roll_dates({"MNQH5": h5, "MNQM5": m5}, ["MNQH5", "MNQM5"]) == []
+
     def test_brak_rolowania_gdy_wolumen_nie_przechodzi(self):
         dane = self._dwa_kontrakty()
-        for d in dane["MNQM5"]:
-            object.__setattr__(d, "volume", 1)
+        dane["MNQM5"] = [ContractDay(d.trade_date, d.contract, d.close, 1)
+                         for d in dane["MNQM5"]]
         assert find_roll_dates(dane, ["MNQH5", "MNQM5"]) == []
 
     def test_offset_najnowszego_kontraktu_to_zero(self):

@@ -24,7 +24,13 @@ from datetime import date, datetime
 import polars as pl
 
 from engine.loader import REQUIRED_COLUMNS
-from engine.roll import ContractDay, RollEvent, cumulative_offsets, find_roll_dates
+from engine.roll import (
+    ContractDay,
+    RollEvent,
+    contract_expiry,
+    cumulative_offsets,
+    find_roll_dates,
+)
 from engine.sessions import (
     SessionCalendar,
     in_historical_halt,
@@ -95,8 +101,20 @@ def _contract_days(df: pl.DataFrame) -> dict[str, list[ContractDay]]:
 
 
 def _contract_order(days: dict[str, list[ContractDay]]) -> list[str]:
-    """Kolejnosc kontraktow wg pierwszego dnia notowania."""
-    return sorted(days, key=lambda c: min(d.trade_date for d in days[c]))
+    """Kolejnosc kontraktow wg WYGASNIECIA odczytanego z kodu symbolu.
+
+    NIE wg daty pierwszego notowania — kontrakty listuja sie ponad rok wczesniej
+    i czesto tego samego dnia, co daje bledna kolejnosc (na realnych danych MNQ:
+    grudzien przed wrzesniem) i rolowanie liczone wstecz. Szczegoly w
+    `engine.roll.contract_expiry`.
+    """
+    def klucz(c: str):
+        try:
+            return contract_expiry(c)
+        except ValueError:
+            # Symbol nie do rozpoznania — na koniec, zeby nie psul kolejnosci
+            return (9999, 99)
+    return sorted(days, key=klucz)
 
 
 def _classify_gaps(ts: list[datetime], calendar: SessionCalendar, rep: BuildReport) -> list[str]:

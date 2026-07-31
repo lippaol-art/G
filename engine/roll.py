@@ -28,7 +28,47 @@ ROZDZIELENIE SERII (kluczowa poprawka v1.1):
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, timedelta
+
+# Kody miesiecy CME. MNQ/NQ/ES uzywaja cyklu kwartalnego: H, M, U, Z.
+MONTH_CODES = {
+    "F": 1, "G": 2, "H": 3, "J": 4, "K": 5, "M": 6,
+    "N": 7, "Q": 8, "U": 9, "V": 10, "X": 11, "Z": 12,
+}
+
+
+def contract_expiry(symbol: str, *, decade_base: int = 2020) -> tuple[int, int]:
+    """Wygasniecie kontraktu (rok, miesiac) odczytane z kodu symbolu.
+
+    KLUCZOWE DLA POPRAWNOSCI ROLOWANIA. Kolejnosci kontraktow NIE WOLNO
+    wyznaczac z daty pierwszego notowania: kontrakty listuja sie ponad rok
+    przed wygasnieciem i czesto tego samego dnia. Na realnych danych MNQ
+    sortowanie po pierwszym barze dalo kolejnosc 'M3, Z3, U3' — grudzien przed
+    wrzesniem — przez co regula wolumenowa liczyla rolowanie WSTECZ,
+    z kontraktu grudniowego na wrzesniowy.
+
+    Format: [ROOT][kod miesiaca][cyfra roku], np. MNQH5 = marzec 2025.
+    Cyfra roku jest jednoznaczna tylko w obrebie dekady — `decade_base`
+    okresla, do ktorej dekady ja odnosic (dla naszego zakresu 2019-2026
+    cyfra 9 oznacza 2019, cyfry 0-6 lata 2020-2026).
+    """
+    s = symbol.strip().upper()
+    if len(s) < 2:
+        raise ValueError(f"symbol za krotki: {symbol!r}")
+
+    rok_cyfra = s[-1]
+    kod_mies = s[-2]
+    if not rok_cyfra.isdigit() or kod_mies not in MONTH_CODES:
+        raise ValueError(f"nie moge odczytac wygasniecia z {symbol!r}")
+
+    cyfra = int(rok_cyfra)
+    rok = decade_base + cyfra
+    # Cyfra wyrazne wieksza od biezacej dekady oznacza dekade poprzednia
+    # (9 -> 2019, gdy decade_base = 2020).
+    if cyfra >= 7:
+        rok = decade_base - 10 + cyfra
+
+    return rok, MONTH_CODES[kod_mies]
 
 
 @dataclass(frozen=True)
@@ -55,15 +95,39 @@ class ContractDay:
     volume: int
 
 
+def third_friday(year: int, month: int) -> date:
+    """Trzeci piatek miesiaca — dzien wygasniecia kontraktow indeksowych CME."""
+    d = date(year, month, 1)
+    # dni do pierwszego piatku (weekday 4)
+    do_piatku = (4 - d.weekday()) % 7
+    return date(year, month, 1 + do_piatku + 14)
+
+
 def find_roll_dates(
     days_by_contract: dict[str, list[ContractDay]],
     contract_order: list[str],
+    *,
+    window_days: int = 45,
+    min_consecutive: int = 3,
 ) -> list[RollEvent]:
-    """Wyznacza daty rolowan regula wolumenowa.
+    """Wyznacza daty rolowan regula wolumenowa — z dwoma zabezpieczeniami.
 
-    Dla kazdej pary kolejnych kontraktow szuka pierwszego dnia, w ktorym
-    wolumen nastepnego przewyzsza wolumen biezacego, i zapisuje spread cen
-    zamkniecia z TEGO SAMEGO dnia (oba kontrakty musza miec tego dnia notowanie).
+    Naiwna wersja ("pierwszy dzien, w ktorym nastepny ma wiekszy wolumen")
+    zawodzi na realnych danych, bo kontrakty listuja sie ponad rok przed
+    wygasnieciem. Na rzadkim dniu, gdy oba maja znikomy obrot, dalszy kontrakt
+    potrafi przypadkiem przebic blizszy — i rolowanie wypada np. dziesiec
+    miesiecy za wczesnie, ze spreadem rzedu setek punktow.
+
+    Dwa warunki, ktore to eliminuja:
+
+    1. OKNO PRZY WYGASNIECIU (`window_days`) — kandydatow szukamy wylacznie
+       w oknie konczacym sie wygasnieciem biezacego kontraktu. Poza tym oknem
+       zaden z kontraktow nie jest jeszcze przednim miesiacem.
+
+    2. TRWALOSC PRZEWAGI (`min_consecutive`) — wolumen nastepnego musi
+       przewyzszac biezacy przez kilka kolejnych DNI NOTOWANIA. To odpowiedz
+       na ryzyko wskazane w audycie: pojedyncza transakcja pakietowa nie moze
+       przesadzac o dacie rolowania.
     """
     events: list[RollEvent] = []
 
@@ -71,16 +135,38 @@ def find_roll_dates(
         cur_days = {d.trade_date: d for d in days_by_contract.get(cur, [])}
         nxt_days = {d.trade_date: d for d in days_by_contract.get(nxt, [])}
         wspolne = sorted(set(cur_days) & set(nxt_days))
+        if not wspolne:
+            continue
 
-        for d in wspolne:
+        try:
+            rok, mies = contract_expiry(cur)
+            wygasniecie = third_friday(rok, mies)
+            okno_od = wygasniecie - timedelta(days=window_days)
+            kandydaci = [d for d in wspolne if okno_od <= d <= wygasniecie]
+            # BEZ fallbacku do calego zakresu: brak danych przy wygasnieciu
+            # oznacza, ze nie mamy podstaw do wyznaczenia rolowania. Siegniecie
+            # po dane sprzed miesiecy dawaloby wlasnie te bledna date, przed
+            # ktora zabezpiecza okno.
+        except ValueError:
+            # Symbolu nie da sie rozpoznac — dopiero wtedy caly wspolny zakres.
+            kandydaci = wspolne
+
+        seria = 0
+        for i, d in enumerate(kandydaci):
             if nxt_days[d].volume > cur_days[d].volume:
-                events.append(RollEvent(
-                    roll_date=d,
-                    from_contract=cur,
-                    to_contract=nxt,
-                    spread=nxt_days[d].close - cur_days[d].close,
-                ))
-                break
+                seria += 1
+                if seria >= min_consecutive:
+                    # rolujemy w PIERWSZYM dniu serii, nie w ostatnim
+                    d0 = kandydaci[i - min_consecutive + 1]
+                    events.append(RollEvent(
+                        roll_date=d0,
+                        from_contract=cur,
+                        to_contract=nxt,
+                        spread=nxt_days[d0].close - cur_days[d0].close,
+                    ))
+                    break
+            else:
+                seria = 0
 
     return events
 

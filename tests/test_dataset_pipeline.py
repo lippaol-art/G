@@ -31,16 +31,21 @@ def _bars(contract: str, start: datetime, n: int, px: float, vol: int) -> list[d
 
 @pytest.fixture
 def dwa_kontrakty() -> pl.DataFrame:
-    """MNQH5 traci plynnosc, MNQM5 przejmuje. Rolowanie w drugim dniu."""
-    d1 = datetime(2025, 3, 11, 14, 30, tzinfo=UTC)   # RTH
-    d2 = datetime(2025, 3, 12, 14, 30, tzinfo=UTC)
+    """MNQH5 traci plynnosc, MNQM5 przejmuje od drugiego dnia.
 
-    rows = (
-        _bars("MNQH5", d1, 30, 20000.0, 900)     # dzien 1: stary dominuje
-        + _bars("MNQM5", d1, 30, 20100.0, 100)
-        + _bars("MNQH5", d2, 30, 20010.0, 200)   # dzien 2: nowy przejmuje
-        + _bars("MNQM5", d2, 30, 20115.0, 800)
-    )
+    MNQH5 wygasa 2025-03-21 (trzeci piatek), wiec wszystkie te dni sa w oknie
+    poszukiwania rolowania. Przewaga MNQM5 trwa TRZY kolejne dni — tyle wymaga
+    zabezpieczenie przed jednodniowym skokiem wolumenu.
+    """
+    dni = [datetime(2025, 3, d, 14, 30, tzinfo=UTC) for d in (11, 12, 13, 14)]
+    rows = []
+    # dzien 1: stary kontrakt dominuje
+    rows += _bars("MNQH5", dni[0], 30, 20000.0, 900)
+    rows += _bars("MNQM5", dni[0], 30, 20100.0, 100)
+    # dni 2-4: nowy przejmuje plynnosc
+    for i, d in enumerate(dni[1:], start=1):
+        rows += _bars("MNQH5", d, 30, 20000.0 + i * 10, 200)
+        rows += _bars("MNQM5", d, 30, 20100.0 + i * 15, 800)
     return pl.DataFrame(rows)
 
 
