@@ -347,6 +347,21 @@ class _VolatilityTracker:
         return self._median
 
 
+def _czas_na_wyjscie(flat_by: time | Callable[[Bar], bool] | None, bar: Bar) -> bool:
+    """Czy pozycje trzeba domknac na tym barze (regula flat-by, tabela 5.4).
+
+    Godzina wystarcza strategii intraday ("zamknij wszystko o 15:55 ET"), ale
+    nie opisuje pozycji przenoszonej przez noc: dla niej "wyjscie o 9:30"
+    znaczy 9:30 NASTEPNEJ sesji, a nie kazda minuta po 9:30. Dlatego regula
+    przyjmuje takze predykat na barze — strategia sama mowi, kiedy jest koniec.
+    """
+    if flat_by is None:
+        return False
+    if isinstance(flat_by, time):
+        return to_et(bar.ts).time() >= flat_by
+    return bool(flat_by(bar))
+
+
 def _week_key(d: date) -> tuple[int, int]:
     iso = d.isocalendar()
     return (iso.year, iso.week)
@@ -371,7 +386,7 @@ def run(
     events: Sequence[datetime] = (),
     blackout_minutes: int = 10,
     blackout: bool = True,
-    flat_by: time | None = None,
+    flat_by: time | Callable[[Bar], bool] | None = None,
     state: dict | None = None,
     tag: str = "",
 ) -> Result:
@@ -410,7 +425,7 @@ def run(
         "require_stop": limits.require_stop,
         "blackout": blackout,
         "blackout_minutes": blackout_minutes,
-        "flat_by": flat_by.isoformat() if flat_by else None,
+        "flat_by": flat_by.isoformat() if isinstance(flat_by, time) else bool(flat_by),
         "n_events": len(events),
         "n_bars": len(bars),
         "tag": tag,
@@ -493,7 +508,7 @@ def run(
                     pos, bar, policy=policy, slippage_points=slip_pkt,
                     gap_slippage_points=gap_slip, subbar_resolver=subbar_resolver,
                 )
-                if wyjscie is None and flat_by is not None and to_et(bar.ts).time() >= flat_by:
+                if wyjscie is None and _czas_na_wyjscie(flat_by, bar):
                     wyjscie = (bar.close - slip_pkt if long else bar.close + slip_pkt, "flat_by")
                     res.forced_exits += 1
                 if wyjscie is None:
