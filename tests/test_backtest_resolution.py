@@ -9,7 +9,7 @@ silnik produkuje smieci z dokladnoscia do szesciu miejsc po przecinku.
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import pytest
 
@@ -24,12 +24,12 @@ from engine.backtest import (
     resolve_exit,
 )
 
-TS = datetime(2024, 3, 15, 14, 30, tzinfo=timezone.utc)
+TS = datetime(2024, 3, 15, 14, 30, tzinfo=UTC)
 SLIP = 0.25   # 1 tick w punktach
 
 
-def bar(o, h, l, c, volume=100):
-    return Bar(ts=TS, open=o, high=h, low=l, close=c, volume=volume)
+def bar(o, h, lo, c, volume=100):
+    return Bar(ts=TS, open=o, high=h, low=lo, close=c, volume=volume)
 
 
 def long_pos(entry=100.0, sl=98.0, tp=104.0):
@@ -147,7 +147,7 @@ def test_subbar_nierozstrzygniety_wraca_do_konserwatyzmu():
 
 def test_gap_wykonanie_po_open_nie_po_sl():
     """Tak dziala stop w rzeczywistosci — nie da sie wyjsc po cenie SL."""
-    b = bar(o=95.0, h=96.0, l=94.0, c=95.5)   # open juz ponizej SL=98
+    b = bar(o=95.0, h=96.0, lo=94.0, c=95.5)   # open juz ponizej SL=98
     px, reason = resolve_exit(long_pos(), b, slippage_points=SLIP)
     assert reason == "stop_gap"
     assert px == pytest.approx(95.0 - SLIP)
@@ -156,14 +156,14 @@ def test_gap_wykonanie_po_open_nie_po_sl():
 
 def test_gap_zwiekszony_poslizg():
     """Po otwarciu luka plynnosc jest bliska zeru — kara musi rosnac."""
-    b = bar(o=95.0, h=96.0, l=94.0, c=95.5)
+    b = bar(o=95.0, h=96.0, lo=94.0, c=95.5)
     zwykly = resolve_exit(long_pos(), b, slippage_points=SLIP)[0]
     duzy = resolve_exit(long_pos(), b, slippage_points=SLIP, gap_slippage_points=1.0)[0]
     assert duzy < zwykly
 
 
 def test_gap_short():
-    b = bar(o=105.0, h=106.0, l=104.0, c=105.5)   # open powyzej SL=102
+    b = bar(o=105.0, h=106.0, lo=104.0, c=105.5)   # open powyzej SL=102
     px, reason = resolve_exit(short_pos(), b, slippage_points=SLIP)
     assert reason == "stop_gap"
     assert px == pytest.approx(105.0 + SLIP)

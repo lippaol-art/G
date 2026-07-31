@@ -23,7 +23,6 @@ from validation.dsr import (
     sigma_sr_from_trials,
 )
 
-
 # --------------------------------------------------------------------------
 # REGRESJA: tabela wykonalnosci DSR z PLAN.pdf rozdz. 6.5
 # --------------------------------------------------------------------------
@@ -86,7 +85,7 @@ def test_sr0_rosnie_z_liczba_prob():
     sigma = sigma_sr_fallback(1000)
     vals = [expected_max_sr(n, sigma) for n in (1, 2, 5, 10, 50, 200)]
     assert vals[0] == 0.0
-    assert all(a < b for a, b in zip(vals, vals[1:]))
+    assert all(a < b for a, b in zip(vals, vals[1:], strict=False))
 
 
 def test_dsr_rosnie_z_dlugoscia_proby():

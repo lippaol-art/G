@@ -1,0 +1,62 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  quality:
+    name: Jakość kodu i niezmienniki projektu
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          # Pin wg PLAN.pdf rozdz. 11.2 — ib_async ma problemy z nowszymi wersjami
+          python-version: "3.12"
+          cache: pip
+
+      - name: Instalacja zależności
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e '.[dev]'
+          pip install ruff mypy
+
+      - name: Linter (ruff)
+        run: ruff check engine validation scripts tests
+
+      - name: Kontrola typów (mypy)
+        run: mypy engine validation --ignore-missing-imports
+        continue-on-error: true   # na razie informacyjnie; zaostrzyć po dopisaniu adnotacji
+
+      - name: Testy + pokrycie
+        run: |
+          PYTHONPATH=. pytest -q \
+            --cov=engine --cov=validation \
+            --cov-report=term-missing \
+            --cov-fail-under=75
+
+      - name: Strażnicy niezmienników projektu
+        # Uruchamiane osobno, żeby awaria była widoczna w logu jako odrębny krok:
+        # to nie są zwykłe testy, tylko kontrola zasad, na których stoi projekt.
+        run: PYTHONPATH=. pytest tests/test_guards.py -v
+
+  secrets:
+    name: Skan sekretów
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # pełna historia — klucz mógł wejść we wcześniejszym commicie
+
+      - name: Wzorce kluczy w historii repozytorium
+        run: |
+          echo "Szukam kluczy API w całej historii..."
+          if git log -p --all | grep -nE 'db-[A-Za-z0-9]{20,}'; then
+            echo "::error::Znaleziono wzorzec klucza Databento w historii repozytorium"
+            exit 1
+          fi
+          echo "OK — brak wzorców kluczy"

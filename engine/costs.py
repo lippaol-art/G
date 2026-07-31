@@ -100,10 +100,7 @@ def gap_stop_slippage_ticks(
 
         slip_gap = base + k * min(gap / ATR_M1, 4)
     """
-    if atr_m1 <= 0:
-        ratio = 0.0
-    else:
-        ratio = min(abs(gap_points) / atr_m1, GAP_SLIPPAGE_CAP)
+    ratio = 0.0 if atr_m1 <= 0 else min(abs(gap_points) / atr_m1, GAP_SLIPPAGE_CAP)
     return (base_ticks + GAP_SLIPPAGE_K * ratio) * stress_multiplier
 
 

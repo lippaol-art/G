@@ -172,7 +172,6 @@ def is_expected_gap(ts_from: datetime, ts_to: datetime,
     historycznego haltu. Wszystko inne -> anomalia do przejrzenia.
     """
     cal = calendar or SessionCalendar()
-    et_from, et_to = to_et(ts_from), to_et(ts_to)
 
     # Luka jednominutowa nie jest luka.
     if (ts_to - ts_from) <= timedelta(minutes=1):

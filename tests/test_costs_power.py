@@ -24,7 +24,6 @@ from validation.power import (
     required_sample_size,
 )
 
-
 # --------------------------------------------------------------------------
 # Koszty — regresja na liczbach z rozdz. 3.2
 # --------------------------------------------------------------------------
@@ -93,7 +92,7 @@ def test_poslizg_gap_rosnie_z_luka():
 def test_konwersje_jednostek():
     assert points_to_usd(10.0) == pytest.approx(20.0)      # mnoznik 2 USD/pkt
     assert points_to_usd(10.0, contracts=3) == pytest.approx(60.0)
-    assert TICK_VALUE == pytest.approx(0.50)
+    assert pytest.approx(0.50) == TICK_VALUE
 
 
 # --------------------------------------------------------------------------

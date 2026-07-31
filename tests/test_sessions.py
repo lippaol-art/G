@@ -6,7 +6,7 @@ awaria, tylko jako cicho zafalszowany wynik dwa razy w roku.
 
 from __future__ import annotations
 
-from datetime import date, datetime, timedelta, timezone
+from datetime import UTC, date, datetime, timedelta
 
 import pytest
 
@@ -24,7 +24,7 @@ from engine.sessions import (
 
 
 def utc(y, m, d, hh, mm=0):
-    return datetime(y, m, d, hh, mm, tzinfo=timezone.utc)
+    return datetime(y, m, d, hh, mm, tzinfo=UTC)
 
 
 def et(y, m, d, hh, mm=0):
@@ -105,16 +105,16 @@ def test_przerwa_serwisowa():
 
 def test_historyczny_halt_istnieje_przed_czerwcem_2021():
     """Halt 15:15-15:30 CT wystepuje w naszym oknie danych (2019-2021)."""
-    assert in_historical_halt(datetime(2020, 5, 12, 20, 20, tzinfo=timezone.utc))
+    assert in_historical_halt(datetime(2020, 5, 12, 20, 20, tzinfo=UTC))
 
 
 def test_historyczny_halt_zniesiony_po_2021_06_27():
-    assert not in_historical_halt(datetime(2022, 5, 12, 20, 20, tzinfo=timezone.utc))
-    assert not in_historical_halt(datetime(2024, 5, 12, 20, 20, tzinfo=timezone.utc))
+    assert not in_historical_halt(datetime(2022, 5, 12, 20, 20, tzinfo=UTC))
+    assert not in_historical_halt(datetime(2024, 5, 12, 20, 20, tzinfo=UTC))
 
 
 def test_halt_tylko_w_swoim_oknie():
-    assert not in_historical_halt(datetime(2020, 5, 12, 19, 0, tzinfo=timezone.utc))
+    assert not in_historical_halt(datetime(2020, 5, 12, 19, 0, tzinfo=UTC))
 
 
 # --------------------------------------------------------------------------

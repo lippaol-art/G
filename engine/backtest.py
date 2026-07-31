@@ -14,12 +14,13 @@ Zasady konstrukcyjne (gwarancje architektoniczne, nie konwencje):
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field, replace
-from enum import Enum
-from typing import Callable, Literal, Protocol, Sequence
+from collections.abc import Callable, Sequence
+from dataclasses import dataclass, field
+from enum import StrEnum
+from typing import Literal, Protocol
 
 
-class AmbiguousBarPolicy(str, Enum):
+class AmbiguousBarPolicy(StrEnum):
     """Rozstrzyganie bara dotykajacego jednoczesnie SL i TP (rozdz. 5.4).
 
     Regula "SL wygrywa" wydaje sie bezpiecznym konserwatyzmem, ale jest
@@ -220,11 +221,9 @@ class RiskGate:
         self._week_r[week_key] = self._week_r.get(week_key, 0.0) + r
 
     def blocked(self, trade_date_key: object, week_key: object) -> bool:
-        if self._day_r.get(trade_date_key, 0.0) <= -self.limits.daily_stop_r:
-            return True
-        if self._week_r.get(week_key, 0.0) <= -self.limits.weekly_stop_r:
-            return True
-        return False
+        day_hit = self._day_r.get(trade_date_key, 0.0) <= -self.limits.daily_stop_r
+        week_hit = self._week_r.get(week_key, 0.0) <= -self.limits.weekly_stop_r
+        return day_hit or week_hit
 
     def validate(self, order: Order, open_positions: int) -> None:
         if self.limits.require_stop and order.sl is None:
