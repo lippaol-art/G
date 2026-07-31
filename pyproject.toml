@@ -1,0 +1,39 @@
+[project]
+name = "projekt-g"
+version = "0.1.0"
+description = "Laboratorium strategii MNQ — silnik badawczy i aparat walidacyjny"
+requires-python = ">=3.11,<3.13"   # pin wg rozdz. 11.2: ib_async ma problemy z 3.14
+
+dependencies = [
+    "numpy>=1.26",
+    "scipy>=1.11",
+    "polars>=0.20",
+    "pyarrow>=14",
+    "matplotlib>=3.8",
+]
+
+[project.optional-dependencies]
+data = [
+    "databento>=0.34",       # Etap 1 — pobieranie danych historycznych
+]
+validation = [
+    "arch>=6.3",             # test SPA Hansena (rozdz. 7.2)
+]
+live = [
+    "ib_async>=1.0",         # Etap 5 — paper trading
+]
+dev = [
+    "pytest>=8.0",
+    "pytest-cov>=4.1",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q --strict-markers"
+markers = [
+    "needs_data: test wymaga realnych danych rynkowych w data/clean/",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"

@@ -1,0 +1,24 @@
+# === SEKRETY — nigdy w repo ===
+.env
+.env.*
+*.key
+secrets/
+
+# === Dane surowe — odtwarzalne z manifestu, za duże dla gita ===
+data/raw/
+*.dbn
+*.dbn.zst
+
+# === Python ===
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+*.egg-info/
+.coverage
+htmlcov/
+
+# === Robocze ===
+.ipynb_checkpoints/
+scratch/

@@ -1,0 +1,13 @@
+{
+  "_comment": "Globalny licznik prob projektu. Kazdy przebieg backtestu inkrementuje. Wejscie do DSR (PLAN.pdf rozdz. 6.5).",
+  "_rules": {
+    "max_variants_per_hypothesis": 10,
+    "max_variants_per_batch": 40,
+    "benchmarks_excluded": true,
+    "benchmarks_reason": "Uruchamiane raz z parametrami z literatury, bez optymalizacji — nie sa proba selekcji."
+  },
+  "total_trials": 0,
+  "by_hypothesis": {},
+  "trial_sharpes_daily": [],
+  "history": []
+}
