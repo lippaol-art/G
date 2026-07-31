@@ -16,8 +16,9 @@ niezależnych audytach zewnętrznych.
 |------|--------|
 | Dokument założycielski v1.1 | ✅ zrobione |
 | Etap 0 — fundament repo | ✅ zrobione |
-| Etap 2 — silnik i aparat walidacyjny | ✅ kompletny: 233 testy, pokrycie 90% |
-| Etap 1 — pobranie danych | ⛔ **zablokowane**: host `hist.databento.com` odrzucany przez politykę egress. Procedura wznowienia: **[HANDOFF.md](HANDOFF.md)** |
+| Etap 2 — silnik i aparat walidacyjny | ✅ kompletny: 322 testy, pokrycie 92% |
+| Pipeline danych, kalendarz CME, sanity-report, bramka silnika | ✅ kod gotowy, czeka na dane |
+| Etap 1 — pobranie danych | ⏳ **odblokowane sieciowo 31.07.2026**, czeka na klucz API w zmiennych środowiska. Procedura: **[HANDOFF.md](HANDOFF.md)** |
 | Etap 3 — fabryka hipotez | oczekuje na dane |
 
 ---
@@ -47,9 +48,12 @@ gdy zmiennej brak — nie ma wartości domyślnej.
 
 ```
 engine/          rdzeń silnika backtestowego
-  sessions.py    segmentacja doby w ET, DST, kalendarz CME, klasyfikacja luk
+  sessions.py    segmentacja doby w ET, DST, klasyfikacja luk
+  calendar_cme.py kalendarz giełdy generowany z reguł — święta i dni skrócone
   costs.py       model kosztów i poślizgu (baza 2.20 USD RT, skalowanie zmiennością)
-  backtest.py    tabela rozstrzygnięć wewnątrzbarowych, warstwa ryzyka
+  backtest.py    główna pętla, tabela rozstrzygnięć wewnątrzbarowych, warstwa ryzyka
+  clean.py       pipeline raw → clean (osiem kroków rozdz. 4.2)
+  sanity.py      raport jakości danych (rozdz. 4.6)
   guards.py      blokada lookaheadu, zakaz volume==0, rozdzielenie serii
   roll.py        rolowanie wolumenowe, back-adjust różnicowy, px_raw/px_adj
   features.py    ATR, VWAP, percentyle, poziomy referencyjne (tylko px_raw)
@@ -57,6 +61,7 @@ engine/          rdzeń silnika backtestowego
   loader.py      GRANICA — wymaga danych w data/clean/
 
 validation/      aparat statystyczny
+  engine_checks.py cztery testy silnika z rozdz. 5.6 — bramka przed eksploracją
   dsr.py         Deflated Sharpe Ratio, SR₀ wg FST, N_eff przez klastrowanie ONC
   power.py       moc testu i planowanie wielkości próby
   walkforward.py okna 12m/3m, purge + embargo, lockbox
@@ -70,7 +75,9 @@ hypotheses/
   REGISTRY.md    katalog hipotez: benchmarki, przeformułowane, kandydaci
 
 scripts/
-  build_dataset.py     pobranie danych (czeka na odblokowanie sieci)
+  build_dataset.py     pobranie danych (sieć OK, czeka na klucz API)
+  sanity_report.py     raport jakości → reports/data_quality.md
+  engine_validation.py bramka silnika: cztery testy z rozdz. 5.6
 
 tests/           pytest — w tym regresja na liczbach opublikowanych w PLAN.pdf
 docs/            dokument założycielski (HTML + PDF)
