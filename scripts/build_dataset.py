@@ -34,9 +34,20 @@ from datetime import date
 
 DATASET = "GLBX.MDP3"
 SCHEMA = "ohlcv-1m"
-SYMBOLS = ["MNQ", "NQ"]          # ES dodawany dla klasy K6 (rozdz. 4.7)
+SYMBOLS = ["MNQ", "NQ", "ES"]    # ES: test transferu (7.5) + baza klasy K6 (4.7)
 START = date(2019, 4, 14)        # start produktu MNQ na CME
 STYPE_IN = "parent"              # wszystkie nogi kontraktowe danego produktu
+
+
+def parent_symbol(root: str) -> str:
+    """Symbol w formacie wymaganym przez stype_in='parent'.
+
+    Databento oczekuje '[ROOT].FUT' — samo 'MNQ' konczy sie bledem
+    symbology_invalid_symbol. Sufiks dodajemy tu, zeby wywolania skryptu
+    przyjmowaly naturalne nazwy ('MNQ', nie 'MNQ.FUT').
+    """
+    root = root.upper().strip()
+    return root if root.endswith((".FUT", ".OPT", ".SPOT")) else f"{root}.FUT"
 
 
 def get_api_key() -> str:
@@ -63,7 +74,7 @@ def estimate_cost(client, symbols: list[str], start: date, end: date) -> float:
     for sym in symbols:
         cost = client.metadata.get_cost(
             dataset=DATASET,
-            symbols=[sym],
+            symbols=[parent_symbol(sym)],
             schema=SCHEMA,
             stype_in=STYPE_IN,
             start=start.isoformat(),
@@ -115,7 +126,7 @@ def main() -> int:
         print(f"\nPobieranie {sym}...")
         data = client.timeseries.get_range(
             dataset=DATASET,
-            symbols=[sym],
+            symbols=[parent_symbol(sym)],
             schema=SCHEMA,
             stype_in=STYPE_IN,
             start=args.start.isoformat(),

@@ -177,7 +177,11 @@ def is_expected_gap(ts_from: datetime, ts_to: datetime,
     if (ts_to - ts_from) <= timedelta(minutes=1):
         return True
 
-    cur = ts_from
+    # Luka to przedzial MIEDZY barami: minuta `ts_from` ma dane, wiec nie nalezy
+    # do luki. Rozpoczecie obchodu od `ts_from` zglaszaloby jako niepokryta
+    # minute, ktora jest pokryta z definicji — a to oznaczaloby falszywa
+    # anomalie na KAZDYM weekendzie (ostatni bar piatku lezy przed 17:00 ET).
+    cur = ts_from + timedelta(minutes=1)
     step = timedelta(minutes=1)
     while cur < ts_to:
         et = to_et(cur)
