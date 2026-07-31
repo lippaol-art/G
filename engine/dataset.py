@@ -47,6 +47,7 @@ class BuildReport:
     ohlc_violations: int = 0
     negative_volume: int = 0
     zero_volume_bars: int = 0
+    degraded_bars: int = 0
     expected_gaps: int = 0
     anomaly_gaps: list[tuple[datetime, datetime]] = field(default_factory=list)
     first_ts: datetime | None = None
@@ -119,11 +120,37 @@ def _classify_gaps(ts: list[datetime], calendar: SessionCalendar, rep: BuildRepo
     return kinds
 
 
+def load_degraded_days(path: str = "data/clean/degraded_days.json") -> dict[str, str]:
+    """Dni o obnizonej jakosci wg dostawcy (`metadata.get_dataset_condition`).
+
+    Dostawca oznacza czesc dni jako `degraded` albo `missing`. Wiekszosc
+    `missing` to soboty (brak handlu — zero problemu), ale kilka `degraded`
+    wypada w dni robocze i MUSI byc oznaczone w danych, bo:
+
+      * 2020-02-27 i 2020-02-28 to szczyt krachu covidowego, czyli najbardziej
+        ekstremalna zmiennosc w calej probce — dokladnie tam, gdzie strategia
+        moglaby "znalezc" przewage na artefakcie danych;
+      * analiza rezimow bez tej flagi nie odrozni prawdziwego zachowania rynku
+        od dziury w feedzie.
+
+    Zwraca mape 'YYYY-MM-DD' -> 'degraded'|'missing'. Brak pliku = pusta mapa
+    (flaga bedzie wszedzie False, co jest bezpiecznym domyslnym zachowaniem).
+    """
+    import json
+    from pathlib import Path
+
+    p = Path(path)
+    if not p.exists():
+        return {}
+    return json.loads(p.read_text())
+
+
 def build_continuous(
     df_raw: pl.DataFrame,
     *,
     calendar: SessionCalendar | None = None,
     report: BuildReport | None = None,
+    degraded_days: dict[str, str] | None = None,
 ) -> tuple[pl.DataFrame, BuildReport]:
     """Buduje kontrakt ciagly ze wszystkich nog kontraktowych.
 
@@ -132,6 +159,7 @@ def build_continuous(
     """
     cal = calendar or SessionCalendar()
     rep = report or BuildReport()
+    degraded = degraded_days if degraded_days is not None else load_degraded_days()
     rep.n_raw = df_raw.height
 
     # [1] dedup + sortowanie
@@ -205,8 +233,11 @@ def build_continuous(
         pl.Series("short_day", [d in cal.short_days for d in td_list]),
         pl.Series("days_to_roll", [_days_to_roll(d) for d in td_list]),
         pl.Series("dst_transition", [_is_dst_week(d) for d in td_list]),
+        pl.Series("data_condition",
+                  [degraded.get(d.isoformat(), "available") for d in td_list]),
     ])
 
+    rep.degraded_bars = int(df.filter(pl.col("data_condition") != "available").height)
     rep.zero_volume_bars = int(df.filter(pl.col("volume") == 0).height)
     rep.n_final = df.height
     if df.height:
@@ -235,11 +266,29 @@ def _is_dst_week(d: date) -> bool:
     return False
 
 
+def is_spread_symbol(symbol: str) -> bool:
+    """Czy symbol oznacza spread kalendarzowy, a nie kontrakt outright.
+
+    CME notuje spready jako 'MNQM9-MNQU9'. Databento zwraca je w tym samym
+    strumieniu co kontrakty zwykle — i to jest PULAPKA, bo ich ceny to
+    ROZNICE miedzy kontraktami (rzedu 14-31 punktow), a nie poziomy indeksu
+    (rzedu 7000-23000).
+
+    Pojedynczy bar spreadu wpuszczony do serii ciaglej wyglada jak krach
+    o 99.6% z natychmiastowym odbiciem w kolejnej minucie. Strategia
+    "kupuj spadki" zrobilaby na takich barach fikcyjna fortune — to jest
+    dokladnie ta klasa cichego bledu, ktory produkuje spektakularne wyniki
+    backtestu nie do powtorzenia na zywo.
+    """
+    return "-" in symbol
+
+
 def normalize_databento(df: pl.DataFrame) -> pl.DataFrame:
     """Mapuje surowy DataFrame Databento na schemat wejsciowy pipeline'u.
 
-    Databento zwraca ceny jako liczby calkowite w jednostkach 1e-9 oraz
-    `symbol` zamiast `contract`.
+    Odfiltrowuje spready kalendarzowe (patrz `is_spread_symbol`) i normalizuje
+    ceny — Databento potrafi zwracac je jako liczby calkowite w jednostkach
+    1e-9 albo juz jako float, zaleznie od sciezki odczytu.
     """
     kolumny = df.columns
     out = df
@@ -253,6 +302,10 @@ def normalize_databento(df: pl.DataFrame) -> pl.DataFrame:
 
     if "symbol" in out.columns and "contract" not in out.columns:
         out = out.rename({"symbol": "contract"})
+
+    # ODFILTROWANIE SPREADOW — musi nastapic przed jakakolwiek agregacja,
+    # inaczej zafalszuja i szereg cenowy, i regule wolumenowa rolowania.
+    out = out.filter(~pl.col("contract").str.contains("-"))
 
     return out.select(
         ["ts_utc", "open", "high", "low", "close", "volume", "contract"]

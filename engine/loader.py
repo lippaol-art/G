@@ -31,6 +31,7 @@ REQUIRED_COLUMNS = (
     "trade_date",      # dzien sesyjny (od 18:00 ET dnia poprzedniego)
     "segment",         # segment doby
     "gap_kind",        # "none" | "expected" | "anomaly"  (rozdz. 4.2 krok 3)
+    "data_condition",  # "available" | "degraded" | "missing" — wg dostawcy
 )
 
 OPTIONAL_COLUMNS = (

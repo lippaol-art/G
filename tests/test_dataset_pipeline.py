@@ -207,3 +207,41 @@ class TestNormalizacja:
             "volume": [100], "symbol": ["MNQH5"],
         })
         assert normalize_databento(df)["open"][0] == pytest.approx(20000.0)
+
+
+class TestSpready:
+    """Spready kalendarzowe w strumieniu Databento — pulapka wykryta na realnych danych.
+
+    CME notuje spready jako 'MNQM9-MNQU9' i Databento zwraca je razem z kontraktami
+    outright. Ich ceny to ROZNICE (14-31 pkt), nie poziomy indeksu (7000-23000).
+    W danych MNQ za 2019 rok bylo ich 582.
+    """
+
+    def test_spread_jest_rozpoznawany(self):
+        from engine.dataset import is_spread_symbol
+        assert is_spread_symbol("MNQM9-MNQU9")
+        assert is_spread_symbol("MNQZ9-MNQH0")
+        assert not is_spread_symbol("MNQH5")
+        assert not is_spread_symbol("MNQU9")
+
+    def test_normalizacja_odfiltrowuje_spready(self):
+        df = pl.DataFrame({
+            "ts_event": [datetime(2019, 5, 10, 20, 36, tzinfo=UTC)] * 3,
+            "open": [7748.75, 28.50, 7749.0],
+            "high": [7748.75, 28.50, 7749.0],
+            "low": [7748.75, 28.50, 7749.0],
+            "close": [7748.75, 28.50, 7749.0],
+            "volume": [1, 1, 5],
+            "symbol": ["MNQM9", "MNQM9-MNQU9", "MNQU9"],
+        })
+        out = normalize_databento(df)
+        assert out.height == 2, "spread nie zostal odfiltrowany"
+        assert "MNQM9-MNQU9" not in out["contract"].to_list()
+
+    def test_spread_wpuszczony_wygladalby_jak_krach(self):
+        """Dokumentuje SKALE problemu: bar spreadu obok baru kontraktu to
+        pozorny spadek o ponad 99% i natychmiastowe odbicie."""
+        cena_kontraktu, cena_spreadu = 7748.75, 28.50
+        pozorny_spadek = (cena_spreadu - cena_kontraktu) / cena_kontraktu
+        assert pozorny_spadek < -0.99, \
+            f"pozorny ruch {100*pozorny_spadek:.1f}% — strategia 'kupuj spadki' zrobilaby fortune"
