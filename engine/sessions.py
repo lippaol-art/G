@@ -69,10 +69,16 @@ class SessionCalendar:
 
     holidays      — dni bez sesji
     short_days    — dni skrocone (zamkniecie 13:00 ET zamiast 16:00)
+    verified      — czy kalendarz porownano z opublikowanym kalendarzem CME.
+                    Kalendarz generowany z regul (engine/calendar_cme.py) jest
+                    poprawny w kazdym typowym roku, ale nie przewidzi sesji
+                    odwolanej doraznie. Sanity-report zglasza `verified=False`
+                    jako otwarta pozycje do zamkniecia przed pierwszym badaniem.
     """
 
     holidays: frozenset[date] = frozenset()
     short_days: frozenset[date] = frozenset()
+    verified: bool = False
 
     def is_trading_day(self, d: date) -> bool:
         # Sobota nie ma sesji; niedziela ma tylko wieczorny start Globexu,
@@ -160,37 +166,65 @@ def in_historical_halt(ts: datetime) -> bool:
     return _HALT_START_CT <= ct.time() < _HALT_END_CT
 
 
+def is_closed(ts: datetime, calendar: SessionCalendar | None = None) -> bool:
+    """Czy o tej minucie rynek jest zamkniety wg KALENDARZA (nie wg danych).
+
+    Jedyne miejsce w projekcie, w ktorym zapisana jest odpowiedz na pytanie
+    "czy o tej porze w ogole powinien byc bar". Klasyfikacja luk i sanity-report
+    korzystaja z niej wspolnie — dwie kopie tej reguly rozjechalyby sie przy
+    pierwszej zmianie kalendarza.
+    """
+    cal = calendar or SessionCalendar()
+    et = to_et(ts)
+    return (
+        in_maintenance(ts)
+        or in_historical_halt(ts)
+        or not cal.is_trading_day(trade_date(ts))
+        or (et.weekday() == 4 and et.time() >= MAINT_START)   # piatek po zamknieciu
+        or (et.weekday() == 5)                                 # sobota
+        or (et.weekday() == 6 and et.time() < SESSION_START)   # niedziela do 18:00
+        or (et.date() in cal.short_days and et.time() >= time(13, 0))
+    )
+
+
+def uncovered_minutes(ts_from: datetime, ts_to: datetime,
+                      calendar: SessionCalendar | None = None,
+                      *, limit: int | None = None) -> list[datetime]:
+    """Minuty przedzialu [ts_from, ts_to), ktorych kalendarz NIE tlumaczy.
+
+    Pusta lista znaczy, ze cala przerwa wynika z kalendarza. Niepusta nie
+    przesadza jeszcze o anomalii: brak transakcji w cienkiej godzinie sesji
+    azjatyckiej tez zostawia minuty bez bara, a jest poprawnym opisem rynku
+    (rozdz. 4.2). Ocene dlugosci ciszy robi `engine.clean.classify_gaps`.
+
+    `limit` zatrzymuje zbieranie po n minutach — pozwala odpowiedziec na
+    pytanie "czy cokolwiek jest niewytlumaczone" bez przechodzenia calego
+    weekendu minuta po minucie.
+    """
+    cal = calendar or SessionCalendar()
+    out: list[datetime] = []
+    cur = ts_from
+    step = timedelta(minutes=1)
+    while cur < ts_to:
+        if not is_closed(cur, cal):
+            out.append(cur)
+            if limit is not None and len(out) >= limit:
+                return out
+        cur += step
+    return out
+
+
 def is_expected_gap(ts_from: datetime, ts_to: datetime,
                     calendar: SessionCalendar | None = None) -> bool:
-    """Czy przerwa miedzy barami jest oczekiwana, czy to anomalia (rozdz. 4.2).
+    """Czy przerwa [ts_from, ts_to) tlumaczy sie kalendarzem (rozdz. 4.2).
 
     KLUCZOWE: Databento nie drukuje bara, gdy w danym interwale nie bylo
     transakcji ("If no trade occurs within the interval, no record is printed").
     Brak bara jest poprawnym opisem rynku, nie defektem feedu.
 
     Zwraca True dla: przerwy serwisowej, weekendu, swieta, dnia skroconego,
-    historycznego haltu. Wszystko inne -> anomalia do przejrzenia.
+    historycznego haltu.
     """
-    cal = calendar or SessionCalendar()
-
-    # Luka jednominutowa nie jest luka.
     if (ts_to - ts_from) <= timedelta(minutes=1):
         return True
-
-    cur = ts_from
-    step = timedelta(minutes=1)
-    while cur < ts_to:
-        et = to_et(cur)
-        covered = (
-            in_maintenance(cur)
-            or in_historical_halt(cur)
-            or not cal.is_trading_day(trade_date(cur))
-            or (et.weekday() == 4 and et.time() >= MAINT_START)   # piatek po zamknieciu
-            or (et.weekday() == 5)                                 # sobota
-            or (et.weekday() == 6 and et.time() < SESSION_START)   # niedziela do 18:00
-            or (et.date() in cal.short_days and et.time() >= time(13, 0))
-        )
-        if not covered:
-            return False
-        cur += step
-    return True
+    return not uncovered_minutes(ts_from, ts_to, calendar, limit=1)
