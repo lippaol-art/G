@@ -85,6 +85,43 @@ def estimate_cost(client, symbols: list[str], start: date, end: date) -> float:
     return total
 
 
+def _year_chunks(start: date, end: date) -> list[tuple[date, date]]:
+    """Dzieli zakres na odcinki roczne.
+
+    Pobieranie 7 lat barow minutowych jednym zapytaniem trwa dlugo i jest
+    nieodporne: przerwanie oznacza utrate calosci. Odcinki roczne daja
+    widocznosc postepu i WZNAWIALNOSC — istniejace pliki sa pomijane, wiec
+    ponowne uruchomienie dociaga tylko brakujace lata.
+    """
+    out: list[tuple[date, date]] = []
+    cur = start
+    while cur < end:
+        nast = min(date(cur.year + 1, 1, 1), end)
+        out.append((cur, nast))
+        cur = nast
+    return out
+
+
+def _download_symbol(client, sym: str, start: date, end: date, out_dir: str) -> None:
+    """Pobiera symbol odcinkami rocznymi, pomijajac juz istniejace pliki."""
+    for a, b in _year_chunks(start, end):
+        path = os.path.join(out_dir, f"{sym.lower()}_{SCHEMA}_{a.year}.dbn.zst")
+        if os.path.exists(path) and os.path.getsize(path) > 0:
+            print(f"  {sym} {a.year}: juz pobrany, pomijam")
+            continue
+        print(f"  {sym} {a.year}: {a} -> {b} ...", flush=True)
+        data = client.timeseries.get_range(
+            dataset=DATASET,
+            symbols=[parent_symbol(sym)],
+            schema=SCHEMA,
+            stype_in=STYPE_IN,
+            start=a.isoformat(),
+            end=b.isoformat(),
+        )
+        data.to_file(path)
+        print(f"    -> {path} ({os.path.getsize(path) / 1e6:.1f} MB)", flush=True)
+
+
 def main() -> int:
     p = argparse.ArgumentParser(description="Pobranie danych MNQ/NQ z Databento")
     p.add_argument("--estimate-only", action="store_true",
@@ -123,18 +160,7 @@ def main() -> int:
 
     os.makedirs(args.out, exist_ok=True)
     for sym in args.symbols:
-        print(f"\nPobieranie {sym}...")
-        data = client.timeseries.get_range(
-            dataset=DATASET,
-            symbols=[parent_symbol(sym)],
-            schema=SCHEMA,
-            stype_in=STYPE_IN,
-            start=args.start.isoformat(),
-            end=args.end.isoformat(),
-        )
-        path = os.path.join(args.out, f"{sym.lower()}_{SCHEMA}.dbn.zst")
-        data.to_file(path)
-        print(f"  -> {path}")
+        _download_symbol(client, sym, args.start, args.end, args.out)
 
     print(
         "\nGotowe. Nastepny krok: czyszczenie i budowa kontraktu ciaglego.\n"
