@@ -1,3 +1,7 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "projekt-g"
 version = "0.1.0"
@@ -28,6 +32,16 @@ dev = [
     "ruff>=0.6",
     "mypy>=1.11",
 ]
+
+[tool.setuptools]
+# Jawna lista pakietow. Bez niej setuptools odmawia budowy: w plaskim ukladzie
+# repo widzi trzy katalogi najwyzszego poziomu (engine, validation, hypotheses)
+# i nie zgaduje, ktore z nich sa pakietami. `hypotheses/` to katalog dokumentow,
+# nie kod — nie instalujemy go.
+packages = ["engine", "validation"]
+
+[tool.setuptools.package-data]
+validation = ["trial_counter.json"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
