@@ -18,7 +18,7 @@ niezależnych audytach zewnętrznych.
 | Etap 0 — fundament repo | ✅ zrobione |
 | Etap 2 — silnik i aparat walidacyjny | ✅ kompletny: 322 testy, pokrycie 92% |
 | Pipeline danych, kalendarz CME, sanity-report, bramka silnika | ✅ kod gotowy, czeka na dane |
-| Etap 1 — pobranie danych | ⛔ **zablokowane**: host `hist.databento.com` odrzucany przez politykę egress. Procedura wznowienia: **[HANDOFF.md](HANDOFF.md)** |
+| Etap 1 — pobranie danych | ⏳ **odblokowane sieciowo 31.07.2026**, czeka na klucz API w zmiennych środowiska. Procedura: **[HANDOFF.md](HANDOFF.md)** |
 | Etap 3 — fabryka hipotez | oczekuje na dane |
 
 ---
@@ -75,7 +75,7 @@ hypotheses/
   REGISTRY.md    katalog hipotez: benchmarki, przeformułowane, kandydaci
 
 scripts/
-  build_dataset.py     pobranie danych (czeka na odblokowanie sieci)
+  build_dataset.py     pobranie danych (sieć OK, czeka na klucz API)
   sanity_report.py     raport jakości → reports/data_quality.md
   engine_validation.py bramka silnika: cztery testy z rozdz. 5.6
 

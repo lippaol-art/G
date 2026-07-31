@@ -10,9 +10,10 @@ UWAGA — KLUCZ API:
         export DATABENTO_API_KEY="db-..."
         python3 scripts/build_dataset.py --estimate-only
 
-STATUS: skrypt gotowy, ale niewykonany — host hist.databento.com jest
-zablokowany przez polityke egress srodowiska (403 na CONNECT). Uruchomic po
-odblokowaniu sieci.
+STATUS: skrypt gotowy, ale niewykonany. Siec do hist.databento.com zostala
+odblokowana 31.07.2026 (API odpowiada 401 bez klucza), brakuje juz tylko
+DATABENTO_API_KEY w zmiennych srodowiska — patrz HANDOFF.md sekcja 2.
+Zweryfikowany klient: databento 0.82.0.
 
 Kolejnosc operacji (rozdz. 4.2):
     [1] dedup + sortowanie po ts_event

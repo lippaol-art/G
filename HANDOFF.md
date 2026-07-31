@@ -18,8 +18,9 @@ Gotowe: fundament repo, **kompletny silnik backtestowy z główną pętlą**, ap
 **pipeline raw → clean**, **kalendarz CME**, **sanity-report**, **aparat walidacji samego
 silnika**, strażnicy niezmienników, CI. **322 testy zielone, pokrycie 92%, ruff czysty.**
 
-Niegotowe i zablokowane: **pobranie danych rynkowych (Etap 1)**. Bez nich nie da się
-uruchomić ani jednego badania. Blokada potwierdzona ponownie 31.07.2026 (sekcja 2).
+Niegotowe: **pobranie danych rynkowych (Etap 1)**. Bez nich nie da się uruchomić ani jednego
+badania. **Blokada sieciowa została zdjęta 31.07.2026** — API Databento jest osiągalne,
+brakuje wyłącznie klucza w zmiennych środowiska (sekcja 2).
 
 Po stronie kodu **nie zostało już nic, co dałoby się zrobić bez danych** — cała reszta
 listy z sekcji 6 czeka na Etap 1.
@@ -37,54 +38,68 @@ listy z sekcji 6 czeka na Etap 1.
 
 ---
 
-## 2. BLOKER: dostęp sieciowy do Databento
+## 2. Sieć: ODBLOKOWANA (31.07.2026) — zostaje klucz API
 
-### Objaw
+**Bloker, który zatrzymywał projekt przez dwie sesje, został zdjęty.** Właściciel przestawił
+sieć środowiska chmurowego na **Full**. Zmiana zadziałała **natychmiast, w trwającej sesji** —
+wbrew wcześniejszej hipotezie, że polityka jest wiązana wyłącznie przy starcie.
+
+### Stan potwierdzony pomiarem
 
 ```
-$ curl -u "$DATABENTO_API_KEY:" https://hist.databento.com/v0/metadata.list_datasets
-curl: (56) CONNECT tunnel failed, response 403
+$ curl -o /dev/null -w "%{http_code}\n" https://hist.databento.com/v0/metadata.list_datasets
+401          # API odpowiada; 401 = brak klucza, nie brak sieci
+$ pip install -e '.[data]'   →  databento 0.82.0, klient tworzy się poprawnie
 ```
 
-### Co już sprawdzono
+Wcześniejszy objaw (`curl: (56) CONNECT tunnel failed, response 403`) już nie występuje;
+`$HTTPS_PROXY/__agentproxy/status` nie notuje nowych odmów.
 
-- `$HTTPS_PROXY/__agentproxy/status` pokazuje wpisy `connect_rejected` dla
-  `hist.databento.com:443` z komentarzem *„gateway answered 403 to CONNECT
-  (policy denial or upstream failure)"*.
-- PyPI działa normalnie (HTTP 200) — blokada dotyczy **konkretnie hosta Databento**,
-  nie sieci w ogóle.
-- Właściciel projektu dodał domenę do allow-listy środowiska **w trakcie poprzedniej sesji**,
-  ale 403 utrzymał się. Polityka egress jest wiązana przy starcie sesji, więc zmiana
-  **wymaga nowej sesji**, żeby zadziałać.
-- **Sprawdzone ponownie 31.07.2026 w kolejnej, nowej sesji: nadal 403.** Hipoteza „wystarczy
-  nowa sesja" jest tym samym **wyczerpana** — albo domena nie została faktycznie dodana do
-  allow-listy, albo środowisko tej sesji zostało utworzone przed zmianą polityki i trzeba je
-  odtworzyć. To pytanie do właściciela projektu, nie do kolejnej próby.
-- W tej sesji `DATABENTO_API_KEY` **nie było w ogóle ustawione** — nawet po odblokowaniu
-  sieci trzeba je najpierw wstawić jako sekret środowiska (sekcja 3).
+**Uwaga na pierwszy request:** zaraz po zmianie polityki pierwsze połączenie z
+`hist.databento.com` wygasło po 20 s, a dopiero kolejne zwróciło 401. Timeout na zimnym
+połączeniu **nie jest** blokadą polityki — odmowa polityki ma zawsze postać `403` przy
+CONNECT i ląduje w `recentRelayFailures`. Nie wyciągaj z jednego timeoutu wniosku, że sieć
+nadal jest zamknięta.
 
 ### Weryfikacja jedną komendą
 
 ```bash
-curl -sS --max-time 20 -o /dev/null -w "%{http_code}\n" \
+curl -sS --max-time 60 -o /dev/null -w "%{http_code}\n" \
   -u "$DATABENTO_API_KEY:" https://hist.databento.com/v0/metadata.list_datasets
 ```
 
-`200` = odblokowane, można ruszać z Etapem 1. `000` z błędem 56 = nadal zablokowane.
+| Wynik | Znaczenie |
+|-------|-----------|
+| `200` | klucz działa — **ruszaj z Etapem 1** (sekcja 4) |
+| `401` | sieć OK, brak albo zły klucz — patrz sekcja 3 |
+| `000` + błąd 56 | wróciła blokada polityki egress |
+| `000` + błąd 28 | timeout; **powtórz raz**, zanim uznasz to za blokadę |
 
-### Czego NIE robić
+### Co zostało do zrobienia po stronie środowiska
+
+`DATABENTO_API_KEY` **nie było ustawione w żadnej dotychczasowej sesji**. To jedyna rzecz,
+która dzieli projekt od Etapu 1. Trzeba je wpisać w **Environment variables** środowiska
+(format `.env`, jedna para `KLUCZ=wartość` na linię) na `claude.ai/code` — ikona chmurki
+w rzędzie nad polem wiadomości, koło zębate przy środowisku.
+
+**Zmienne środowiskowe są kopiowane raz, przy starcie sesji** — inaczej niż polityka
+sieciowa. Klucz dodany do konfiguracji pojawi się więc dopiero w **następnej** sesji, nie
+w trwającej.
+
+### Ograniczenie, o którym trzeba wiedzieć
+
+Środowiska chmurowe **nie mają osobnego magazynu sekretów**: wartość zmiennej jest czytelna
+dla każdego, kto używa tego środowiska. Stąd zalecenie: klucz o możliwie wąskich
+uprawnieniach, rotowany po zakończeniu pobierania danych. Alternatywa całkowicie omijająca
+problem: właściciel pobiera dane lokalnie u siebie (`scripts/build_dataset.py`) i wgrywa
+gotowe parquet do `data/clean/` — reszta pipeline'u działa bez zmian i bez klucza w chmurze.
+
+### Czego NIE robić, jeśli blokada wróci
 
 - **Nie ponawiać** odmów polityki w pętli. Dokumentacja proxy (`/root/.ccr/README.md`) mówi
-  wprost: odmowy 403/407 należy zgłaszać, nie obchodzić. Dwie próby wystarczą do
-  stwierdzenia stanu.
+  wprost: odmowy 403/407 należy zgłaszać, nie obchodzić.
 - **Nie szukać obejść** (inny host, tunel, wyłączenie weryfikacji TLS). To naruszenie
   polityki organizacji, a nie problem techniczny do rozwiązania.
-
-### Jeśli nadal zablokowane
-
-Alternatywa całkowicie omijająca problem: właściciel pobiera dane lokalnie u siebie
-(ten sam skrypt `scripts/build_dataset.py`) i wgrywa gotowe pliki parquet do `data/clean/`.
-Reszta pipeline'u działa bez zmian.
 
 ---
 
@@ -296,7 +311,7 @@ validation/
   trial_counter.json   globalny licznik prób
 
 scripts/
-  build_dataset.py      pobranie danych (czeka na odblokowanie sieci)
+  build_dataset.py      pobranie danych (sieć OK, czeka na klucz API)
   sanity_report.py      raport jakości → reports/data_quality.md
   engine_validation.py  bramka silnika (rozdz. 5.6)
 
@@ -319,10 +334,13 @@ PYTHONPATH=. pytest -q              # czy wszystko nadal zielone
 # sprawdź bloker sieciowy (sekcja 2) i jeśli 200 — ruszaj z sekcją 4
 ```
 
-**Jeśli sieć nadal zablokowana:** nie ma sensu szukać zadania w kodzie — lista z sekcji 6
-jest w całości zależna od danych albo od źródeł zewnętrznych. Jedyne sensowne działanie to
-zgłoszenie blokera właścicielowi projektu wraz z ustaleniem z sekcji 2 (nowa sesja nie
-wystarczyła) i ewentualne przejęcie ścieżki awaryjnej: właściciel pobiera dane lokalnie
-i wgrywa gotowe parquet do `data/clean/`.
+**Jeśli komenda z sekcji 2 zwraca `200`** — masz klucz i sieć, więc pierwsze zadanie tej sesji
+jest jednoznaczne: Etap 1 (sekcja 4), potem bramka silnika (sekcja 5), potem pierwsze zadanie
+badawcze (sekcja 7).
+
+**Jeśli zwraca `401`** — sieć działa, brakuje klucza. Nie ma sensu szukać zadania w kodzie:
+lista z sekcji 6 jest w całości zależna od danych albo od źródeł zewnętrznych. Poproś
+właściciela o wpisanie `DATABENTO_API_KEY` w zmiennych środowiska i **załóż nową sesję** —
+zmienne są kopiowane przy starcie, więc w trwającej sesji się nie pojawią.
 
 Opis PR zawiera bieżący status projektu i jest aktualizowany po każdej sesji roboczej.
