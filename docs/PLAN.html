@@ -72,7 +72,7 @@
 <!-- ============ OKŁADKA ============ -->
 <div class="cover">
   <div class="top">
-    <div class="kicker">Projekt „G” · Dokument założycielski · wersja 1.0</div>
+    <div class="kicker">Projekt „G” · Dokument założycielski · wersja 1.1 (po audytach)</div>
     <h1>Laboratorium strategii MNQ</h1>
     <div class="sub">Plan operacyjny, specyfikacja techniczna, metodologia badawcza i katalog hipotez dla systematycznego wynalezienia oryginalnej strategii na kontrakcie Micro E-mini Nasdaq-100 — od surowych danych do zweryfikowanej przewagi statystycznej.</div>
   </div>
@@ -81,7 +81,7 @@
     <div><span>Repozytorium</span>lippaol-art/G</div>
     <div><span>Branch</span>claude/financial-market-strategy-8mb1y1</div>
     <div><span>Instrument</span>MNQ (CME Globex)</div>
-    <div><span>Status</span>Zatwierdzony do realizacji</div>
+    <div><span>Status</span>Po 4 audytach zewnętrznych</div>
   </div>
 </div>
 
@@ -97,7 +97,7 @@
   <li><span class="n">6</span><span>Metryki i aparat statystyczny</span></li>
   <li><span class="n">7</span><span>Framework walidacji</span></li>
   <li><span class="n">8</span><span>Fabryka hipotez — proces</span></li>
-  <li><span class="n">9</span><span>Katalog hipotez startowych: 12 kart badawczych</span></li>
+  <li><span class="n">9</span><span>Katalog hipotez: benchmarki, przeformułowania, kandydaci</span></li>
   <li><span class="n">10</span><span>Zarządzanie ryzykiem</span></li>
   <li><span class="n">11</span><span>Paper trading i architektura live</span></li>
   <li><span class="n">12</span><span>Harmonogram: tygodnie 1–12</span></li>
@@ -110,6 +110,7 @@
   <li class="anx"><span class="n">C</span><span>Aneks C — Kalendarz zdarzeń makro i sezonów wyników</span></li>
   <li class="anx"><span class="n">D</span><span>Aneks D — Szablony dokumentów roboczych</span></li>
   <li class="anx"><span class="n">E</span><span>Aneks E — Słownik pojęć PL/EN</span></li>
+  <li class="anx"><span class="n">—</span><span>Changelog: wersja 1.0 → 1.1, co zmieniły audyty</span></li>
 </ol>
 </div>
 
@@ -126,19 +127,32 @@
 <p>Strategia zbudowana <strong>od zera z hipotez strukturalnych</strong> — o mikrostrukturze sesji MNQ, reżimach zmienności i zachowaniu rynku wokół zdarzeń — z własną parametryzacją, własnymi definicjami reżimów i własnymi filtrami. Nie kopiujemy żadnego gotowego setupu z internetu. Uczciwe zastrzeżenie: nie da się formalnie udowodnić, że jakaś reguła „nie istnieje nigdzie w internecie” — przestrzeń publikacji jest nieprzeszukiwalna w całości. Da się natomiast <strong>zagwarantować proces</strong>: każda reguła jest wywiedziona z naszych własnych badań statystycznych na naszych danych, a oryginalność egzekwujemy konstrukcyjnie — przez łączenie minimum dwóch niezależnych warunków (struktura sesji × reżim zmienności × kontekst zdarzeń) i przez własne, niestandardowe definicje operacyjne każdego z nich. Rozdział 8.4 podaje pełne reguły egzekwowania oryginalności.</p>
 </div>
 
-<h3>1.3. Twarde progi sukcesu</h3>
-<p>Strategia zostaje uznana za znalezioną dopiero, gdy spełni <strong>wszystkie</strong> poniższe kryteria jednocześnie. Progi są zdefiniowane z góry — przed testami — właśnie po to, żeby nie dało się ich „dopasować” do wyników po fakcie.</p>
+<h3>1.3. Twarde progi sukcesu — system dwustopniowy</h3>
+<p>Wersja 1.0 tego dokumentu zawierała jedną listę progów. Audyt statystyczny wykazał, że była ona <strong>matematycznie nieprzechodnia</strong>: wymaganie Sharpe ≥ 0.8 przy jednoczesnym DSR ≥ 0.95 jest nieosiągalne przy realnej długości danych i jakiejkolwiek sensownej liczbie prób (dowód liczbowy w 6.5). To nie była usterka zapisu, lecz treść <em>False Strategy Theorem</em>: przy ograniczonej historii i wielu próbach umiarkowanej przewagi po prostu <strong>nie da się</strong> statystycznie certyfikować.</p>
+<p>Rozwiązanie nie polega na obniżeniu poprzeczki, lecz na nazwaniu <strong>dwóch różnych poprzeczek i ich konsekwencji</strong>:</p>
 <table>
-<tr><th style="width:38%">Kryterium</th><th>Próg</th><th>Uzasadnienie</th></tr>
-<tr><td>Liczba transakcji out-of-sample</td><td>≥ 300</td><td>Poniżej tej liczby przedział ufności dla expectancy jest zbyt szeroki, by cokolwiek twierdzić (rozdz. 6.6).</td></tr>
+<tr><th style="width:16%">Poziom</th><th style="width:42%">Wymagania</th><th>Co uprawnia</th></tr>
+<tr><td><strong>Tier 1<br>OBIECUJĄCA</strong></td><td>Wszystkie kryteria z tabeli niżej <em>poza</em> DSR: liczba transakcji, PF, Sharpe ≥ 0.8, stabilność, koncentracja, plateau, PBO, transfer, stress kosztów.</td><td>Przejście na <strong>forward paper trading</strong> — jedyny mechanizm dokładający niezależne dane OOS <em>bez zużywania budżetu prób</em>. To ścieżka awansu, nie poczekalnia.</td></tr>
+<tr><td><strong>Tier 2<br>CERTYFIKOWANA</strong></td><td>Wszystko z Tier 1 <strong>plus DSR ≥ 0.95</strong> liczone na pełnym zszytym szeregu OOS (backtest + zgromadzony paper).</td><td>Wyłącznie ten poziom uprawnia do rozmowy o realnym kapitale (rozdz. 11.4, 16).</td></tr>
+</table>
+<table>
+<tr><th style="width:34%">Kryterium</th><th style="width:20%">Próg</th><th>Uzasadnienie</th></tr>
+<tr><td>Liczba transakcji out-of-sample</td><td><strong>≥ 400</strong> (podłoga)<br>cel: 800+</td><td>400 to <em>podłoga bezwzględna</em>, nie „wystarczająca próba" — daje moc testu ~50%. Moc 80% wymaga ~785 transakcji (wyprowadzenie w 6.4).</td></tr>
 <tr><td>Profit factor po realnych kosztach</td><td>≥ 1.15</td><td>Bufor na degradację live; PF 1.05 w backteście to w praktyce strategia stratna.</td></tr>
-<tr><td>Sharpe ratio (OOS, annualizowany)</td><td>≥ 0.8</td><td>Poziom osiągalny dla strategii intraday na jednym instrumencie; wyższy próg byłby nierealistyczny bez portfela.</td></tr>
+<tr><td>Sharpe ratio (OOS, annualizowany)</td><td>≥ 0.8</td><td>Próg <em>ekonomiczny</em> dla systemu jednoinstrumentowego. Uwaga: próg <em>dowodowy</em> jest wyższy — patrz tabela wykonalności w 6.5.</td></tr>
 <tr><td>Stabilność w czasie</td><td>zysk w ≥ 3 z 4 ostatnich lat</td><td>Chroni przed strategią „z jednego reżimu”.</td></tr>
 <tr><td>Koncentracja wyniku</td><td>usunięcie 5 najlepszych dni nie zmienia znaku wyniku</td><td>Chroni przed strategią „z trzech szczęśliwych dni”.</td></tr>
 <tr><td>Plateau parametrów</td><td>wynik dodatni w całej siatce ±20% parametrów</td><td>Ostry szczyt w przestrzeni parametrów = przeuczenie (rozdz. 7.4).</td></tr>
-<tr><td>Deflated Sharpe Ratio</td><td>DSR &gt; 0 (p &lt; 0.05)</td><td>Poprawka na liczbę wszystkich przetestowanych wariantów w projekcie (rozdz. 6.5).</td></tr>
+<tr><td><strong>PBO</strong> (Probability of Backtest Overfitting)</td><td>&lt; 0.20</td><td>Mierzy overfitting <em>procesu selekcji</em> — czego żaden test Monte Carlo nie robi (rozdz. 7.2).</td></tr>
+<tr><td>Test SPA Hansena</td><td>odrzucenie H₀ przy α = 0.05</td><td>Czy najlepszy wariant bije zero po uwzględnieniu data-snoopingu w całej puli.</td></tr>
+<tr><td>Transfer i podokresy</td><td>NQ ≈ 1:1; ES wyjaśniony mechanizmem</td><td>Rozdz. 7.5.</td></tr>
 <tr><td>Stress-test kosztów</td><td>dodatnia przy 2× poślizgu</td><td>Realne wypełnienia bywają gorsze niż modelowe.</td></tr>
+<tr><td><strong>Deflated Sharpe Ratio</strong><br><span class="muted small">(tylko Tier 2)</span></td><td><strong>DSR ≥ 0.95</strong></td><td>Poprawka na liczbę wszystkich przetestowanych wariantów projektu. W v1.0 było tu „DSR &gt; 0 (p&lt;0.05)" — kryterium <strong>puste</strong>, bo DSR jest prawdopodobieństwem i zawsze przekracza zero.</td></tr>
 </table>
+<div class="box accent">
+<div class="label">Konsekwencja, którą trzeba przyjąć świadomie</div>
+<p>Każdy dodatkowy przetestowany wariant podnosi poprzeczkę dla ostatecznego zwycięzcy. Dlatego limit prób na hipotezę wynosi <strong>≤ 10 wariantów</strong> (nie 30, jak w v1.0), a cztery karty katalogu zostały przeniesione do kategorii benchmarków, które nie zużywają licznika (rozdz. 9). Tabela wykonalności w 6.5 pozwala <em>przed</em> startem hipotezy sprawdzić, jaki Sharpe jest przy jej budżecie prób w ogóle certyfikowalny.</p>
+</div>
 
 <h3>1.4. Decyzje podjęte (stan na 31.07.2026)</h3>
 <table>
@@ -150,7 +164,11 @@
 <tr><td><strong>Kalendarz makro</strong></td><td>Własna, timestampowana tabela zdarzeń budowana ze źródeł publicznych (rozdz. 4.5).</td></tr>
 <tr><td><strong>Trwałość danych</strong></td><td>Oczyszczone dane parquet commitowane do repozytorium (środowisko sesji jest efemeryczne).</td></tr>
 <tr><td><strong>Ciągłość projektu</strong></td><td>Draft PR jako dziennik, <code>REGISTRY.md</code> jako pamięć instytucjonalna, Routines do cyklicznych przeglądów.</td></tr>
+<tr><td><strong>Baza kosztów</strong></td><td>1 tick poślizgu na stronę → <strong>2.20 USD round-turn</strong>. Konserwatyzm zostaje w stress-teście ×2 jako warunku bramki, nie w bazie (rozdz. 3.2).</td></tr>
+<tr><td><strong>Bramka sukcesu</strong></td><td>System dwustopniowy PROMISING / CERTIFIED (rozdz. 1.3); limit ≤ 10 wariantów na hipotezę.</td></tr>
+<tr><td><strong>Zakres danych K6</strong></td><td>Wersja oszczędna: ES z Databento + kwartalne snapshoty wag NDX + ceny after-hours 8 megacapów; SOX zastąpiony proxy z półprzewodników obecnych w NDX (rozdz. 4.7).</td></tr>
 </table>
+<p class="small muted">Wersja 1.1 dokumentu powstała po czterech niezależnych audytach zewnętrznych (metodologia backtestingu, aparat statystyczny, oryginalność katalogu hipotez, stack techniczny). Pełny wykaz przyjętych i odrzuconych uwag znajduje się w Changelogu na końcu dokumentu.</p>
 
 <h3>1.5. Zasada procesu: odrzucenie to wynik</h3>
 <p>W badaniach kwantytatywnych normalny, poprawny rezultat pracy to <strong>odrzucenie większości hipotez</strong>. Każda odrzucona hipoteza zawęża przestrzeń poszukiwań i produkuje wiedzę: wiemy, gdzie przewagi nie ma i dlaczego. Rejestr hipotez (rozdz. 8.3) wymusza zapisanie przyczyny każdego odrzucenia, a wnioski z odrzuconych hipotez są jawnym wejściem do projektowania kolejnej partii. Projekt nie ma zdefiniowanego „końca po N próbach” — iterujemy do skutku, ale iterujemy <em>uczciwie</em>: licznik wszystkich prób rośnie globalnie i zaostrza próg istotności dla każdego kolejnego kandydata. To jedyny znany sposób pogodzenia „próbujemy aż się uda” z rzetelnością statystyczną.</p>
@@ -164,8 +182,8 @@
 <h3>2.1. Dlaczego wskaźniki nie są przewagą</h3>
 <p>Wszystkie klasyczne wskaźniki techniczne — RSI, MACD, średnie kroczące, Bollinger Bands, stochastic — są <strong>funkcjami deterministycznymi ceny</strong>. Nie zawierają ani jednego bitu informacji, którego nie ma w samych świecach; są jedynie kompresją albo wygładzeniem tej samej serii danych. Z tego wynikają dwie konsekwencje. Po pierwsze, wskaźnik sam w sobie nie może być źródłem przewagi, bo jest publicznie znaną transformacją publicznie znanych danych, liczoną identycznie przez miliony uczestników rynku od dziesięcioleci. Po drugie — i to jest konstruktywna strona tej obserwacji — wskaźnik może być znakomitym <strong>miernikiem</strong> zjawiska, które przewagę daje. ATR nie jest przewagą, ale jest dobrym miernikiem reżimu zmienności. VWAP nie jest przewagą, ale mierzy średnią cenę zaangażowania kapitału w sesji, wokół której faktycznie pracują algorytmy egzekucyjne instytucji. Różnica między „handluję, bo RSI &lt; 30” a „mierzę odchylenie od VWAP, bo testuję hipotezę o zachowaniu algorytmów egzekucyjnych w niskiej zmienności” jest różnicą między zabobonem a badaniem.</p>
 
-<h3>2.2. Pięć klas nieefektywności strukturalnych na MNQ</h3>
-<p>Przewaga statystyczna może istnieć tylko tam, gdzie istnieje <strong>strukturalny powód</strong>, dla którego ceny nie są w pełni efektywne. Na rynku tak płynnym jak Nasdaq-100 futures te powody muszą być mocne — poniżej pięć klas, wokół których zbudowany jest cały katalog hipotez z rozdziału 9.</p>
+<h3>2.2. Sześć klas nieefektywności strukturalnych na MNQ</h3>
+<p>Przewaga statystyczna może istnieć tylko tam, gdzie istnieje <strong>strukturalny powód</strong>, dla którego ceny nie są w pełni efektywne. Na rynku tak płynnym jak Nasdaq-100 futures te powody muszą być mocne — poniżej sześć klas, wokół których zbudowany jest cały katalog hipotez z rozdziału 9.</p>
 <table>
 <tr><th style="width:22%">Klasa</th><th>Mechanizm strukturalny</th><th>Dlaczego nie znika</th></tr>
 <tr><td><strong>K1. Rytm sesji</strong></td><td>Doba MNQ składa się z segmentów o skrajnie różnej płynności i populacji uczestników (Azja, Europa, pre-market, otwarcie RTH, lunch, zamknięcie). Przejścia między segmentami wymuszają przewidywalne zachowania: budowanie pozycji, egzekucję benchmarkową, domykanie ryzyka.</td><td>Wynika z geografii i regulacji (godziny sesji kasowej, fixing), nie z „wiedzy tajemnej” — nie może zostać zarbitrażowany do zera, bo jest kosztem prowadzenia biznesu uczestników.</td></tr>
@@ -173,7 +191,12 @@
 <tr><td><strong>K3. Reżimy zmienności</strong></td><td>Parametry procesu cenowego (autokorelacja, grubość ogonów, skłonność do kontynuacji vs powrotu) są radykalnie różne w niskiej i wysokiej zmienności. Reguła zyskowna w jednym reżimie bywa stratna w drugim — więc filtr reżimu sam w sobie bywa większą częścią przewagi niż sygnał.</td><td>Zmienność klastruje się (fakt empiryczny od dekad); uczestnicy reagują na nią z opóźnieniem wymuszonym przez limity ryzyka.</td></tr>
 <tr><td><strong>K4. Mechanika zdarzeń</strong></td><td>Wokół publikacji makro (CPI, FOMC, NFP) nie da się wygrać wyścigu o pierwszą reakcję — ale <em>struktura</em> reakcji (rozszerzenie zakresu, częstość fałszywego pierwszego ruchu, tempo stabilizacji) jest zjawiskiem mechanicznym: wynika ze zdejmowania płynności przed publikacją i jej powrotu po niej.</td><td>Zdejmowanie kwotowań przed publikacją to racjonalna ochrona market-makerów — jest trwałe, bo jest optymalne.</td></tr>
 <tr><td><strong>K5. Poziomy mechaniczne</strong></td><td>Poprzednie dzienne high/low, granice zakresu nocnego, VWAP, ceny otwarcia — to punkty, w których realnie skoncentrowane są zlecenia (stop-lossy, take-profity, odniesienia algorytmów). Reakcja ceny na nie jest funkcją mechaniki zleceń, nie sentymentu.</td><td>Dopóki ludzie i algorytmy kotwiczą zlecenia o punkty odniesienia, punkty te generują podaż/popyt.</td></tr>
+<tr><td><strong>K6. Transmisja międzyrynkowa</strong><br><span class="muted small">(dodana w v1.1)</span></td><td>MNQ nie istnieje w izolacji: żyje w sieci powiązanych rynków — NQ↔MNQ, NQ↔ES, NQ↔półprzewodniki, indeks↔spółki składowe, wrażliwość na stopy. Informacja przepływa między nimi z opóźnieniami i niedoskonałościami; kontrakt bywa nie- albo przereagowany względem tego, co „powinien" wyceniać z ruchów swoich komponentów.</td><td>Wycena koszyka wymaga agregacji wielu strumieni informacji przy różnej płynności każdego z nich. Przestrzeń słabo skomercjalizowana publicznie, bo wymaga łączenia danych z kilku rynków — bariera wejścia, która chroni przewagę.</td></tr>
 </table>
+<div class="box">
+<div class="label">Skąd wzięła się klasa K6</div>
+<p>Wersja 1.0 dokumentu opisywała wyłącznie mechanizmy <em>wewnątrz</em> MNQ (K1–K5). Audyt oryginalności trafnie wskazał, że to systematyczna luka: cała rodzina mechanizmów transmisji, bazy i price discovery została pominięta, mimo że jest naturalnie zgodna z profilem projektu i znacznie słabiej wyeksploatowana publicznie niż rytm sesji czy poziomy referencyjne. Hipotezy H013, H014 i H016 z rozdziału 9 należą do tej klasy.</p>
+</div>
 <div class="box good">
 <div class="label">Wniosek konstrukcyjny</div>
 <p>Każda hipoteza w tym projekcie musi wskazywać, z której klasy nieefektywności czerpie i <strong>dlaczego ta nieefektywność miałaby przetrwać</strong>. Hipoteza bez mechanizmu („bo na wykresie to widać”) nie wchodzi do rejestru. To pierwszy filtr jakości — tańszy niż jakikolwiek backtest.</p>
@@ -221,13 +244,24 @@
 <p>Model kosztów jest jednym z najważniejszych elementów całego projektu, bo to on decyduje, czy „statystycznie istotny efekt” jest „handlowalną przewagą”. Składniki dla MNQ:</p>
 <table>
 <tr><th>Składnik</th><th>Wartość przyjęta</th><th>Komentarz</th></tr>
-<tr><td>Prowizja broker + giełda + regulacje</td><td>≈ 0.50–0.75 USD/stronę → <strong>1.20 USD round-turn</strong> (przyjęte konserwatywnie)</td><td>U IBKR i podobnych; dokładna wartość konfigurowalna w <code>costs.py</code>.</td></tr>
+<tr><td>Prowizja broker + giełda + regulacje</td><td>≈ 0.60 USD/stronę → <strong>1.20 USD round-turn</strong></td><td>Weryfikacja zewnętrzna potwierdziła ten szacunek: CME exchange fee 0.35 + NFA 0.02 + brokerage ~0.25 = 0.62 USD/stronę (1.24 RT). Konfigurowalne w <code>costs.py</code>.</td></tr>
 <tr><td>Poślizg — warunki normalne</td><td><strong>1 tick (0.50 USD) na stronę</strong> dla zleceń rynkowych</td><td>MNQ ma spread zwykle 1 tick w RTH; przecięcie spreadu to minimum realizmu.</td></tr>
 <tr><td>Poślizg — otwarcie RTH, duża zmienność</td><td>2 ticki na stronę</td><td>Ruchliwa książka, kolejka po jednej stronie.</td></tr>
 <tr><td>Poślizg — okna zdarzeń (CPI/FOMC/NFP ±)</td><td>3–4 ticki na stronę (jeśli w ogóle handlowane)</td><td>Spread potrafi rozszerzyć się do kilku ticków; domyślnie blackout.</td></tr>
 <tr><td>Poślizg — sesja nocna (Azja)</td><td>1–2 ticki na stronę</td><td>Cieńsza książka; szczególnie 19:00–02:00 ET.</td></tr>
 </table>
-<p><strong>Rachunek roczny.</strong> Przy koszcie całkowitym ≈ 3.20 USD na round-turn (prowizja 1.20 + 2 × 1 tick poślizgu) strategia wykonująca średnio 2 transakcje dziennie przez ~251 dni sesyjnych płaci rocznie ≈ <strong>1 600 USD na kontrakt</strong> samych kosztów. Strategia scalpingowa (10 transakcji/dzień) płaci ≈ 8 000 USD — czyli przy rachunku 25 000 USD musi wygenerować 32% zwrotu rocznie, zanim zarobi pierwszego dolara. Ten rachunek ustawia całą przestrzeń poszukiwań: <strong>preferujemy strategie o niskiej i średniej częstotliwości</strong> (0.5–3 transakcji dziennie), w których koszt nie pożera struktury zysku, a poślizg jest małym ułamkiem przeciętnego ruchu.</p>
+<p><strong>Rachunek roczny.</strong> Koszt bazowy round-turn = prowizja 1.20 + 2 × 1 tick poślizgu (2 × 0.50) = <strong>2.20 USD</strong>. Strategia wykonująca średnio 2 transakcje dziennie przez ~251 dni sesyjnych płaci rocznie ≈ <strong>1 104 USD na kontrakt</strong> samych kosztów. Strategia scalpingowa (10 transakcji dziennie) płaci ≈ <strong>5 522 USD</strong> — czyli przy rachunku 25 000 USD musi wygenerować 22% zwrotu rocznie, zanim zarobi pierwszego dolara. Ten rachunek ustawia całą przestrzeń poszukiwań: <strong>preferujemy strategie o niskiej i średniej częstotliwości</strong> (0.5–3 transakcji dziennie), w których koszt nie pożera struktury zysku, a poślizg jest małym ułamkiem przeciętnego ruchu.</p>
+<table>
+<tr><th style="width:26%">Transakcji dziennie</th><th style="width:24%">Koszt roczny (baza 2.20)</th><th>Koszt roczny w stress-teście ×2 (4.40 USD RT)</th></tr>
+<tr><td>0.5</td><td>276 USD</td><td>552 USD</td></tr>
+<tr><td>2</td><td>1 104 USD</td><td>2 209 USD</td></tr>
+<tr><td>5</td><td>2 761 USD</td><td>5 522 USD</td></tr>
+<tr><td>10</td><td>5 522 USD</td><td>11 044 USD</td></tr>
+</table>
+<div class="box">
+<div class="label">Gdzie mieszka konserwatyzm</div>
+<p>Wersja 1.0 podawała tu koszt 3.20 USD RT przy jednoczesnym wzorze „1.20 + 2 × 1 tick", który daje 2.20 — była to niespójność arytmetyczna wychwycona przez audyt. Poprawka nie polega na wyborze wyższej liczby „dla bezpieczeństwa": <strong>baza ma odzwierciedlać rzeczywistość</strong> (1 tick to realny spread MNQ w RTH przy 1–5 kontraktach), a margines bezpieczeństwa mieszka w obowiązkowym stress-teście ×2, który jest warunkiem przejścia bramki walidacyjnej (7.6). Wbudowanie bufora w bazę powodowałoby odrzucanie strategii, które realnie by działały — a stress-test stawałby się wtedy testem 4 ticków, czyli scenariusza nierealistycznego.</p>
+</div>
 
 <h3>3.3. Anatomia doby handlowej MNQ (czas ET)</h3>
 <table>
@@ -264,12 +298,25 @@
 <h3>4.1. Wybór dostawcy: Databento (i dlaczego nie inni)</h3>
 <table>
 <tr><th>Opcja</th><th>Zalety</th><th>Wady / powód odrzucenia</th></tr>
-<tr><td><strong>Databento (wybrane)</strong></td><td>Surowe dane prosto z CME MDP 3.0; jawna metodologia; schemat OHLCV-1m i głębsze (trades, MBP); wycena pay-as-you-go — pełna historia M1 dla MNQ+NQ to koszt rzędu kilku–kilkunastu USD; czyste API Pythona; timestampy giełdowe w nanosekundach.</td><td>Wymaga własnego sklejenia kontraktu ciągłego (traktujemy to jako zaletę: pełna kontrola, rozdz. 4.3).</td></tr>
-<tr><td>FirstRate Data / Kibot</td><td>Gotowe kontrakty ciągłe, prosty zakup.</td><td>Metodologia rolowania częściowo nieprzejrzysta; brak kontroli nad back-adjustmentem; format plikowy zamiast API.</td></tr>
-<tr><td>IQFeed / DTN</td><td>Solidny feed z historią.</td><td>Abonament miesięczny nieproporcjonalny do potrzeb fazy badawczej.</td></tr>
-<tr><td>Dane z IBKR API</td><td>Zero dodatkowego kosztu przy koncie.</td><td>Historia kontraktów wygasłych ograniczona (~2 lata), pacing limits, luki; niewystarczające na 5+ lat M1.</td></tr>
-<tr><td>Darmowe źródła (Yahoo itp.)</td><td>Koszt zerowy.</td><td>Brak rzetelnego M1 futures, nieznana proweniencja; niedopuszczalne dla wniosków badawczych — user zdecydował: zero placeholderów.</td></tr>
+<tr><td><strong>Databento (wybrane)</strong></td><td>Surowe dane prosto z CME MDP 3.0 (dataset GLBX.MDP3, futures CME od 2010; MNQ od 2019-04-14, czyli od startu produktu); jawna metodologia; schematy OHLCV-1m, 1s, trades i MBP; pay-as-you-go bez abonamentu; czyste API Pythona; timestampy giełdowe w nanosekundach.</td><td>Wymaga własnego sklejenia kontraktu ciągłego (traktujemy to jako zaletę: pełna kontrola, rozdz. 4.3).</td></tr>
+<tr><td>FirstRate Data</td><td>Publikuje 3 warianty kontraktu ciągłego (unadjusted / absolute / ratio) oraz serie per kontrakt; NQ M1 od 2008; ~100 USD/rok.</td><td>Brak streaming API (tylko pliki), rolowanie nie wg naszej reguły wolumenowej, gorsza audytowalność niż surowe MDP. <strong>Dobre jako źródło wtórne do kontroli krzyżowej</strong>, słabe jako primary.</td></tr>
+<tr><td>Kibot</td><td>Pakiet wszystkich futures continuous 1m od 2009, 520 USD jednorazowo; publikowany kalendarz rolowań.</td><td>Rolowanie kalendarzowe (nie wolumenowe); mieszana reputacja jakości; dla dwóch symboli drożej i mniej przejrzyście niż Databento.</td></tr>
+<tr><td>IQFeed / DTN</td><td>Solidny feed z historią.</td><td>Abonament ~105 USD/mies. + opłaty giełdowe — nieproporcjonalny do 12-tygodniowej fazy badawczej. Sensowny przy stałym desku live.</td></tr>
+<tr><td>Dane z IBKR API</td><td>Zero dodatkowego kosztu przy koncie.</td><td>Twarde ograniczenie oficjalne: kontrakty wygasłe dostępne tylko do ~2 lat od wygaśnięcia. Plus pacing limits i luki. <strong>Nie da się pobrać 2019→dziś.</strong></td></tr>
+<tr><td>Darmowe źródła (Yahoo itp.)</td><td>Koszt zerowy.</td><td>Brak rzetelnego M1 futures, nieznana proweniencja; niedopuszczalne dla wniosków badawczych — zero placeholderów.</td></tr>
 </table>
+<h4>Koszt i licencje — stan zweryfikowany</h4>
+<ul>
+<li><strong>Koszt historii:</strong> ~25–60 USD za MNQ + NQ, OHLCV-1m, 2019→dziś (zależnie od tego, czy pobieramy wszystkie nogi kontraktowe). Nowe konto otrzymuje <strong>125 USD kredytów startowych</strong>, więc praktyczny koszt tej fazy wynosi zero. Przed każdym pobraniem obowiązkowo <code>metadata.get_cost</code>. Batch download: opłata raz, ponowne pobranie w ciągu 30 dni bezpłatne.</li>
+<li><strong>Subskrypcja Databento Standard (199 USD/mies.) jest zbędna</strong> — historyczne OHLCV mieści się w warstwie pay-as-you-go.</li>
+<li><strong>Licencje:</strong> dane historyczne T+1 do backtestu i researchu nie wymagają licencji giełdowej CME. Automatyczny handel na własnym rachunku z wykorzystaniem danych historycznych jest dozwolony; egzekucja idzie przez brokera i to on dostarcza dane live. Redystrybucja na zewnątrz podlega osobnym ograniczeniom — nie dotyczy tego projektu.</li>
+</ul>
+<div class="box accent">
+<div class="label">Pułapka: continuous symbology Databento jest nieskorygowane</div>
+<p>Symbole typu <code>MNQ.v.0</code> zwracają ceny <strong>unadjusted</strong> — Databento nie wykonuje syntetycznego back-adjustmentu. To dobrze współgra z naszym planem własnego sklejania (4.3), ale oznacza bezwzględny zakaz: <strong>nie wolno używać serii continuous „prosto z API" jako podstawy do liczenia P&amp;L punktowego</strong>. Ścieżka obowiązkowa: surowe kontrakty per wygaśnięcie → własne rolowanie wolumenowe → własny back-adjust różnicowy.</p>
+</div>
+<h4>Ochrona przed pojedynczym punktem awarii danych</h4>
+<p>Cała wiedza projektu opiera się na jednym dostawcy — to ryzyko systemowe. Mitygacja: <strong>kontrola krzyżowa jednego pełnego miesiąca danych względem źródła wtórnego</strong> (FirstRate w tej roli), z zapisem wyniku porównania i sum kontrolnych w <code>manifest.md</code>. Dodatkowo opcja: zakup 3–6 miesięcy schematu <code>trades</code> i samodzielne zbudowanie z niego barów M1 — porównanie z barami dostawcy jest najmocniejszym testem jakości, jaki możemy wykonać, a te same dane posłużą do rozstrzygania spornych barów w silniku (5.4). Uwaga operacyjna: Databento zmienił normalizację GLBX.MDP3 w lipcu 2026 — <strong>datę pobrania i wersję schematu pinujemy w manifeście</strong>, a przy zmianach po stronie dostawcy regenerujemy <code>data/clean/</code> od zera.</p>
 
 <h3>4.2. Pipeline danych: raw → clean</h3>
 <pre>Databento API ──▶ data/raw/  (pliki natywne .dbn / .parquet, gitignore)
@@ -277,16 +324,28 @@
                      ▼  scripts/build_dataset.py
    [1] dedup + sortowanie po ts_event
    [2] walidacja: monotoniczność czasu, OHLC-spójność (L ≤ O,C ≤ H), wolumen ≥ 0
-   [3] mapowanie kontraktów: MNQH5, MNQM5, ... + tabela dat rolowania (wolumenowa)
-   [4] sklejenie kontraktu ciągłego + back-adjust (rozdz. 4.3)
-   [5] konwersja stref: przechowujemy UTC, indeksujemy sesje w ET (rozdz. 4.4)
-   [6] oznaczenia segmentów sesji (kolumna `segment`) i dnia sesyjnego (`trade_date`)
+   [3] KLASYFIKACJA LUK wg kalendarza sesji CME: expected_gap vs anomaly_gap  ◀ nowe w v1.1
+   [4] mapowanie kontraktów: MNQH5, MNQM5, ... + tabela dat rolowania (wolumenowa)
+   [5] sklejenie kontraktu ciągłego + back-adjust (rozdz. 4.3)
+   [6] konwersja stref: przechowujemy UTC, indeksujemy sesje w ET (rozdz. 4.4)
+   [7] oznaczenia segmentów sesji (kolumna `segment`) i dnia sesyjnego (`trade_date`)
+   [8] flagi: dst_transition, short_day, days_to_roll, halt_window (2019–2021)
                      │
                      ▼
                 data/clean/mnq_1m_cont.parquet     (commitowane do repo)
                 data/clean/nq_1m_cont.parquet     (do testów transferu)
                 data/clean/events.csv              (kalendarz zdarzeń, rozdz. 4.5)
                 data/manifest.md                   (zakres, wersje, sumy kontrolne)</pre>
+<div class="box accent">
+<div class="label">Semantyka OHLCV: brak bara nie jest luką w danych</div>
+<p>Dokumentacja Databento stanowi wprost: <em>„If no trade occurs within the interval, no record is printed."</em> Oznacza to, że <strong>brak bara M1 jest poprawnym opisem rynku</strong> (nie było transakcji), a nie defektem feedu. Wersja 1.0 tego dokumentu zakładała ~1380 barów na dzień i traktowałaby każdy brak jako anomalię — sanity-report generowałby fałszywe alarmy w cienkich godzinach sesji azjatyckiej.</p>
+<p><strong>Konsekwencje, które muszą być w kodzie:</strong></p>
+<ul>
+<li>Rozróżnienie <code>expected_gap</code> (przerwa serwisowa 16:00–17:00 CT, weekend, święto, dzień skrócony, historyczny halt 15:15–15:30 CT do 27.06.2021, brak transakcji w cienkiej godzinie) od <code>anomaly_gap</code> (wszystko inne — do ręcznego przejrzenia).</li>
+<li><strong>Forward-fill jest dozwolony dla wskaźników, ale bezwzględnie zakazany dla barów wejścia i stop-lossa.</strong> Wolumen zero oznacza, że nie było gdzie się wykonać — symulowanie transakcji w takim barze produkuje zysk, którego nie dało się zrealizować.</li>
+<li>Kalendarz sesji CME jest osobnym, wersjonowanym artefaktem, nie wnioskowaniem z danych.</li>
+</ul>
+</div>
 <p>Zasada niezmienniczości: pliki w <code>data/clean/</code> są <strong>artefaktami wersjonowanymi</strong> — każda regeneracja podbija wpis w <code>manifest.md</code> (data, zakres, hash, wersja skryptu). Żaden backtest nie czyta z <code>raw/</code>; jedynym wejściem badań jest <code>clean/</code>. Dzięki temu każdy wynik w projekcie jest odtwarzalny co do bajta.</p>
 
 <h3>4.3. Kontrakt ciągły: rolowanie wolumenowe i back-adjustment</h3>
@@ -297,6 +356,15 @@
 <div class="label">Dlaczego to jest krytyczne</div>
 <p>Nieskorygowane sklejenie pozostawia w serii sztuczne skoki cen w dniach rolowania (contango/backwardation). Strategia „kupuj spadki” przetestowana na takiej serii „zarabia” na lukach, które nigdy nie były handlowalne. To jeden z najczęstszych sposobów, w jaki amatorskie backtesty futures produkują fikcyjne zyski — i pierwszy test jednostkowy silnika (rozdz. 5.6): w serii ciągłej nie może istnieć bar, którego open odbiega od poprzedniego close o spread rolowania.</p>
 </div>
+<h4>Rozdzielenie serii: gdzie liczymy co (nowe w v1.1)</h4>
+<p>Back-adjust przesuwa całą historię sprzed rolowania o stałą wartość. Wewnątrz jednego okresu kontraktowego relacje cenowe są zachowane idealnie — ale <strong>na granicy rolowania poziomy odniesienia sięgające wstecz przestają odpowiadać cenom, które realnie widniały na tablicy</strong>. Trader patrzący w dniu rolowania na poprzednie dzienne maksimum widzi je na nowym kontrakcie, przesunięte o spread względem starego.</p>
+<table>
+<tr><th style="width:34%">Wielkość</th><th style="width:22%">Liczona na serii</th><th>Uzasadnienie</th></tr>
+<tr><td>PDH / PDL / PDC, poziomy międzysesyjne, zakres nocny odnoszony do dnia poprzedniego</td><td><strong>surowej</strong> (kontrakt aktywny)</td><td>To są ceny, przy których realnie stały zlecenia. Na serii skorygowanej rozjeżdżają się w 4 dniach rolowania w roku, generując sygnały wejścia na poziomach, które nie istniały.</td></tr>
+<tr><td>VWAP sesyjny, zakres dnia, ATR, wszystkie wskaźniki wewnątrzsesyjne</td><td>obojętne</td><td>Mieszczą się w całości w jednym kontrakcie; stałe przesunięcie ich nie zmienia. <span class="muted">(Audyt sugerował tu szerszą korektę — zawężamy ją do przypadków, w których faktycznie występuje różnica.)</span></td></tr>
+<tr><td>P&amp;L, equity, statystyki zwrotów</td><td><strong>ciągłej skorygowanej</strong></td><td>Wymaga jednorodnej skali punktowej przez całą historię.</td></tr>
+</table>
+<p>Loader udostępnia obie reprezentacje równolegle (<code>px_raw</code> i <code>px_adj</code>), a test jednostkowy w 5.6 sprawdza, że funkcje poziomów referencyjnych sięgają wyłącznie do <code>px_raw</code>.</p>
 
 <h3>4.4. Strefy czasowe i zmiana czasu — pułapki</h3>
 <ul>
@@ -322,13 +390,31 @@
 <h3>4.6. Kontrola jakości: sanity-report</h3>
 <p>Po każdej regeneracji <code>data/clean/</code> generowany jest <code>reports/data_quality.md</code>:</p>
 <ul>
-<li>liczba barów na dzień sesyjny w czasie (wykres) — nagłe spadki = luki w danych; oczekiwane ~1380 barów/dzień pełny;</li>
-<li>histogram luk między barami; wszystkie luki &gt; 1 min sklasyfikowane (przerwa serwisowa / święto / halt / brak danych);</li>
-<li>rozkład zakresów barów — bary o zakresie zero w RTH i bary-outliery (&gt; 0.5% w 1 min) do ręcznego przejrzenia z listą dat;</li>
-<li>weryfikacja krzyżowa: 10 losowych sesji porównanych z niezależnym wykresem (zgodność ekstremów dnia do 2 ticków);</li>
+<li>liczba barów na dzień sesyjny w czasie — <strong>rozbita na segmenty</strong>, bo oczekiwana liczba barów zależy od płynności segmentu (w RTH bliska 390, w sesji azjatyckiej istotnie niższa i to jest normalne);</li>
+<li>histogram luk z <strong>obowiązkową klasyfikacją każdej luki</strong> na <code>expected</code> (przerwa serwisowa, weekend, święto, dzień skrócony, halt 15:15–15:30 CT dla lat 2019–H1 2021, brak transakcji) i <code>anomaly</code> — tylko te drugie trafiają do przeglądu;</li>
+<li>udział barów o wolumenie zero w każdym segmencie — kontrola, czy zakaz forward-fill dla barów wykonania jest respektowany;</li>
+<li>rozkład zakresów barów — bary-outliery (&gt; 0.5% w 1 min) do ręcznego przejrzenia z listą dat;</li>
+<li>weryfikacja krzyżowa: <strong>pełny miesiąc</strong> porównany ze źródłem wtórnym + 10 losowych sesji porównanych z niezależnym wykresem (zgodność ekstremów dnia do 2 ticków);</li>
 <li>ciągłość rolowania: zero skoków open/close w dniach rolowań po adjustmencie;</li>
-<li>pokrycie kalendarza zdarzeń: każdy miesiąc historii musi mieć komplet zdarzeń rangi 1 (CPI×1, NFP×1, FOMC w miesiące posiedzeń).</li>
+<li>rozjazd <code>px_raw</code> vs <code>px_adj</code> w dniach rolowania — kontrola, że rozdzielenie serii z 4.3 działa;</li>
+<li>pokrycie kalendarza zdarzeń: każdy miesiąc historii musi mieć komplet zdarzeń rangi 1 (CPI×1, NFP×1, FOMC w miesiące posiedzeń);</li>
+<li>metadane: wersja schematu dostawcy, data pobrania, sumy kontrolne — do wykrycia zmian normalizacji po stronie Databento.</li>
 </ul>
+
+<h3>4.7. Dane uzupełniające dla klasy K6 (nowe w v1.1)</h3>
+<p>Hipotezy z klasy transmisji międzyrynkowej (H013, H014, H016) wymagają danych spoza MNQ. Zakres przyjęty świadomie w <strong>wersji oszczędnej</strong> — maksimum możliwości badawczych przy minimum nowych źródeł:</p>
+<table>
+<tr><th style="width:26%">Dane</th><th style="width:24%">Źródło</th><th>Uwagi i koszt</th></tr>
+<tr><td>ES (E-mini S&amp;P 500) M1</td><td>Databento GLBX.MDP3</td><td>Ta sama rodzina danych, ten sam pipeline i to samo rolowanie — koszt marginalny. Służy zarówno H014, jak i testom transferu z 7.5.</td></tr>
+<tr><td>Wagi składników NDX</td><td>Publikacje indeksowe, <strong>snapshoty kwartalne</strong></td><td>Wagi zmieniają się wolno; interpolacja między kwartałami jest wystarczającym przybliżeniem dla sygnału rezydualnego. Rekonstrukcja wstecz od 2019.</td></tr>
+<tr><td>Ceny after-hours 8 megacapów</td><td>Databento (dane akcyjne)</td><td>Jedyny realny nowy koszt. Potrzebne wyłącznie w oknach po publikacji wyników — pobieranie punktowe, nie ciągłe.</td></tr>
+<tr><td>Proxy SOX (półprzewodniki)</td><td><strong>Koszyk spółek już obecnych w NDX</strong></td><td>Zero dodatkowego źródła: NVDA, AVGO, AMD, QCOM, INTC, MU i pokrewne i tak są w zbiorze składników. Własny indeks ważony kapitalizacją zastępuje właściwy SOX.</td></tr>
+</table>
+<p><strong>Kontrola jakości specyficzna dla K6:</strong> suma wag składników musi mieścić się w [0.98, 1.02] w każdym snapshocie; ruchy after-hours muszą mieć niezerowy wolumen (inaczej odrzucane); beta względem ES i proxy-SOX estymowana na oknie kroczącym, nie globalnie. Wszystkie serie uzupełniające trafiają do <code>data/clean/</code> z osobnymi wpisami w manifeście.</p>
+<div class="box">
+<div class="label">Czego świadomie nie kupujemy</div>
+<p>Właściwego indeksu SOX, rentowności Treasuries w wysokiej rozdzielczości ani danych akcyjnych poziomu <code>trades</code>/MBP dla składników. Hipoteza <strong>H015 (price discovery NQ→MNQ)</strong> pozostaje z tego powodu <em>zarejestrowana, ale niebadalna</em> — na barach M1 wynik lead-lag byłby artefaktem agregacji, nie zjawiskiem rynkowym. Wraca do kolejki, jeśli kiedykolwiek pozyskamy dane tickowe.</p>
+</div>
 
 <!-- ============ ROZDZIAŁ 5 ============ -->
 <h2><span class="chapnum">Rozdział 5</span>Silnik backtestowy — specyfikacja techniczna</h2>
@@ -401,28 +487,40 @@ audit: len(trades), config_hash, global_trial_counter += grid_size</pre>
 <tr><th style="width:38%">Sytuacja w barze M1</th><th>Rozstrzygnięcie</th></tr>
 <tr><td>Bar dotyka tylko SL</td><td>Wyjście po SL − poślizg (stopy wykonują się gorzej, nigdy lepiej).</td></tr>
 <tr><td>Bar dotyka tylko TP (limit)</td><td>Wyjście po TP bez poślizgu dodatniego, ale wymagane <em>przebicie</em> ceny limitu o ≥ 1 tick (samo dotknięcie nie gwarantuje wypełnienia w kolejce).</td></tr>
-<tr><td><strong>Bar dotyka SL i TP</strong></td><td><strong>Liczy się SL.</strong> Bez danych tickowych nie znamy kolejności; wybieramy wariant gorszy.</td></tr>
-<tr><td>Open bara przeskakuje SL (gap)</td><td>Wyjście po open bara (nie po cenie SL) − poślizg — tak działa stop w rzeczywistości.</td></tr>
+<tr><td><strong>Bar dotyka SL i TP</strong></td><td><strong>Rozstrzygane sub-barami 1s</strong> (patrz ramka niżej). Fallback bez danych 1s: liczy się SL <em>plus obowiązkowe raportowanie pasma wrażliwości</em>.</td></tr>
+<tr><td>Open bara przeskakuje SL (gap)</td><td>Wyjście po open bara (nie po cenie SL) − <strong>poślizg skalowany wielkością luki</strong>: w pierwszych sekundach po otwarciu luką płynność w książce spada niemal do zera, więc realna kara sięga 2–8 ticków ponad cenę open. Model: <code>slip_gap = base + k · min(gap/ATR_M1, 4)</code>.</td></tr>
 <tr><td>Zlecenie stop-entry: open przeskakuje poziom</td><td>Wejście po open + poślizg.</td></tr>
 <tr><td>Wejście i potencjalne wyjście w tym samym barze</td><td>Wyjście dopiero od bara następnego — w barze wejścia znamy tylko fakt wypełnienia, nie trajektorię po nim.</td></tr>
 <tr><td>Bar w przerwie serwisowej / poza godzinami strategii</td><td>Zlecenia oczekujące zamrożone; pozycje przenoszone z pełnym mark-to-market (ryzyko luki widoczne w equity).</td></tr>
 <tr><td>Koniec dnia strategii intraday</td><td>Przymusowe zamknięcie po close ostatniego bara okna − poślizg (flat-by rule konfigurowalny per strategia).</td></tr>
 </table>
 
-<h3>5.5. Model poślizgu (domyślne wartości)</h3>
+<div class="box good">
+<div class="label">Rozstrzyganie barów spornych — rozwiązanie hybrydowe (v1.1)</div>
+<p>Reguła „przy dotknięciu SL i TP w jednym barze liczy się SL" wydaje się bezpiecznym konserwatyzmem, ale audyt metodologiczny wykazał, że jest <strong>skrzywieniem statystycznym</strong>: im szerszy cel względem stopa, tym częściej bar obejmuje oba poziomy — więc reguła systematycznie i nieproporcjonalnie karze strategie o wysokim stosunku zysku do ryzyka, zaniżając ich win rate i generując fikcyjne obsunięcia.</p>
+<p><strong>Rozwiązanie:</strong> w momencie wykrycia bara spornego silnik dociąga <strong>60 sub-barów jednosekundowych</strong> (schemat <code>ohlcv-1s</code> Databento) wyłącznie dla tej jednej minuty i odtwarza faktyczną chronologię. Nie przeliczamy całej historii w rozdzielczości 1 s — pobieramy punktowo, tylko dla spornych minut, których w całej historii będzie rzędu setek. Koszt obliczeniowy i finansowy: pomijalny.</p>
+<p><strong>Fallback</strong> (gdy dane 1 s niedostępne dla danego okresu): zachowujemy regułę „SL wygrywa", ale raport hipotezy <strong>musi</strong> zawierać <em>pasmo wrażliwości</em> — wynik przy założeniu „SL wygrywa" i „TP wygrywa" jako dwie osobne liczby. Strategia, która jest dobra tylko przy optymistycznym końcu pasma, nie jest dobra.</p>
+<p class="small muted">Odrzucono alternatywę proponowaną przez audyt (wnioskowanie kolejności z położenia ceny otwarcia względem ekstremów bara) — jest to heurystyka bez walidacji empirycznej, a jej błędy byłyby skorelowane z kierunkiem ruchu, czyli dokładnie tam, gdzie najbardziej szkodzą.</p>
+</div>
+
+<h3>5.5. Model poślizgu</h3>
+<p>Poślizg bazowy zależy od segmentu sesji, ale <strong>skaluje się dynamicznie zmiennością</strong> — statyczna tabela zaniżałaby koszt dokładnie w tych momentach, w których jest największy:</p>
+<div class="formula">slippage_ticks = base(segment) × clamp( ATR_M1 / median(ATR_M1, 60d), 1.0, 3.0 )</div>
 <table>
-<tr><th>Kontekst</th><th>Zlecenie rynkowe / stop</th><th>Uwagi</th></tr>
-<tr><td>RTH poza otwarciem, zmienność normalna</td><td>1 tick</td><td>baza</td></tr>
-<tr><td>Otwarcie RTH (09:30–10:00) lub ATR-percentyl &gt; 80</td><td>2 ticki</td><td>ruchliwa książka</td></tr>
-<tr><td>±10 min od zdarzenia rangi 1</td><td>4 ticki</td><td>domyślnie i tak blackout; wartość dla strategii zdarzeniowych (H003)</td></tr>
+<tr><th>Kontekst</th><th>base (zlecenie rynkowe / stop)</th><th>Uwagi</th></tr>
+<tr><td>RTH poza otwarciem, zmienność normalna</td><td>1 tick</td><td>baza; odpowiada realnej głębokości pierwszego poziomu książki MNQ przy 1–5 kontraktach</td></tr>
+<tr><td>Otwarcie RTH (09:30–10:00)</td><td>2 ticki</td><td>ruchliwa książka</td></tr>
+<tr><td>±10 min od zdarzenia rangi 1</td><td>4 ticki</td><td>domyślnie blackout; wartość dla strategii zdarzeniowych — model ×2 obowiązuje je już na etapie in-sample</td></tr>
 <tr><td>Azja (19:00–02:00 ET)</td><td>2 ticki</td><td>cienka książka</td></tr>
-<tr><td>Stress-test (rozdz. 7.6)</td><td>× 2 wszystkie powyższe</td><td>warunek przejścia walidacji</td></tr>
+<tr><td>Stop przeskoczony luką</td><td>base + k·min(gap/ATR_M1, 4)</td><td>do 8 ticków przy dużych lukach — płynność po otwarciu luką jest bliska zeru</td></tr>
+<tr><td>Stress-test (rozdz. 7.6)</td><td>× 2 wszystkie powyższe</td><td>warunek przejścia bramki walidacyjnej</td></tr>
 </table>
+<p class="small muted">Model nie korzysta z rzeczywistej szerokości spreadu, bo schemat OHLCV jej nie zawiera; ATR minutowy jest proxy. Gdyby projekt kiedykolwiek pozyskał dane <code>bbo-1s</code>, mnożnik zmienności należy zastąpić zmierzonym spreadem — to jedyna zmiana wymagana w tym module.</p>
 
 <h3>5.6. Walidacja samego silnika — zanim przetestujemy cokolwiek</h3>
 <p>Silnik, któremu nie udowodniono poprawności, produkuje śmieci z dokładnością do sześciu miejsc po przecinku. Przed pierwszą hipotezą silnik musi przejść:</p>
 <ol>
-<li><strong>Testy jednostkowe</strong> (pytest): rozstrzygnięcia z tabeli 5.4 na spreparowanych barach; poprawność rolowania (test z 4.3); segmenty przy zmianie czasu; naliczanie kosztów; przymusowe zamknięcia.</li>
+<li><strong>Testy jednostkowe</strong> (pytest): rozstrzygnięcia z tabeli 5.4 na spreparowanych barach; poprawność rolowania (test z 4.3); segmenty przy zmianie czasu; naliczanie kosztów; przymusowe zamknięcia; <strong>rozdzielenie serii</strong> — funkcje poziomów referencyjnych nie mogą sięgać do <code>px_adj</code>; <strong>zakaz wykonania w barze o wolumenie zero</strong>.</li>
 <li><strong>Test zerowej przewagi.</strong> Strategia losowych wejść (moneta, losowy SL/TP) na realnych danych: oczekiwany wynik ≈ −(koszty × liczba transakcji), rozkład zysków symetryczny przed kosztami. Odchylenie od tego = przeciek informacji w silniku.</li>
 <li><strong>Test znanego efektu.</strong> Kup na close RTH, sprzedaj na open RTH (overnight) vs kup na open, sprzedaj na close (intraday) — silnik musi odtworzyć znaną z literatury asymetrię overnight/intraday na indeksach US co do znaku i rzędu wielkości. To nie jest nasza strategia; to linijka do mierzenia, czy silnik mierzy dobrze.</li>
 <li><strong>Test symetrii.</strong> Odwrócenie każdej reguły (long↔short) na strategii losowej musi dawać lustrzany wynik przed kosztami.</li>
@@ -454,19 +552,64 @@ audit: len(trades), config_hash, global_trial_counter += grid_size</pre>
 <div class="formula">SR_ann = √252 · ( mean(r_d) − r_f/252 ) / std(r_d)&nbsp;&nbsp;&nbsp;&nbsp;[r_d — dzienne P&amp;L; r_f pomijalne dla intraday]</div>
 <p>Trzy pułapki, które silnik ma obowiązek obchodzić: <strong>(1)</strong> autokorelacja dziennych wyników zawyża annualizowany SR — raportujemy też SR z poprawką Lo (wariancja skorygowana o autokowariancje); <strong>(2)</strong> strategie o rzadkich transakcjach mają dni zerowe — std liczone tylko po dniach aktywnych zawyżałoby SR, liczymy po wszystkich dniach; <strong>(3)</strong> SR nie widzi asymetrii ogonów — dlatego zawsze towarzyszy mu MDD i Sortino.</p>
 
-<h3>6.4. Minimalna próba: dlaczego 300 transakcji</h3>
-<p>Błąd standardowy średniej wyniku to σ/√N. Dla typowej strategii intraday σ ≈ 1.2R. Aby odróżnić expectancy +0.12R (dobra strategia) od zera na poziomie ufności ~95%, potrzeba N ≈ (1.96·1.2/0.12)² ≈ <strong>380 transakcji</strong>; próg 300 przyjmujemy jako minimum bezwzględne przy jednoczesnym spełnieniu pozostałych kryteriów (stabilność lat, plateau). Konsekwencja projektowa: strategia generująca 2 sygnały tygodniowo potrzebuje ~3 lat OOS — dlatego walk-forward pokrywa całą historię, a hipotezy o rzadkich sygnałach (H004, H008, H009) mają z góry dłuższą ścieżkę walidacji i łagodniejszy priorytet w kolejce.</p>
+<h3>6.4. Minimalna próba: istotność to nie moc</h3>
+<p>Wersja 1.0 tego dokumentu wyprowadzała minimalną liczność z błędu standardowego: dla σ ≈ 1.2R i expectancy +0.12R wychodziło N ≈ (1.96·1.2/0.12)² ≈ <strong>384</strong>. Rachunek jest poprawny, ale odpowiada na węższe pytanie, niż się wydaje: to <strong>próg istotności</strong>, a nie moc testu. Przy N = 384 wykryjemy prawdziwą przewagę 0.12R tylko w około <strong>połowie przypadków</strong> — reszta to fałszywe negatywy. Odrzucalibyśmy działające strategie rzutem monety.</p>
+<div class="formula">N = ( (z<sub>α/2</sub> + z<sub>β</sub>) · σ_R / E )²</div>
+<table>
+<tr><th style="width:24%">Moc testu</th><th style="width:20%">z<sub>β</sub></th><th style="width:26%">N (σ=1.2R, E=0.12R)</th><th>Rola w projekcie</th></tr>
+<tr><td>50%</td><td>0.00</td><td>384</td><td>rachunek z v1.0 — <em>niewystarczający</em></td></tr>
+<tr><td>80%</td><td>0.84</td><td><strong>785</strong></td><td><strong>cel operacyjny</strong></td></tr>
+<tr><td>90%</td><td>1.28</td><td>1 051</td><td>komfort dla kandydata do certyfikacji</td></tr>
+</table>
+<p>Stąd progi z 1.3: <strong>400 transakcji to podłoga bezwzględna</strong> (spójna z własnym wyprowadzeniem istotności), a <strong>celem jest 800+</strong>. Poniżej podłogi nie formułujemy żadnych wniosków, nawet jeśli pozostałe metryki wyglądają dobrze.</p>
+<p><strong>Dwa zastrzeżenia, które trzeba respektować w kodzie.</strong> Po pierwsze, σ_R = 1.2R to <em>założenie</em>, nie pomiar — strategie z długim ogonem zysków mają σ rzędu 1.5–2R, co podnosi wymagane N kilkukrotnie; dlatego σ estymujemy empirycznie dla każdej strategii, a wzór analityczny służy wyłącznie do <em>planowania</em> wielkości próby. Po drugie, wyniki transakcji <strong>nie są niezależne</strong> (klastrowanie zmienności, reżimy), więc efektywna liczność jest niższa od nominalnej — kryterium decyzyjnym jest bootstrapowy przedział ufności (BCa) z rozdz. 7.2, a nie normalny błąd standardowy. Zbieżność do rozkładu normalnego przy skośności i kurtozie typowej dla R-multipli jest wolna i klasyczne przedziały niedokrywają.</p>
+<p>Konsekwencja projektowa: hipotezy o rzadkich sygnałach (dawne H004, H008) mają z góry dłuższą ścieżkę walidacji i niższy priorytet — przy 50 obserwacjach rocznie osiągnięcie mocy 80% jest poza zasięgiem naszej historii i karta nie może zostać certyfikowana, cokolwiek pokaże backtest.</p>
 
 <h3>6.5. Deflated Sharpe Ratio — nasza polisa przeciw samooszukaniu</h3>
 <p>Jeśli przetestujemy N wariantów strategii na szumie, najlepszy z nich będzie miał „świetny” Sharpe — czysto losowo. Oczekiwane maksimum SR z N niezależnych prób o zerowej prawdziwej przewadze rośnie jak √(2·ln N) · σ_SR. DSR (Bailey &amp; López de Prado) odpowiada na pytanie: <em>czy najlepszy znaleziony SR przekracza to, co dałoby samo losowanie?</em></p>
 <div class="formula">SR₀ = σ_SR · [ (1−γ)·Φ⁻¹(1−1/N) + γ·Φ⁻¹(1−1/(N·e)) ]&nbsp;&nbsp;&nbsp;γ ≈ 0.5772<br>
 DSR = Φ( (SR − SR₀)·√(T−1) / √( 1 − γ₃·SR + ((γ₄−1)/4)·SR² ) )</div>
-<p>gdzie N — liczba prób, T — długość próby (dni), γ₃/γ₄ — skośność i kurtoza dziennych zwrotów, Φ — dystrybuanta normalna. <strong>Interpretacja:</strong> DSR to prawdopodobieństwo, że prawdziwy SR jest dodatni, po uczciwym rozliczeniu z liczby prób. Wymagamy DSR &gt; 0.95.</p>
+<p>gdzie N — efektywna liczba prób, T — długość próby (dni), γ₃/γ₄ — skośność i kurtoza dziennych zwrotów, Φ — dystrybuanta normalna. <strong>Interpretacja:</strong> DSR to prawdopodobieństwo, że prawdziwy SR jest dodatni, po uczciwym rozliczeniu z liczby prób. Wymagamy <strong>DSR ≥ 0.95</strong>.</p>
+<div class="box">
+<div class="label">Trzy warunki poprawnej implementacji</div>
+<ol>
+<li><strong>Częstotliwość dzienna, nie annualizowana.</strong> SR, γ₃ i γ₄ we wzorze muszą być liczone na dziennych zwrotach. Wstawienie SR annualizowanego to najczęstszy błąd implementacji DSR i daje wyniki bez sensu. γ₄ to kurtoza surowa (dla rozkładu normalnego równa 3), spójnie z członem ((γ₄−1)/4).</li>
+<li><strong>σ_SR to rozrzut SR-ów między próbami</strong>, czyli √V[{SR<sub>n</sub>}] z zarejestrowanych wariantów — tak stanowi <em>False Strategy Theorem</em>. Uproszczenie σ_SR = 1/√T jest szczególnym przypadkiem czystego szumu iid; dopuszczamy je wyłącznie jako jawnie oznaczony fallback, gdy prób jest zbyt mało, by oszacować wariancję. Projekt i tak loguje SR każdego wariantu, więc poprawna wersja nic nie kosztuje.</li>
+<li><strong>N to liczba prób efektywnych</strong>, nie surowa liczba komórek siatki — algorytm w A.3.</li>
+</ol>
+</div>
+<h4>Tabela wykonalności — narzędzie planowania hipotez</h4>
+<p>Zanim uruchomimy hipotezę, musimy wiedzieć, czy jej budżet prób w ogóle pozwala na certyfikację. Poniższa tabela podaje DSR przy T = 1500 dni (~6 lat zszytego OOS — realny sufit projektu przy danych od 2019):</p>
+<table>
+<tr><th style="width:20%">SR annualizowany</th><th>N_eff = 1</th><th>N_eff = 5</th><th>N_eff = 10</th><th>N_eff = 30</th></tr>
+<tr><td><strong>0.8</strong></td><td>0.974 ✅</td><td>0.776 ❌</td><td>0.647 ❌</td><td>0.452 ❌</td></tr>
+<tr><td><strong>1.0</strong></td><td>0.993 ✅</td><td>0.894 ❌</td><td>0.806 ❌</td><td>0.643 ❌</td></tr>
+<tr><td><strong>1.2</strong></td><td>0.998 ✅</td><td>0.958 ✅</td><td>0.912 ❌</td><td>0.803 ❌</td></tr>
+<tr><td><strong>1.5</strong></td><td>1.000 ✅</td><td>0.993 ✅</td><td>0.981 ✅</td><td>0.943 ❌</td></tr>
+</table>
+<p>Oraz — patrząc z drugiej strony — ile dni OOS potrzeba, żeby DSR osiągnęło 0.95 przy pojedynczej próbie:</p>
+<table>
+<tr><th style="width:26%">SR annualizowany</th><th style="width:26%">Wymagane T</th><th>W latach OOS</th></tr>
+<tr><td>0.8</td><td>1 070 dni</td><td><strong>≈ 4.2 lat</strong></td></tr>
+<tr><td>1.0</td><td>690 dni</td><td>≈ 2.7 lat</td></tr>
+<tr><td>1.2</td><td>480 dni</td><td>≈ 1.9 lat</td></tr>
+<tr><td>1.5</td><td>310 dni</td><td>≈ 1.2 lat</td></tr>
+</table>
+<div class="box accent">
+<div class="label">Co z tych tabel wynika — i dlaczego istnieje system dwustopniowy</div>
+<p>Kombinacja progów z wersji 1.0 („Sharpe ≥ 0.8 przy DSR &gt; 0.95") była <strong>nieprzechodnia</strong>: nawet przy jednej jedynej próbie wymagałaby ponad czterech lat czystego OOS, a przy realistycznych pięciu–dziesięciu próbach na hipotezę jest poza zasięgiem niezależnie od długości historii. Limit 30 wariantów z v1.0 był w tym świetle samobójczy — przy N_eff = 30 nie przechodzi nawet strategia o Sharpe 1.5.</p>
+<p>To nie jest wada konstrukcji dokumentu, tylko treść <em>False Strategy Theorem</em>: <strong>nie istnieje próg Sharpe odporny na liczbę prób</strong>. Odpowiedzią nie może więc być ani udawanie, że problemu nie ma, ani obniżenie poprzeczki. Odpowiedzią jest rozdzielenie dwóch pytań — „czy to wygląda na przewagę ekonomiczną?" (Tier 1) i „czy da się to statystycznie certyfikować?" (Tier 2) — oraz wskazanie jedynej uczciwej drogi z pierwszego do drugiego: <strong>forward paper trading, który dokłada T bez zużywania prób</strong>.</p>
+</div>
 <div class="box accent">
 <div class="label">Globalny licznik prób — reguła bezwzględna</div>
 <p>Każdy przebieg backtestu — każda kombinacja parametrów w każdej siatce każdej hipotezy — inkrementuje globalny licznik <code>n_trials</code> zapisywany w repo (<code>validation/trial_counter.json</code>). DSR każdego kandydata liczy się względem <strong>całego</strong> licznika projektu (z korektą na korelację między wariantami — warianty jednej hipotezy są silnie skorelowane, liczymy efektywną liczbę prób przez klastrowanie). Bez tej reguły „próbujemy aż się uda” byłoby matematycznie gwarantowanym samooszustwem: po 1000 prób na czystym szumie najlepszy wariant miałby SR ≈ 3·σ_SR. Z tą regułą — im dłużej szukamy, tym wyższy próg musi przeskoczyć zwycięzca. To jest cena uczciwości i płacimy ją świadomie.</p>
 </div>
-<p><strong>Przykład liczbowy.</strong> Po przetestowaniu efektywnie 200 niezależnych wariantów, przy T = 500 dni OOS: σ_SR ≈ 1/√T ≈ 0.045 (dzienny), SR₀ ≈ 0.045 · 2.9 ≈ 0.13 dziennego SR ≈ 2.1 annualizowanego… — czyli <em>sam próg losowości</em> przekracza nasz próg jakości. Dlatego kluczowa jest korekta klastrowa (warianty zależne) i dyscyplina małych siatek: <strong>testujemy mało wariantów dobrze umotywowanych zamiast tysięcy przypadkowych</strong>. Praktyczny limit: ≤ 30 wariantów na hipotezę (siatka 5.4), co po korekcie utrzymuje SR₀ w osiągalnym zakresie.</p>
+<p><strong>Przykład liczbowy.</strong> Po przetestowaniu efektywnie 200 niezależnych wariantów, przy T = 500 dni OOS: σ_SR ≈ 1/√T ≈ 0.045 (dzienny), SR₀ ≈ 0.045 · 2.9 ≈ 0.13 dziennego SR ≈ 2.1 annualizowanego — czyli <em>sam próg losowości</em> dwukrotnie przekracza nasz próg jakości. Dlatego kluczowe są dwie rzeczy naraz: poprawna korekta klastrowa (warianty jednej hipotezy są silnie zależne) i <strong>żelazna dyscyplina małych siatek</strong>.</p>
+<div class="box good">
+<div class="label">Limit prób: ≤ 10 wariantów na hipotezę</div>
+<p>Wersja 1.0 dopuszczała 30 wariantów. Tabela wykonalności pokazuje, że przy N_eff = 30 nie przechodzi nawet strategia o Sharpe 1.5 — limit był w praktyce gwarancją porażki. <strong>Nowy limit to 10 wariantów</strong>, przy czym każdy musi być uzasadniony mechanizmem <em>przed</em> testem. To zmienia sposób pracy: nie przeszukujemy siatki, żeby zobaczyć, co wyjdzie — projektujemy garść wariantów, o których potrafimy powiedzieć, dlaczego akurat one.</p>
+<p>Drugim źródłem oszczędności jest kategoria <strong>benchmarków</strong> (rozdz. 9): cztery karty katalogu uruchamiane są raz, z parametrami wprost z literatury, bez optymalizacji — i dlatego <em>nie zużywają licznika prób</em>. Służą jako punkt odniesienia w teście przyrostowym, a nie jako kandydaci.</p>
+</div>
 
 <h3>6.6. Moc testu i projektowanie eksperymentu</h3>
 <p>Przed każdym backtestem karta hipotezy (aneks D) wymaga wypełnienia sekcji „projekt eksperymentu”: oczekiwana częstość sygnałów (z eksploracji rozkładów), wynikająca z niej liczba transakcji w oknie OOS, minimalny wykrywalny efekt (MDE) przy tej liczbie. Jeśli MDE &gt; realistyczna przewaga (np. strategia dawałaby 40 transakcji OOS, więc wykrywalne byłoby dopiero E &gt; 0.37R — nierealistyczne), hipoteza wraca do przeprojektowania <em>zanim</em> spali budżet prób. To eliminuje całą klasę „testów, które nie mogły się udać”.</p>
@@ -485,18 +628,43 @@ Walk-forward:   [IS 12 mies.][OOS 3 mies.] → przesunięcie o 3 mies. → ...
 <li><strong>Ostatnie 6 miesięcy historii = sejf (lockbox).</strong> Nie dotykamy ich w żadnej iteracji badawczej; służą wyłącznie do finalnej, jednorazowej weryfikacji kandydata przed decyzją GO na paper trading. Jedno spojrzenie na sejf = zużycie sejfu (odnotowane w rejestrze).</li>
 <li>Optymalizacja parametrów na IS: wyłącznie siatki zdefiniowane w karcie hipotezy (≤ 30 wariantów), bez doszukiwania.</li>
 <li>Wynik hipotezy = metryki krzywej OOS. Metryki IS raportujemy tylko diagnostycznie (rozjazd IS/OOS &gt; 50% na PF = czerwona flaga przeuczenia).</li>
+<li><strong>DSR liczymy na pełnym zszytym szeregu OOS</strong>, nie na pojedynczym oknie — maksymalizacja T jest jedyną dźwignią, którą mamy po stronie danych.</li>
 </ul>
+<h4>CPCV — dlaczego sam walk-forward nie wystarcza (nowe w v1.1)</h4>
+<p>Klasyczny walk-forward generuje <strong>jedną ścieżkę OOS</strong> — tę jedną, którą historia akurat ułożyła. Ocena strategii staje się przez to wrażliwa na przypadkową kolejność reżimów rynkowych: ta sama reguła wypadłaby inaczej, gdyby bessa 2022 przyszła przed hossą AI, a nie po niej. <strong>Combinatorial Purged Cross-Validation</strong> (López de Prado, <em>AFML</em> rozdz. 12) dzieli historię na N spójnych bloków i wybiera k bloków testowych, generując wiele historycznie spójnych ścieżek OOS zamiast jednej.</p>
+<table>
+<tr><th style="width:32%">Cecha</th><th style="width:30%">Walk-forward (12m/3m)</th><th>CPCV (N=6, k=2 → 15 ścieżek)</th></tr>
+<tr><td>Liczba ścieżek OOS</td><td>1, sekwencyjna</td><td>15 — otrzymujemy <strong>rozkład</strong> Sharpe’a, nie punkt</td></tr>
+<tr><td>Wykorzystanie danych</td><td>Częściowe (rozgrzewka okien)</td><td>100% danych występuje w warunkach OOS</td></tr>
+<tr><td>Wrażliwość na kolejność reżimów</td><td>Wysoka</td><td>Niska — testuje kombinacje różnych okresów</td></tr>
+<tr><td>Estymacja przeuczenia</td><td>Porównanie IS vs OOS</td><td>Pozwala policzyć <strong>PBO</strong></td></tr>
+</table>
+<p><strong>Rola każdego z nich:</strong> walk-forward zostaje jako symulacja realistycznego narastania kapitału (tak wyglądałby rachunek, gdybyśmy handlowali od 2020 roku); CPCV jest <strong>obowiązkową bramką przed otwarciem lockboxa</strong> i źródłem rozkładu wyników oraz metryki PBO. Moduł: <code>validation/cpcv.py</code>.</p>
 
 <h3>7.2. Monte Carlo — trzy testy</h3>
 <table>
 <tr><th style="width:28%">Test</th><th>Procedura</th><th>Kryterium</th></tr>
 <tr><td><strong>Permutacja kolejności</strong></td><td>5 000 × losowa permutacja sekwencji transakcji OOS; rozkład MDD i najdłuższego DD.</td><td>Realny MDD &lt; 95. percentyl rozkładu; planowanie kapitału bierze 95. percentyl, nie historyczny MDD.</td></tr>
-<tr><td><strong>Bootstrap wyniku</strong></td><td>5 000 × próbkowanie transakcji ze zwracaniem; przedział ufności dla E i PF.</td><td>Dolna granica 95% CI dla E &gt; 0.</td></tr>
-<tr><td><strong>Test na danych bez struktury</strong></td><td>Pełny pipeline hipotezy (z optymalizacją!) uruchomiony na 200 seriach syntetycznych (bootstrap blokowy zwrotów M1 — zachowuje rozkład i klastry zmienności, niszczy strukturę czasową).</td><td>Wynik na danych realnych &gt; 95. percentyl wyników na syntetykach. To najmocniejszy pojedynczy test w arsenale: mierzy, ile „zysku” generuje sama procedura.</td></tr>
+<tr><td><strong>Bootstrap wyniku</strong></td><td>5 000 × próbkowanie ze zwracaniem, w <strong>dwóch wariantach</strong>: po transakcjach oraz <strong>blokowo po dniach</strong> (bloki o losowej długości ~1 dzień sesyjny). Przedziały BCa dla E i PF.</td><td>Dolna granica 95% CI dla E &gt; 0 <strong>w wariancie blokowym</strong>. Bootstrap po transakcjach zakłada niezależność, której nie ma — przy klastrowaniu zmienności daje przedziały zbyt wąskie, czyli fałszywą pewność.</td></tr>
+<tr><td><strong>Test na danych bez struktury</strong></td><td>Pełny pipeline hipotezy uruchomiony na <strong>≥1000 seriach syntetycznych</strong> (bootstrap blokowy zwrotów M1 — zachowuje rozkład i klastry zmienności, niszczy strukturę czasową). <strong>Warunek krytyczny: na syntetykach wykonujemy dokładnie tyle samo prób optymalizacyjnych co na danych realnych.</strong></td><td>Wynik na danych realnych &gt; 95. percentyl wyników na syntetykach. Najmocniejszy pojedynczy test w arsenale: mierzy, ile „zysku” generuje sama procedura badawcza. <span class="muted">(v1.0 zakładała 200 serii — za mało: minimalne osiągalne p wynosiło 0.005, a oszacowanie percentyla było szumne.)</span></td></tr>
 </table>
+<h4>Testy overfittingu procesu selekcji (nowe w v1.1)</h4>
+<p>Powyższe trzy testy mierzą własności <em>znalezionej</em> strategii. Żaden z nich nie odpowiada na pytanie, ile przewagi wygenerował sam <em>proces wybierania</em> najlepszego wariantu z puli. Dokładają to dwa narzędzia:</p>
+<table>
+<tr><th style="width:22%">Test</th><th style="width:38%">Co mierzy</th><th>Bramka</th></tr>
+<tr><td><strong>PBO</strong> przez CSCV<br><span class="small muted">(Bailey, Borwein, López de Prado, Zhu)</span></td><td>Prawdopodobieństwo, że wariant najlepszy in-sample wypadnie <em>poniżej mediany</em> out-of-sample. Idealnie pasuje do naszej struktury partii wariantów.</td><td><strong>PBO &lt; 0.20</strong></td></tr>
+<tr><td><strong>SPA</strong> Hansena<br><span class="small muted">(alternatywa: White’s Reality Check)</span></td><td>Bootstrap stacjonarny po szeregach zwrotów <em>wszystkich</em> wariantów naraz: czy najlepszy bije benchmark zerowy po uwzględnieniu data-snoopingu. SPA ma większą moc niż Reality Check dzięki studentyzacji i mniejszą wrażliwość na słabe warianty w puli.</td><td>odrzucenie H₀ przy α = 0.05<br><span class="small">gotowa implementacja: <code>arch.bootstrap.SPA</code></span></td></tr>
+</table>
+<p>Opcjonalnie, gdy pula wariantów jest większa: procedura zstępująca Romano–Wolfa do wskazania, <em>które konkretnie</em> warianty przeżywają korektę na wielokrotne testowanie, a nie tylko czy przeżywa najlepszy.</p>
 
-<h3>7.3. Purged cross-validation dla hipotez swing</h3>
-<p>Dla strategii trzymających pozycje przez noc/dni standardowy walk-forward uzupełniamy o <strong>purging i embargo</strong>: między oknem treningowym a testowym usuwamy bufor równy maksymalnemu horyzontowi pozycji (zapobiega przeciekowi przez transakcje rozpięte na granicy okien) plus embargo 5 dni (zapobiega przeciekowi przez autokorelację zmienności). Bez tego walk-forward na strategiach wielodniowych systematycznie zawyża wyniki.</p>
+<h3>7.3. Purging i embargo — dla wszystkich strategii, nie tylko swing</h3>
+<p>Między oknem treningowym a testowym usuwamy <strong>purge</strong> — bufor równy maksymalnemu horyzontowi pozycji, który eliminuje przeciek przez transakcje rozpięte na granicy okien — oraz <strong>embargo</strong> chroniące przed przeciekiem przez autokorelację zmienności.</p>
+<table>
+<tr><th style="width:26%">Typ strategii</th><th style="width:20%">Purge</th><th style="width:18%">Embargo</th><th>Uzasadnienie</th></tr>
+<tr><td>Swing / overnight</td><td>maks. horyzont pozycji (dni)</td><td>5 dni</td><td>Bez tego walk-forward na strategiach wielodniowych systematycznie zawyża wyniki.</td></tr>
+<tr><td><strong>Intraday</strong></td><td>do końca dnia sesyjnego</td><td><strong>≥ 60 minut</strong></td><td>Wersja 1.0 zwalniała intraday z tego wymogu — błędnie. Zmienność wewnątrzdzienna jest silnie autokorelowana, więc bar tuż po granicy okna niesie informację o barze tuż przed nią.</td></tr>
+</table>
+<p>Purging i embargo obowiązują zarówno w walk-forward, jak i w CPCV — w tym drugim są warunkiem poprawności całej konstrukcji.</p>
 
 <h3>7.4. Odporność parametryczna: plateau, nie szczyt</h3>
 <p>Dla kandydata liczymy pełną siatkę ±20% wokół wybranych parametrów (co najmniej 2 parametry × 5 wartości). Kryteria: <strong>(a)</strong> wszystkie komórki siatki dodatnie po kosztach; <strong>(b)</strong> odchylenie standardowe PF w siatce &lt; 25% średniej; <strong>(c)</strong> wybrany punkt nie jest maksimum siatki (jeśli jest — przesuwamy się do środka plateau). Heatmapa siatki obowiązkowo w raporcie. Uzasadnienie: prawdziwy efekt strukturalny jest rozmyty w przestrzeni parametrów; szpilka („działa tylko dla okresu 17, dla 15 i 19 traci”) to sygnatura dopasowania do szumu.</p>
@@ -509,16 +677,27 @@ Walk-forward:   [IS 12 mies.][OOS 3 mies.] → przesunięcie o 3 mies. → ...
 <tr><td>Podokresy reżimowe</td><td>Wynik osobno dla: 2019 (niska zmienność), 2020 (COVID), 2022 (bessa), 2023–25 (hossa AI). Nie wymagamy zysku w każdym; wymagamy zrozumienia, gdzie strategia traci i czy filtr reżimowy to wychwytuje.</td></tr>
 </table>
 
-<h3>7.6. Bramka walidacyjna — checklist przed statusem CANDIDATE</h3>
-<pre>[ ] ≥ 300 transakcji OOS (lub uzasadniona ścieżka do 300 w 6.6)
+<h3>7.6. Bramka walidacyjna — dwie listy kontrolne</h3>
+<p><strong>Bramka Tier 1 — status PROMISING</strong> (uprawnia do forward paper tradingu):</p>
+<pre>[ ] ≥ 400 transakcji OOS (podłoga; cel 800+, moc 80%)
 [ ] PF OOS ≥ 1.15 przy pełnych kosztach          [ ] Sharpe OOS ≥ 0.8
 [ ] zysk w ≥ 3 z 4 lat                            [ ] top-5 dni < 40% wyniku
 [ ] plateau ±20% w całości dodatnie               [ ] IS/OOS rozjazd PF < 50%
-[ ] MC-permutacja: MDD < p95                      [ ] MC-bootstrap: CI(E) > 0
-[ ] MC-syntetyki: wynik > p95 syntetyków          [ ] DSR > 0.95 (globalny licznik)
-[ ] transfer NQ ≈ 1:1                             [ ] transfer ES wyjaśniony
-[ ] stress kosztów ×2: nadal dodatnia             [ ] purge/embargo (swing) zastosowane
+[ ] MC-permutacja: MDD < p95                      [ ] MC-bootstrap blokowy: CI-BCa(E) > 0
+[ ] MC-syntetyki (≥1000 serii, równy budżet prób): wynik > p95
+[ ] PBO < 0.20  (CSCV)                            [ ] SPA Hansena: H0 odrzucone
+[ ] CPCV: rozkład Sharpe'a raportowany            [ ] purge + embargo zastosowane
+[ ] transfer NQ ≈ 1:1                             [ ] transfer ES wyjaśniony mechanizmem
+[ ] stress kosztów ×2: nadal dodatnia             [ ] pasmo wrażliwości barów spornych raportowane
+[ ] test przyrostowy ponad benchmark dodatni      [ ] ablacje: każdy warunek coś wnosi
 [ ] raport kompletny w reports/                   [ ] wpis REGISTRY zaktualizowany</pre>
+<p><strong>Bramka Tier 2 — status CERTIFIED</strong> (jedyna droga do rozmowy o realnym kapitale):</p>
+<pre>[ ] wszystkie pozycje Tier 1 spełnione
+[ ] DSR ≥ 0.95 na pełnym zszytym OOS (backtest + zgromadzony paper),
+    liczone z sigma_SR wg False Strategy Theorem i N_eff wg algorytmu z A.3
+[ ] lockbox otwarty JEDEN raz i wynik zgodny z resztą OOS
+[ ] kryteria paper tradingu z 11.4 spełnione</pre>
+<p class="small muted">Kolejność jest nieprzypadkowa: lockbox otwieramy dopiero po przejściu wszystkich testów, które da się wykonać bez niego. Jedno spojrzenie do sejfu = zużycie sejfu, odnotowane w rejestrze.</p>
 
 <!-- ============ ROZDZIAŁ 8 ============ -->
 <h2><span class="chapnum">Rozdział 8</span>Fabryka hipotez — proces</h2>
@@ -535,16 +714,22 @@ Walk-forward:   [IS 12 mies.][OOS 3 mies.] → przesunięcie o 3 mies. → ...
                             backtest in-sample ──▶ PF<1.15 ──▶ REJECTED(is)
                                    │
                                    ▼
-                        walk-forward + MC + DSR ──▶ porażka ──▶ REJECTED(oos)
+                     walk-forward + CPCV + MC + PBO/SPA ──▶ porażka ──▶ REJECTED(oos)
                                    │
                                    ▼
-                               CANDIDATE ──▶ pełna bramka 7.6 ──▶ VALIDATED
-                                   │                                 │
-                                   ▼                                 ▼
-                            REJECTED(gate)                    lockbox + GO/NO-GO
-                                                                     │
-                                                                     ▼
-                                                              PAPER (rozdz. 11)</pre>
+                               CANDIDATE ──▶ bramka Tier 1 (7.6) ──▶ REJECTED(gate)
+                                   │
+                                   ▼
+                             ╔═══════════╗
+                             ║ PROMISING ║──▶ FORWARD PAPER (rozdz. 11)
+                             ╚═══════════╝         │  dokłada T bez zużywania prób
+                                   ▲               │
+                                   └───────────────┘  co miesiąc: przelicz DSR
+                                                   │
+                                        DSR ≥ 0.95 ▼
+                                             ╔═══════════╗
+                                             ║ CERTIFIED ║──▶ lockbox + GO/NO-GO usera
+                                             ╚═══════════╝</pre>
 <p>Każde przejście stanu = commit z aktualizacją <code>REGISTRY.md</code>. Stan <code>REJECTED</code> jest trwały — hipoteza może wrócić wyłącznie jako <em>nowa</em> karta z nowym ID i jawnym odwołaniem do poprzedniczki („H017, wariant H003 z wnioskiem W-12”).</p>
 
 <h3>8.2. Etap eksploracji — badanie bez backtestu</h3>
@@ -560,161 +745,221 @@ Wnioski przekrojowe:
 | W-01 | (przykład) poślizg 2t zabija wszystko poniżej 12 pkt TP w segmencie rth_open |</pre>
 <p>Rejestr pełni trzy funkcje: <strong>(1)</strong> zabezpiecza ciągłość między sesjami agenta — każda sesja zaczyna od przeczytania rejestru; <strong>(2)</strong> jest jawnym licznikiem prób do DSR; <strong>(3)</strong> akumuluje wnioski przekrojowe (W-xx) — fakty o rynku i o procesie odkryte przy okazji, które zasilają projektowanie kolejnych partii hipotez.</p>
 
-<h3>8.4. Reguły oryginalności — egzekwowane konstrukcyjnie</h3>
+<h3>8.4. Test oryginalności — czterokrokowy (przepisany w v1.1)</h3>
+<div class="box accent">
+<div class="label">Dlaczego poprzednia reguła była błędna</div>
+<p>Wersja 1.0 stanowiła, że reguła łącząca <em>dwie niezależne klasy mechanizmów</em> spełnia wymóg oryginalności. Audyt obalił to jednym zdaniem: <strong>„połączenie dwóch znanych warunków nie tworzy oryginalności — oryginalność wymaga innego mechanizmu, nie innych parametrów"</strong>.</p>
+<p>Kontrprzykład rozstrzyga sprawę: opening range breakout z filtrem zmienności łączy dwie klasy (rytm sesji × reżim), a jest absolutnie standardową implementacją ORB, obecną w każdym podręczniku. Stara reguła pobłogosławiłaby ją jako oryginalną. Podobnie własne percentyle i progi: jeśli tysiące uczestników handluje tę samą <em>rodzinę</em> sygnałów, nasz własny próg kompresji nie chroni przed tłokiem w tych samych momentach rynkowych — bo tłok bierze się z mechanizmu, nie z parametryzacji.</p>
+</div>
+<p>Każda karta hipotezy musi przejść cztery kroki. Pierwsze dwa wykonuje się <strong>przy pisaniu karty</strong>, przed jakimkolwiek testem; dwa kolejne są elementem walidacji.</p>
+<table>
+<tr><th style="width:8%">Krok</th><th style="width:30%">Wymóg</th><th>Co konkretnie</th></tr>
+<tr><td><strong>1</strong></td><td>Zidentyfikuj najbliższy publiczny benchmark</td><td>Nazwij z nazwiska i roku najbliższy opublikowany setup lub efekt (np. „ORB na dniu kontrakcji — Crabel ok. 1990, Initial Balance — Steidlmayer, lata 80."). Wpis obowiązkowy w karcie. Jeśli nie potrafisz wskazać żadnego, to sygnał ostrzegawczy: albo obszar jest naprawdę pusty, albo nie szukałeś.</td></tr>
+<tr><td><strong>2</strong></td><td>Nazwij różnicę <em>w mechanizmie</em></td><td>Jednym zdaniem: co w <strong>przyczynie zjawiska</strong> — nie w progach, oknach ani percentylach — odróżnia naszą kartę od benchmarku. <strong>Reguła samoczyszcząca: jeśli różnicy nie da się nazwać, karta natychmiast schodzi do kategorii benchmarku</strong> i nie zużywa budżetu prób.</td></tr>
+<tr><td><strong>3</strong></td><td>Test przyrostowy OOS</td><td>Czy karta dodaje wartość <em>ponad</em> benchmark po kosztach — benchmark uruchamiany z parametrami z literatury jako grupa kontrolna. Sam dodatni wynik karty nie wystarcza; liczy się przyrost.</td></tr>
+<tr><td><strong>4</strong></td><td>Ablacje</td><td>Usuń po kolei każdy warunek deklarowany jako „oryginalny" i przetestuj ponownie. <strong>Jeśli wynik się nie zmienia, warunek jest dekoracją</strong>, a karta redukuje się do benchmarku. Ablacje są obowiązkową pozycją bramki 7.6.</td></tr>
+</table>
+<h4>Reguły uzupełniające (pozostają z v1.0)</h4>
 <ol>
-<li><strong>Zakaz kopiowania setupów.</strong> Żadna karta nie może być transkrypcją reguły znalezionej w internecie/literaturze. Znane <em>efekty</em> (np. overnight drift — fakt naukowy) są dozwolonym punktem wyjścia; znane <em>reguły handlowe</em> — nie.</li>
-<li><strong>Własne definicje operacyjne.</strong> Każdy reżim i filtr definiujemy od zera na własnych danych (np. „niska zmienność” = ATR-percentyl w oknie 60 dni poniżej progu wyznaczonego z rozkładu, nie „VIX &lt; 15” z podręcznika).</li>
-<li><strong>Minimum dwa niezależne warunki.</strong> Reguła musi łączyć co najmniej dwie klasy z rozdz. 2.2 (np. struktura sesji × reżim zmienności). Pojedyncze warunki są zbyt eksploatowane, by przetrwać.</li>
-<li><strong>Test crowdingu.</strong> Karta zawiera pole „ryzyko zatłoczenia”: jak popularne są zbliżone podejścia i co by się działo z naszym wykonaniem, gdyby były masowo handlowane. Preferujemy reguły o nieoczywistych warunkach brzegowych.</li>
-<li><strong>Wywodliwość.</strong> Dla każdej reguły musi istnieć ścieżka: mechanizm (2.2) → efekt w rozkładach (8.2) → reguła. Reguła bez tej ścieżki nie wchodzi do walk-forward, choćby IS wyglądał znakomicie.</li>
+<li><strong>Zakaz kopiowania setupów.</strong> Znane <em>efekty</em> (np. dryf overnight — fakt naukowy) są dozwolonym punktem wyjścia; znane <em>reguły handlowe</em> — nie.</li>
+<li><strong>Własne definicje operacyjne.</strong> Każdy reżim i filtr definiujemy od zera na własnych danych. Konieczne, ale — jak pokazał audyt — <em>niewystarczające</em>.</li>
+<li><strong>Test crowdingu.</strong> Karta zawiera ocenę zatłoczenia: jak popularne są zbliżone podejścia i co stałoby się z naszym wykonaniem, gdyby były masowo handlowane.</li>
+<li><strong>Wywodliwość.</strong> Musi istnieć ścieżka: mechanizm (2.2) → efekt w rozkładach (8.2) → reguła. Reguła bez tej ścieżki nie wchodzi do walk-forward, choćby in-sample wyglądał znakomicie.</li>
+<li><strong>Ostrożność z „zanikiem po publikacji".</strong> Przeciętne słabnięcie przewidywalności po publikacji (McLean–Pontiff) nie jest stałym współczynnikiem do mechanicznego stosowania. Twarde, policzalne dowody zaniku istnieją dla nielicznych efektów; dla reszty <strong>zanik trzeba zweryfikować na własnych danych</strong>, a nie założyć.</li>
 </ol>
 
 <h3>8.5. Budżet i rytm iteracji</h3>
 <ul>
 <li>Partia = 3–5 kart naraz (wspólna eksploracja tła: te same rozkłady bazowe służą wielu kartom).</li>
 <li>Jedna iteracja karty (eksploracja → werdykt wstępny) ≈ 1–2 dni robocze agenta.</li>
-<li>Limit siatki: ≤ 30 wariantów/kartę; limit partii: ≤ 120 wariantów — kontrola tempa wzrostu <code>n_trials</code>.</li>
+<li>Limit siatki: <strong>≤ 10 wariantów/kartę</strong>; limit partii: ≤ 40 wariantów — kontrola tempa wzrostu <code>n_trials</code>. Benchmarki nie liczą się do limitu, bo nie są optymalizowane.</li>
 <li>Po każdej partii: przegląd wniosków W-xx i projektowanie następnej partii <em>z ich uwzględnieniem</em>. To jest pętla ucząca projektu.</li>
 </ul>
 
 <!-- ============ ROZDZIAŁ 9 ============ -->
-<h2><span class="chapnum">Rozdział 9</span>Katalog hipotez startowych: 12 kart badawczych</h2>
-<p>Karty poniżej to <strong>punkty startowe pierwszych partii</strong> — nie obietnice. Każda przejdzie pełny proces z rozdz. 8 i większość zostanie odrzucona; taka jest rola katalogu. Kolejność uwzględnia moc statystyczną (częstość sygnałów) i niezależność mechanizmów. Wszystkie parametry liczbowe w kartach są <em>wstępnymi zakresami siatek</em>, nie wartościami wybranymi.</p>
+<h2><span class="chapnum">Rozdział 9</span>Katalog hipotez: benchmarki, przeformułowania, kandydaci</h2>
 
-<div class="hcard"><div class="hhead"><span class="hid">H001 — Kompresja nocna → ekspansja otwarcia</span><span class="htag">K1 × K3 · intraday</span></div><div class="hbody">
-<p class="hyp">Hipoteza: gdy zakres sesji nocnej (18:00–09:30 ET) jest w dolnym kwintylu rozkładu z 60 dni, wybicie z zakresu pierwszych 15 minut RTH ma dodatnie oczekiwanie w horyzoncie do zamknięcia sesji.</p>
-<p><strong>Mechanizm:</strong> kompresja nocna = niezrealizowane pozycjonowanie; aukcja otwarcia wymusza odkrycie ceny, a wąski zakres startowy daje niski koszt ryzyka względem potencjalnej ekspansji (asymetria zakładu, nie prognoza kierunku).</p>
-<p><strong>Eksploracja:</strong> kwintyle ON-range vs rozkład (a) zasięgu dnia od open, (b) częstości kontynuacji kierunku wybicia IB-15, (c) głębokości cofnięć po wybiciu.</p>
-<table><tr><th>Siatka</th><th>Zakresy</th></tr>
-<tr><td>Próg kompresji</td><td>p20 / p30 / p40 z okna 60 dni</td></tr>
-<tr><td>Okno initial balance</td><td>10 / 15 / 30 min</td></tr>
-<tr><td>Stop / cel</td><td>przeciwległy kraniec IB / k×ATR(dzienny), k ∈ {0.8, 1.2}; wyjście czasowe 15:55 ET</td></tr></table>
-<p><strong>Falsyfikacja:</strong> brak różnic rozkładów między kwintylami; lub kontynuacja ≤ 50% przy koszcie przekraczającym asymetrię. <strong>Crowding:</strong> idea wybić z otwarcia jest znana — oryginalność leży w warunkowaniu kompresją nocną liczoną po naszemu i filtrze zdarzeń (dni CPI wykluczone); ryzyko średnie.</p>
+<h3>9.1. Jak audyt przebudował ten rozdział</h3>
+<p>Wersja 1.0 zawierała dwanaście kart przedstawionych jako równorzędni kandydaci na oryginalną strategię. Audyt oryginalności skonfrontował je z literaturą akademicką i publiczną praktyką branżową, a wynik był bolesny i pouczający: <strong>cztery karty okazały się wprost tożsame z opublikowanymi setupami</strong>, cztery kolejne były zbyt bliskie znanym rodzinom, by nazywać je oryginalnymi bez przeformułowania, a karta uznana w v1.0 za najbardziej oryginalną (dzień po wynikach big-tech) funkcjonuje w publicznych poradnikach handlu NQ.</p>
+<p>Odpowiedzią nie jest usunięcie tych kart, lecz <strong>przypisanie im właściwych ról</strong>. Katalog dzieli się teraz na trzy kategorie o różnym przeznaczeniu i różnym koszcie dla budżetu prób:</p>
+<table>
+<tr><th style="width:20%">Kategoria</th><th style="width:26%">Karty</th><th>Rola i koszt dla licznika prób</th></tr>
+<tr><td><strong>Benchmarki</strong></td><td>B01–B04 (dawne H006, H007, H008, H012)</td><td>Uruchamiane <strong>raz, z parametrami wprost z literatury</strong>, bez optymalizacji. Służą jako grupa kontrolna w teście przyrostowym (8.4 krok 3). <strong>Nie zużywają licznika prób</strong> — to bezpośredni zysk dla DSR wszystkich pozostałych kandydatów.</td></tr>
+<tr><td><strong>Przeformułowane</strong></td><td>H001–H004</td><td>Pytanie zmienione z „czy znany efekt działa?" na „jaki mechanizm decyduje, <em>kiedy</em> występuje?". Każda dostaje jawny benchmark, nazwaną różnicę mechanizmu i plan ablacji. Karta, dla której różnicy nie da się nazwać, schodzi do benchmarków.</td></tr>
+<tr><td><strong>Kandydaci</strong></td><td>H005, H010, H011, H013, H014, H016<br><span class="small muted">(H015 warunkowa)</span></td><td>Główny front oryginalnych badań. Najniższe pokrycie z opublikowanymi strategiami, najwyższy priorytet.</td></tr>
+</table>
+<p class="small muted">Każda karta zawiera odtąd trzy nowe, obowiązkowe pola wynikające z testu z rozdz. 8.4: <strong>najbliższy publiczny benchmark</strong>, <strong>różnica mechanizmu</strong> i <strong>plan ablacji</strong>. Siatki parametrów zredukowano do maksymalnie dziesięciu wariantów.</p>
+
+<h3>9.2. Stan wiedzy: co jest znane i czy nadal działa</h3>
+<p>Podstawa rekategoryzacji — dla każdej rodziny efektów: od kiedy jest znana i jaki jest udokumentowany status.</p>
+<table>
+<tr><th style="width:22%">Rodzina efektów</th><th style="width:14%">Znana od</th><th>Status</th></tr>
+<tr><td>Dryf overnight na indeksach US</td><td>2008 <span class="small muted">(Cooper–Cliff–Gulen)</span></td><td><strong>Udokumentowany zanik.</strong> Badania Fed nowojorskiego wskazują ~3.7% rocznie w latach 1998–2020 wobec wartości bliskiej zeru w latach 2021–2025. Jeden z nielicznych efektów z policzalnym dowodem wygaśnięcia. <em>Weryfikujemy to na własnych danych przed jakąkolwiek pracą nad H004.</em></td></tr>
+<tr><td>Opening range / Initial Balance</td><td>lata 80. <span class="small muted">(Steidlmayer)</span>, ok. 1990 <span class="small muted">(Crabel)</span></td><td>Motyw publiczny i masowo eksploatowany. Nie wyzerowany, ale przewaga cienka, wrażliwa na koszty i <strong>nieoryginalna z definicji</strong>.</td></tr>
+<tr><td>Poziomy referencyjne (PDH/PDL, wsparcia i opory)</td><td>2000, 2003 <span class="small muted">(Osler)</span></td><td>Mechanizm klastrowania zleceń przy poziomach udokumentowany. Ale <strong>mikrostruktura kolejnych testów tego samego poziomu jest słabo sformalizowana</strong> — obszar do zagospodarowania.</td></tr>
+<tr><td>Efekty dnia tygodnia, weekend effect</td><td>1973, 1980 <span class="small muted">(Cross, French)</span></td><td>W dużych indeksach praktycznie wyarbitrażowany; zanik dla dużych spółek udokumentowany po 1987 r. Znak efektu niestabilny w metaanalizach.</td></tr>
+<tr><td>Wzorzec U-kształtny sesji (lunch)</td><td>koniec lat 80.</td><td><strong>Fakt mikrostrukturalny trwały</strong> (niższa aktywność w środku dnia). Ale zyskowna po kosztach strategia powrotu do VWAP w lunchu <em>nie ma</em> równie mocnego udokumentowania — przy jednoczesnej dużej popularności detalicznej.</td></tr>
+<tr><td>OPEX, rebalancing indeksów, mechanika zamknięcia</td><td>lata 80. / 2013 / 2018</td><td>Efekt włączenia do indeksu ma <strong>najlepiej policzony zanik</strong> ze wszystkich (mediana nadwyżkowej stopy dla dodań spadła z kilku procent w latach 90. do wartości bliskiej zeru w ostatniej dekadzie). Momentum wewnątrzdzienne opublikowane w 2018 r. i intensywnie eksploatowane; informacja o nierównowadze zleceń na zamknięcie jest wyceniana w milisekundach.</td></tr>
+</table>
+
+<h3>9.3. Rejestr benchmarków (B01–B04)</h3>
+<p>Te cztery karty <strong>nie są kandydatami na oryginalną strategię</strong>. Uruchamiamy je raz, z parametrami z literatury, i traktujemy jako punkty odniesienia. Ich wyniki są potrzebne — bez nich test przyrostowy z rozdz. 8.4 nie ma z czym porównywać.</p>
+<table>
+<tr><th style="width:8%">ID</th><th style="width:24%">Karta</th><th style="width:28%">Publiczny odpowiednik</th><th>Dlaczego benchmark, nie kandydat</th></tr>
+<tr><td><strong>B01</strong></td><td>Gap otwarcia i jego domknięcie<br><span class="small muted">(dawne H006)</span></td><td>Gap-fill — jeden z najstarszych i najszerzej znanych setupów indeksowych</td><td>Rodzina setupu identyczna. Warstwa klasyfikacji katalizatora (gap z newsem vs bez) była wartościowa i <strong>zostaje przeniesiona jako cecha do H013</strong>, ale sama nie czyni karty oryginalną.</td></tr>
+<tr><td><strong>B02</strong></td><td>Cykl kontrakcja–ekspansja zakresu<br><span class="small muted">(dawne H007)</span></td><td>Rodzina NR7 i pochodne, Crabel, ok. 1990 — <strong>wprost</strong></td><td>Nasze własne percentyle nie zmieniają rodziny setupu. Mechanizm identyczny z opublikowanym.</td></tr>
+<tr><td><strong>B03</strong></td><td>Asymetria piątek→poniedziałek<br><span class="small muted">(dawne H008)</span></td><td>Weekend effect, Cross 1973 / French 1980</td><td>Podwójny problem: efekt bazowy wyarbitrażowany po 1987 r. <em>oraz</em> słaba moc statystyczna — ~52 obserwacje rocznie przy wymogu 400+ transakcji OOS oznaczają, że karta nie mogłaby zostać certyfikowana nawet gdyby działała.</td></tr>
+<tr><td><strong>B04</strong></td><td>Mechanika zamknięcia / proxy MOC<br><span class="small muted">(dawne H012)</span></td><td>Momentum wewnątrzdzienne, Gao i in., <em>Journal of Financial Economics</em> 2018</td><td>Opublikowane i eksploatowane. Dodatkowo: informacja o nierównowadze zleceń MOC jest wyceniana w ~300 ms, więc jej proxy odczytywane z barów minutowych <strong>nie daje żadnej przewagi informacyjnej wobec HFT</strong>.</td></tr>
+</table>
+
+<h3>9.4. Karty przeformułowane (H001–H004)</h3>
+<p>Cztery karty o mechanizmach wartych ratowania — pod warunkiem przejścia kroków 1 i 2 testu oryginalności. Przy każdej podano wymaganą różnicę mechanizmu; <strong>jeśli w trakcie pisania pełnej karty okaże się, że różnicy nie da się obronić, karta dołącza do benchmarków</strong> — decyzja zapada na papierze, zanim spali choć jedną próbę.</p>
+
+<div class="hcard"><div class="hhead"><span class="hid">H001 — Kompresja nocna: przyczyna, nie sam fakt</span><span class="htag">K1 × K3 · intraday</span></div><div class="hbody">
+<p class="hyp">Przeformułowanie: nie „czy wybicie po wąskiej nocy działa", lecz <strong>czy kompresja nocna o różnym pochodzeniu prowadzi do statystycznie różnych sesji RTH</strong>.</p>
+<table class="kv">
+<tr><td>Publiczny benchmark</td><td>ORB / Initial Balance na dniu kontrakcji (Steidlmayer, Crabel) → <strong>B02</strong></td></tr>
+<tr><td>Wymagana różnica mechanizmu</td><td>Benchmark traktuje wąski zakres jako jednorodny sygnał. My rozróżniamy <em>kompresję z braku uczestników</em> (święta, sesje bez katalizatora, cienka książka) od <em>kompresji z równowagi sił</em> (wysoki wolumen przy wąskim zakresie — dwie strony aktywnie się blokują). Hipoteza: tylko druga poprzedza ekspansję kierunkową; pierwsza to po prostu martwy rynek, który zostaje martwy.</td></tr>
+<tr><td>Siatka (≤10)</td><td>próg kompresji: p20 / p30; klasyfikator pochodzenia: wolumen nocny vs mediana 60d (2 progi); okno IB: 15 / 30 min → 8 wariantów</td></tr>
+<tr><td>Plan ablacji</td><td>Usunąć klasyfikator pochodzenia → jeśli wynik bez zmian, karta <strong>jest</strong> B02 i schodzi do benchmarków.</td></tr>
+<tr><td>Falsyfikacja</td><td>Rozkłady sesji RTH nierozróżnialne między typami kompresji.</td></tr>
+</table>
 </div></div>
 
-<div class="hcard"><div class="hhead"><span class="hid">H002 — Powrót do VWAP w martwej strefie</span><span class="htag">K1 × K5 × K3 · intraday</span></div><div class="hbody">
-<p class="hyp">Hipoteza: w segmencie lunch (11:30–13:30 ET), w reżimie niskiej zmienności i przy braku zdarzeń rangi 1, odchylenia ceny od sesyjnego VWAP powyżej progu wyznaczonego z rozkładu mają dodatnie oczekiwanie powrotu do VWAP.</p>
-<p><strong>Mechanizm:</strong> lunch to segment zdominowany przez algorytmy egzekucyjne benchmarkowane do VWAP; brak przepływu kierunkowego sprawia, że rozszerzenia są głównie szumem egzekucji, nie informacją — a benchmark działa jak przyciąganie.</p>
-<p><strong>Eksploracja:</strong> rozkład maksymalnego odchylenia od VWAP w lunch vs pozostałych segmentach; prawdopodobieństwo powrotu do VWAP przed 13:30 jako funkcja wielkości odchylenia (w jednostkach odchylenia standardowego VWAP z bieżącej sesji) i reżimu ATR.</p>
-<table><tr><th>Siatka</th><th>Zakresy</th></tr>
-<tr><td>Próg wejścia</td><td>1.5 / 2.0 / 2.5 σ_vwap sesji</td></tr>
-<tr><td>Filtr reżimu</td><td>ATR-percentyl(60d) &lt; 40 / &lt; 60</td></tr>
-<tr><td>Stop / cel</td><td>dodatkowe 1.0–1.5 σ przeciw / VWAP; wyjście czasowe 13:30</td></tr></table>
-<p><strong>Falsyfikacja:</strong> prawdopodobieństwo powrotu niezależne od segmentu lub zjadane przez ogon strat w dniach trendowych. <strong>Crowding:</strong> mean-reversion do VWAP jest znany instytucjonalnie; nasza specyficzność (segment × reżim × kalendarz) i mały rozmiar chronią wykonanie; ryzyko średnio-niskie.</p>
+<div class="hcard"><div class="hhead"><span class="hid">H002 — Powrót do VWAP: kto stoi po drugiej stronie</span><span class="htag">K1 × K5 × K3 · intraday</span></div><div class="hbody">
+<p class="hyp">Przeformułowanie: nie „czy cena wraca do VWAP w lunchu", lecz <strong>czy odchylenie powstałe przy niskim wolumenie zachowuje się inaczej niż odchylenie z przepływem</strong>.</p>
+<table class="kv">
+<tr><td>Publiczny benchmark</td><td>„Lunch VWAP fade" — bardzo popularny setup detaliczny; ciekawe, że przy <em>luce w literaturze akademickiej</em>. Benchmark odtwarzamy z parametrów obiegowych.</td></tr>
+<tr><td>Wymagana różnica mechanizmu</td><td>Benchmark handluje samo odchylenie. My warunkujemy je <strong>strukturą wolumenu, która je wytworzyła</strong>: rozszerzenie przy wolumenie poniżej mediany segmentu to szum egzekucyjny (powinno wracać), rozszerzenie z wolumenem to informacja (nie powinno). Ten sam dystans od VWAP, dwa różne zjawiska.</td></tr>
+<tr><td>Siatka (≤10)</td><td>próg wejścia: 1.5 / 2.0 / 2.5 σ_vwap; próg wolumenowy: mediana / p30 segmentu → 6 wariantów</td></tr>
+<tr><td>Plan ablacji</td><td>Usunąć warunek wolumenowy → jeśli wynik bez zmian, karta jest zwykłym fade i schodzi do benchmarków.</td></tr>
+<tr><td>Falsyfikacja</td><td>Prawdopodobieństwo powrotu niezależne od struktury wolumenu odchylenia.</td></tr>
+</table>
 </div></div>
 
-<div class="hcard"><div class="hhead"><span class="hid">H003 — Wygaszenie pierwszej reakcji na publikację</span><span class="htag">K4 · event-driven</span></div><div class="hbody">
-<p class="hyp">Hipoteza: pierwszy impuls po publikacjach CPI/FOMC ma podwyższone prawdopodobieństwo częściowego cofnięcia w oknie 15–60 minut, gdy impuls nie przebija poziomów referencyjnych dnia (ON-high/low), a cofnięcie handlowane po stabilizacji spreadu ma dodatnie oczekiwanie.</p>
-<p><strong>Mechanizm:</strong> reakcja pierwszych sekund to egzekucja algorytmiczna na nagłówek przy zdjętej płynności; wycena pełnej treści (szczegóły raportu, konferencja) przychodzi wolniej. Impuls, który nie zdobywa poziomów strukturalnych, jest częściej przepływem niż informacją.</p>
-<p><strong>Eksploracja:</strong> dla wszystkich publikacji rangi 1 od 2019: rozkład (impuls 0–5 min) → (ruch 15–60 min) warunkowany przebiciem/nieprzebiciem poziomów referencyjnych; osobno CPI i FOMC (inne godziny, inna mechanika — decyzja vs konferencja).</p>
-<table><tr><th>Siatka</th><th>Zakresy</th></tr>
-<tr><td>Okno impulsu / wejścia</td><td>impuls 5 min; wejście 10 / 15 / 20 min po publikacji</td></tr>
-<tr><td>Warunek strukturalny</td><td>impuls nie przebił ON-ekstremum / przebił i wrócił</td></tr>
-<tr><td>Stop / cel</td><td>za ekstremum impulsu / 50–100% cofnięcia impulsu</td></tr></table>
-<p><strong>Falsyfikacja:</strong> kontynuacja impulsu niezależna od warunku strukturalnego; lub poślizg 4-tickowy zjada całą asymetrię. <strong>Uwaga wykonawcza:</strong> to jedyna karta handlująca w oknie podwyższonego poślizgu — model kosztów ×2 obowiązuje ją już na etapie IS. <strong>Crowding:</strong> fade-the-news jest znany; przewaga ma pochodzić z warunku strukturalnego i selekcji publikacji; ryzyko średnie.</p>
+<div class="hcard"><div class="hhead"><span class="hid">H003 — Reakcja na publikację: co odróżnia odwrócenie od kontynuacji</span><span class="htag">K4 · event-driven</span></div><div class="hbody">
+<p class="hyp">Przeformułowanie: nie „czy fade'ować pierwszy ruch po danych", lecz <strong>które cechy samej reakcji przewidują odwrócenie, a które kontynuację</strong>.</p>
+<table class="kv">
+<tr><td>Publiczny benchmark</td><td>Literatura reakcji na ogłoszenia makro (dryf vs odwrócenie) + obiegowa praktyka „fade the news".</td></tr>
+<tr><td>Wymagana różnica mechanizmu</td><td>Benchmark zakłada stałą tendencję. My twierdzimy, że rozstrzyga <strong>relacja impulsu do struktury płynności sprzed publikacji</strong>: impuls, który nie zdobył poziomów referencyjnych zbudowanych przed danymi, był przepływem przez pustą książkę, a nie repricingiem. Zmienną warunkującą jest zatem <em>gdzie</em> impuls się zatrzymał względem struktury, nie <em>jak duży</em> był.</td></tr>
+<tr><td>Siatka (≤10)</td><td>okno wejścia: 10 / 15 / 20 min po publikacji; warunek strukturalny: nieprzebicie ON-ekstremum / przebicie z powrotem → 6 wariantów</td></tr>
+<tr><td>Plan ablacji</td><td>Usunąć warunek strukturalny → zostaje czysty fade czasowy (benchmark).</td></tr>
+<tr><td>Falsyfikacja</td><td>Kontynuacja niezależna od położenia impulsu względem poziomów. <strong>Uwaga:</strong> jedyna karta handlująca w oknie podwyższonego poślizgu — model kosztów ×2 obowiązuje ją już in-sample.</td></tr>
+</table>
 </div></div>
 
-<div class="hcard"><div class="hhead"><span class="hid">H004 — Warunkowy dryf nocny</span><span class="htag">K2 × K3 · swing/overnight</span></div><div class="hbody">
-<p class="hyp">Hipoteza: znany dodatni dryf overnight na indeksach US nie jest jednorodny — koncentruje się w noce po dniach o określonej strukturze RTH (zamknięcie w górnej części zakresu przy spadającej zmienności) i poza nocami przed zdarzeniami rangi 1.</p>
-<p><strong>Mechanizm:</strong> dryf overnight to skumulowana premia za ryzyko luk + systematyczne przepływy (zagraniczne zakupy, hedging opcyjny). Struktura zamknięcia RTH koduje bilans popytu na ryzyko; noce przed publikacjami mają odwrotny profil (premia za niepewność ściągana przed danymi).</p>
-<p><strong>Eksploracja:</strong> dekompozycja zwrotów close→open od 2019 warunkowana: pozycją close w zakresie dnia (tercyle), kierunkiem zmiany ATR, obecnością zdarzenia rangi 1 następnego dnia, dniem tygodnia.</p>
-<table><tr><th>Siatka</th><th>Zakresy</th></tr>
-<tr><td>Warunek wejścia</td><td>close w górnym tercylu/kwartylu zakresu dnia; ATR malejący 3/5 dni</td></tr>
-<tr><td>Wyłączenia</td><td>noce przed CPI/FOMC/NFP; noce po earnings top-8</td></tr>
-<tr><td>Wyjście</td><td>open RTH / open + trailing do 10:00</td></tr></table>
-<p><strong>Falsyfikacja:</strong> dryf jednorodny (warunki nic nie zmieniają) → brak wartości dodanej nad znany efekt = odrzucenie z powodu braku oryginalnej treści. <strong>Uwaga:</strong> ~250 sygnałów/rok maksymalnie przed filtrami; moc statystyczna wymaga pełnej historii. <strong>Crowding:</strong> efekt bazowy szeroko opisany — cała wartość karty leży w warunkowaniu; ryzyko wysokie i jawnie zaakceptowane.</p>
+<div class="hcard"><div class="hhead"><span class="hid">H004 — Dryf nocny: czy w ogóle jeszcze istnieje</span><span class="htag">K2 × K3 · swing · WARUNKOWA</span></div><div class="hbody">
+<p class="hyp">Przeformułowanie wymuszone: <strong>zanim zapytamy „w jakich reżimach dryf jest silniejszy", musimy sprawdzić, czy dryf jeszcze występuje.</strong></p>
+<div class="box accent">
+<div class="label">Test wstępny — obowiązkowy przed jakąkolwiek pracą nad tą kartą</div>
+<p>Zewnętrzne badania wskazują na wygaśnięcie dryfu overnight na indeksach US po roku 2020. Nie przyjmujemy tego na wiarę ani nie odrzucamy — <strong>sprawdzamy na własnych danych</strong>: dekompozycja zwrotów close→open rok po roku, 2019–2026, z przedziałami ufności. To kilkadziesiąt minut pracy i rozstrzyga los całej karty:</p>
+<ul>
+<li><strong>Dryf obecny w ostatnich latach</strong> → karta wchodzi do badań z pytaniem o warunkowość reżimową.</li>
+<li><strong>Dryf wygasł</strong> → karta schodzi do benchmarków, a sam wynik trafia do rejestru jako wniosek przekrojowy: mamy własny, policzony dowód zaniku znanego efektu i nie budujemy na nim niczego.</li>
+</ul>
+</div>
+<table class="kv">
+<tr><td>Publiczny benchmark</td><td>Dryf overnight (Cooper–Cliff–Gulen 2008 i literatura następcza) — efekt szeroko opisany.</td></tr>
+<tr><td>Wymagana różnica mechanizmu</td><td>Warunkowanie strukturą zamknięcia RTH i kalendarzem zdarzeń. <span class="muted">Ryzyko nieoryginalności pozostaje wysokie i jest przyjęte świadomie — cała wartość karty leży w warstwie warunkującej, więc ablacje rozstrzygną ją bezlitośnie.</span></td></tr>
+<tr><td>Siatka (≤10)</td><td>pozycja close w zakresie dnia: górny tercyl / kwartyl; kierunek zmiany ATR: 3 / 5 dni; wyłączenia kalendarzowe: tak → 4 warianty</td></tr>
+</table>
 </div></div>
 
-<div class="hcard"><div class="hhead"><span class="hid">H005 — Pierwszy test poziomu referencyjnego</span><span class="htag">K5 · intraday</span></div><div class="hbody">
-<p class="hyp">Hipoteza: pierwszy w sesji test poprzedniego dziennego high/low (PDH/PDL) zachowuje się statystycznie inaczej niż testy kolejne — pierwszy częściej odrzuca cenę (reakcja zleceń oczekujących), kolejne częściej kończą się przebiciem (wyczerpanie obrony).</p>
-<p><strong>Mechanizm:</strong> na poziomach referencyjnych skoncentrowane są zlecenia pasywne i stopy; pierwszy kontakt konsumuje największą ich pulę. Każdy kolejny test zastaje płytszą obronę — to mechanika książki zleceń, nie sentyment.</p>
-<p><strong>Eksploracja:</strong> dla każdego dnia od 2019: sekwencja testów PDH/PDL (test = zbliżenie ≤ x ticków), rozkład reakcji (odrzucenie ≥ y punktów vs przebicie ≥ z punktów) w funkcji numeru testu, segmentu, odległości ON-range od poziomu.</p>
-<table><tr><th>Siatka</th><th>Zakresy</th></tr>
-<tr><td>Definicja testu</td><td>zbliżenie ≤ 2 / 4 / 8 ticków</td></tr>
-<tr><td>Handlowany wariant</td><td>fade pierwszego testu / breakout trzeciego+ testu (dwie osobne pod-karty, wspólna eksploracja)</td></tr>
-<tr><td>Stop / cel</td><td>za poziom + bufor ATR-ułamek / 1R–2R</td></tr></table>
-<p><strong>Falsyfikacja:</strong> rozkład reakcji niezależny od numeru testu. <strong>Crowding:</strong> handel poziomami jest masowy, ale rozróżnienie „numer testu” jako zmienna warunkująca jest rzadko formalizowane; ryzyko średnie.</p>
+<h3>9.5. Kandydaci — główny front badań</h3>
+
+<div class="hcard"><div class="hhead"><span class="hid">H005 — Mikrostruktura kolejnych testów poziomu</span><span class="htag">K5 · intraday · PRIORYTET</span></div><div class="hbody">
+<p class="hyp">Hipoteza: pierwszy w sesji test poprzedniego dziennego ekstremum zachowuje się statystycznie inaczej niż testy kolejne — pierwszy częściej odrzuca cenę, każdy następny częściej kończy się przebiciem.</p>
+<table class="kv">
+<tr><td>Mechanizm</td><td>Na poziomach referencyjnych skoncentrowane są zlecenia pasywne i stopy. Pierwszy kontakt konsumuje największą pulę; każdy kolejny zastaje płytszą obronę. To mechanika książki zleceń, nie sentyment.</td></tr>
+<tr><td>Publiczny benchmark</td><td>Klasyczne wsparcia i opory (Osler 2000/2003) — mechanizm klastrowania zleceń jest udokumentowany.</td></tr>
+<tr><td><strong>Różnica mechanizmu</strong></td><td>Benchmark opisuje <em>istnienie</em> reakcji na poziomie. My badamy <strong>wyczerpywanie się obrony w sekwencji testów</strong> — numer testu jako zmienna warunkująca, wraz z kontekstem dojścia do poziomu (z trendem vs w konsolidacji). Ta mikrostruktura jest w literaturze słabo sformalizowana, zwłaszcza dla kontraktów indeksowych.</td></tr>
+<tr><td>Siatka (≤10)</td><td>definicja testu: zbliżenie ≤ 2 / 4 / 8 ticków; wariant: fade pierwszego / breakout trzeciego+ → 6 wariantów</td></tr>
+<tr><td>Plan ablacji</td><td>Zastąpić numer testu wartością stałą → jeśli wynik bez zmian, karta redukuje się do zwykłego handlu poziomami.</td></tr>
+<tr><td>Falsyfikacja / crowding</td><td>Rozkład reakcji niezależny od numeru testu. Ryzyko zatłoczenia średnie: handel poziomami jest masowy, ale rozróżnienie numeru testu — rzadko formalizowane.</td></tr>
+</table>
 </div></div>
 
-<div class="hcard"><div class="hhead"><span class="hid">H006 — Gap otwarcia a typ domknięcia</span><span class="htag">K1 × K2 · intraday</span></div><div class="hbody">
-<p class="hyp">Hipoteza: prawdopodobieństwo domknięcia gapu otwarcia RTH (powrotu do close poprzedniej sesji) jest silnie zależne od wielkości gapu względem ATR i od tego, czy gap powstał „z niczego” (spokojna noc) czy „z przyczyny” (zdarzenie/earnings) — gapy bezprzyczynowe średniej wielkości domykają się istotnie częściej.</p>
-<p><strong>Mechanizm:</strong> gap bez katalizatora to głównie nierównowaga przepływu nocnego przy cienkiej książce; sesja RTH z pełną płynnością re-testuje wycenę. Gap z katalizatorem to nowa informacja — domykanie go jest walką z repricingiem.</p>
-<p><strong>Eksploracja:</strong> klasyfikacja wszystkich gapów od 2019: wielkość/ATR (kwintyle) × katalizator (zdarzenie w nocy? earnings? nic?) × kierunek; rozkład czasu do domknięcia i częstości domknięcia do 12:00 / do końca sesji.</p>
-<table><tr><th>Siatka</th><th>Zakresy</th></tr>
-<tr><td>Rozmiar gapu</td><td>0.3–0.8 × ATR(20d) (poza tym zakresem: brak handlu)</td></tr>
-<tr><td>Warunek czystości</td><td>brak zdarzeń rangi 1–2 w nocy; ON-range &lt; p60</td></tr>
-<tr><td>Wejście / stop / cel</td><td>po IB-15 w stronę domknięcia / ekstremum IB / close poprzedniej sesji</td></tr></table>
-<p><strong>Falsyfikacja:</strong> częstość domknięcia niezależna od katalizatora. <strong>Crowding:</strong> „gap fade” jest znany na akcjach; wersja futures z klasyfikacją katalizatora i oknem nocnym — mniej; ryzyko średnie.</p>
+<div class="hcard"><div class="hhead"><span class="hid">H010 — Zmienność zrealizowana wobec oczekiwanej</span><span class="htag">K3 × K1 · intraday · warstwa reżimowa</span></div><div class="hbody">
+<p class="hyp">Hipoteza: znaczenie ma nie bezwzględny zakres nocny, lecz jego <strong>relacja do reżimu</strong> — noce „cichsze niż powinny być" poprzedzają sesje trendowe, „głośniejsze niż powinny" poprzedzają rotacyjne.</p>
+<table class="kv">
+<tr><td>Mechanizm</td><td>Zrealizowana cisza przy wysokich oczekiwaniach zmienności to odroczone odkrycie ceny — energia, która nie znalazła ujścia. Zrealizowany hałas przy niskich oczekiwaniach to ruch już wyczerpany przed otwarciem RTH.</td></tr>
+<tr><td>Publiczny benchmark</td><td>Literatura reżimów zmienności; sama interakcja zakresu nocnego z reżimem słabo sformalizowana.</td></tr>
+<tr><td><strong>Różnica mechanizmu</strong></td><td>Normalizacja zakresu nocnego <em>własnym</em> proxy oczekiwań zbudowanym z samych cen (stosunek ATR krótkiego do długiego okna), zamiast używania zewnętrznego indeksu zmienności. Badamy odchylenie od oczekiwania, nie poziom bezwzględny.</td></tr>
+<tr><td>Siatka (≤10)</td><td>proxy reżimu ATR(5d)/ATR(60d): tercyle; handlowane narożniki mapy: 2 → 6 wariantów</td></tr>
+<tr><td>Rola dodatkowa</td><td><strong>Warstwa reżimowa dla innych kart.</strong> Nawet jeśli nie utworzy samodzielnej strategii, może służyć jako filtr dla H001, H005 i H013 — i wtedy jej wartość mierzy się przyrostem w tamtych kartach.</td></tr>
+<tr><td>Falsyfikacja / crowding</td><td>Mapa płaska — typ dnia niezależny od narożnika. Ryzyko zatłoczenia niskie.</td></tr>
+</table>
 </div></div>
 
-<div class="hcard"><div class="hhead"><span class="hid">H007 — Cykl ekspansji–kontrakcji zakresu</span><span class="htag">K3 · intraday/swing</span></div><div class="hbody">
-<p class="hyp">Hipoteza: sekwencja dziennych zakresów MNQ ma strukturę cykliczną wykraczającą poza zwykłe klastrowanie zmienności — po serii N dni kontrakcji (zakres &lt; mediana) prawdopodobieństwo dnia ekspansji rośnie ponad poziom bazowy, a kierunek ekspansji jest skorelowany z kierunkiem wybicia pierwszej godziny.</p>
-<p><strong>Mechanizm:</strong> kontrakcja = akumulacja pozycji obustronnych i zaciskanie stopów wokół coraz węższego zakresu; ekspansja to kaskada uwolnienia tych zleceń. Klasyka teorii aukcji — mierzona po naszemu, na dniach sesyjnych <code>trade_date</code>.</p>
-<p><strong>Eksploracja:</strong> rozkład zakresu dnia t+1 warunkowany liczbą kolejnych dni kontrakcji; test czy kierunek IB-60 w dniu ekspansji przewiduje kierunek całego dnia lepiej niż bezwarunkowo.</p>
-<table><tr><th>Siatka</th><th>Zakresy</th></tr>
-<tr><td>Definicja kontrakcji</td><td>zakres &lt; mediana(20d); seria N ∈ {2, 3, 4}</td></tr>
-<tr><td>Tryb handlu</td><td>breakout IB-60 tylko w dni po serii; pozostałe dni — brak handlu</td></tr>
-<tr><td>Stop / cel</td><td>przeciwny kraniec IB-60 / 1.5–2.5 R, trailing od 2R</td></tr></table>
-<p><strong>Falsyfikacja:</strong> rozkład zakresów t+1 zgodny ze zwykłym GARCH-owym klastrowaniem (seria nic nie dodaje). <strong>Crowding:</strong> NR4/NR7 to znane pojęcia — nasza wersja używa własnych definicji i filtra kierunkowego; ryzyko średnie.</p>
+<div class="hcard"><div class="hhead"><span class="hid">H011 — Sekwencja sesji Azja→Europa jako predyktor</span><span class="htag">K1 · intraday · NAJWYŻSZY PRIORYTET</span></div><div class="hbody">
+<p class="hyp">Hipoteza: konfiguracja dwóch segmentów nocy — zgodność lub spór między kierunkiem Azji a kierunkiem Europy — niesie informację o rozkładzie pierwszej godziny RTH ponad to, co mówi sam łączny zakres nocny.</p>
+<table class="kv">
+<tr><td>Mechanizm</td><td>Azja i Europa to różne populacje kapitału. Europa „głosująca" przeciw ruchowi Azji (absorpcja) sygnalizuje spór o wycenę, który sesja amerykańska rozstrzyga z podwyższoną energią. Zgodność obu sesji oznacza konsensus — RTH częściej kontynuuje spokojnie.</td></tr>
+<tr><td>Publiczny benchmark</td><td><strong>Nie zidentyfikowano rozpoznawalnego opublikowanego setupu.</strong> Analiza sesyjna funkcjonuje jakościowo w obiegu detalicznym, ale niemal nigdy nie jest formalizowana statystycznie. To najniższe pokrycie z literaturą w całym katalogu.</td></tr>
+<tr><td><strong>Różnica mechanizmu</strong></td><td>Sam przedmiot badania jest inny: nie poziom ani zakres, lecz <strong>relacja między dwiema populacjami uczestników</strong> wyrażona sekwencją segmentów. Benchmarkiem kontrolnym jest tu prosty predyktor z łącznego zakresu nocnego — musimy pobić właśnie jego.</td></tr>
+<tr><td>Siatka (≤10)</td><td>granice segmentów: bazowe / ±1h; typy sekwencji handlowane: 1 lub 2 wybrane na IS i zamrożone → 6 wariantów</td></tr>
+<tr><td>Plan ablacji</td><td>Zastąpić sekwencję łącznym zakresem nocnym → mierzy dokładnie przyrost z rozróżnienia segmentów.</td></tr>
+<tr><td>Falsyfikacja / crowding</td><td>Rozkłady RTH nierozróżnialne między typami sekwencji po poprawce na liczbę porównań. Ryzyko zatłoczenia niskie. Uwaga na tygodnie przejścia czasu (flaga z 4.4).</td></tr>
+</table>
 </div></div>
 
-<div class="hcard"><div class="hhead"><span class="hid">H008 — Asymetria piątek → poniedziałek</span><span class="htag">K2 × K1 · swing</span></div><div class="hbody">
-<p class="hyp">Hipoteza: przeniesienie ryzyka przez weekend na MNQ ma niejednorodną premię — zwroty piątek-close → poniedziałek-open oraz zachowanie poniedziałkowego RTH zależą systematycznie od pozycji piątkowego zamknięcia w zakresie tygodnia i od kalendarza (poniedziałki przed FOMC vs zwykłe).</p>
-<p><strong>Mechanizm:</strong> weekend to 65 godzin nierehedgowalnego ryzyka; niechęć do przenoszenia pozycji generuje piątkowe domykanie (przepływ przymusowy, K2) i poniedziałkową rekonstrukcję pozycji. Struktura piątkowego zamknięcia koduje, ile pozycji zostało zdjętych.</p>
-<p><strong>Eksploracja:</strong> zwroty Fri→Mon warunkowane: pozycją close w zakresie tygodnia (kwartyle), zmianą ATR w tygodniu, obecnością zdarzeń rangi 1 w nadchodzącym tygodniu; osobno open-gap i przebieg poniedziałkowego RTH.</p>
-<table><tr><th>Siatka</th><th>Zakresy</th></tr>
-<tr><td>Warunek</td><td>close piątku w skrajnym kwartylu zakresu tygodnia</td></tr>
-<tr><td>Wejście / wyjście</td><td>piątek 15:30–15:55 → poniedziałek open / poniedziałek 12:00</td></tr>
-<tr><td>Wyłączenia</td><td>weekendy przed FOMC; piątki OPEX (osobna analiza)</td></tr></table>
-<p><strong>Falsyfikacja:</strong> zwroty weekendowe niezależne od struktury piątku. <strong>Uwaga:</strong> ~52 obserwacje/rok — karta wymaga pełnej historii i ma niski priorytet mocy; trzymamy ją w partii dla dywersyfikacji mechanizmów. <strong>Crowding:</strong> efekty weekendowe znane od dekad i w prostej formie martwe — wartość wyłącznie w warunkowaniu; ryzyko wysokie.</p>
+<div class="hcard"><div class="hhead"><span class="hid">H013 — Rezydualny repricing po wynikach megacapów</span><span class="htag">K6 × K4 · event-driven · PRIORYTET</span></div><div class="hbody">
+<p class="hyp">Hipoteza: po publikacji wyników spółki o dużej wadze w indeksie kontrakt bywa nie- lub przereagowany względem ruchu <strong>implikowanego przez ruchy after-hours jego składników</strong>, a to odchylenie ma dodatnie oczekiwanie domknięcia w sesji RTH.</p>
+<div class="formula">impuls implikowany NDX ≈ Σ wᵢ · rᵢ<sup>(after-hours)</sup><br>
+sygnał rezydualny = r<sub>NQ</sub> − Σ wᵢ·rᵢ − β<sub>ES</sub>·r<sub>ES</sub> − β<sub>SOX</sub>·r<sub>SOX</sub></div>
+<table class="kv">
+<tr><td>Mechanizm</td><td>Wyniki spółki o wadze kilku procent indeksu to repricing całego koszyka. Wycena tego repricingu wymaga agregacji ruchów wielu składników przy cienkiej płynności nocnej — rynek robi to niedokładnie. Rezyduum mierzy właśnie tę niedokładność, po odjęciu tego, co tłumaczy szeroki rynek (ES) i sektor (proxy półprzewodników).</td></tr>
+<tr><td>Publiczny benchmark</td><td>Dryf po publikacji wyników (PEAD) — anomalia znana od dekad, ale dotycząca <em>pojedynczych akcji</em>. Plus publiczne poradniki handlu NQ wokół wyników big-tech, oparte na schemacie „gap → powrót do VWAP → kontynuacja". Ten schemat jest naszym benchmarkiem kontrolnym.</td></tr>
+<tr><td><strong>Różnica mechanizmu</strong></td><td>Benchmark handluje <em>zachowanie kontraktu</em> dzień po. My modelujemy <strong>transmisję wyceny ze składników do indeksu</strong> i handlujemy wyłącznie jej błąd. To inna wielkość mierzona, nie inne progi — publiczne poradniki nie formalizują impulsu implikowanego wagami.</td></tr>
+<tr><td>Dane</td><td>Wymaga warstwy K6 z rozdz. 4.7: wagi NDX, ruchy after-hours 8 megacapów, ES, proxy półprzewodnikowe. Przejmuje też klasyfikację katalizatora z B01.</td></tr>
+<tr><td>Siatka (≤10)</td><td>próg rezyduum: p70 / p80 / p90 rozkładu; okno estymacji bety: 60 / 120 dni; wejście: open RTH / pullback → 8 wariantów (redukcja po eksploracji)</td></tr>
+<tr><td>Plan ablacji</td><td>(a) usunąć kontrolę β<sub>ES</sub> — ile przewagi to sam kierunek rynku; (b) zastąpić rezyduum surowym gapem — czy formalizacja w ogóle coś wnosi; (c) użyć równych wag zamiast rzeczywistych — czy struktura indeksu ma znaczenie.</td></tr>
+<tr><td>Falsyfikacja / crowding</td><td>Rezyduum nie ma mocy predykcyjnej ponad surowy gap. Ryzyko zatłoczenia niskie — bariera wejścia jest w łączeniu danych z kilku rynków.</td></tr>
+</table>
 </div></div>
 
-<div class="hcard"><div class="hhead"><span class="hid">H009 — Dzień po wynikach big-tech</span><span class="htag">K4 × K2 · intraday, specyficzna dla NQ</span></div><div class="hbody">
-<p class="hyp">Hipoteza: w pierwszej sesji RTH po publikacji wyników spółki z top-8 wag indeksu, MNQ ma podwyższoną częstość dnia trendowego w kierunku gapu wtedy, gdy gap jest zgodny z kierunkiem reakcji after-hours tej spółki i nie został zredukowany w sesji nocnej o więcej niż połowę.</p>
-<p><strong>Mechanizm:</strong> wyniki spółki o wadze 5–10% indeksu to repricing całego koszyka (korelacje wewnątrz sektora); pełna dystrybucja tego repricingu wymaga płynności RTH — fundusze nie przebudowują ekspozycji w nocnej książce. Nieoddany gap = niedokończony repricing.</p>
-<p><strong>Eksploracja:</strong> wszystkie dni po earnings top-8 od 2019 (~200 obserwacji): rozkład (gap, redukcja nocna, kierunek AH spółki) → (typ dnia RTH: trend/range/odwrócenie), benchmark vs zwykłe dni.</p>
-<table><tr><th>Siatka</th><th>Zakresy</th></tr>
-<tr><td>Warunek</td><td>|gap| &gt; 0.4×ATR; redukcja nocna &lt; 50%; zgodność kierunku AH</td></tr>
-<tr><td>Wejście</td><td>pullback do VWAP w pierwszych 90 min w kierunku gapu</td></tr>
-<tr><td>Stop / cel</td><td>za VWAP − bufor / trailing ATR do 15:55</td></tr></table>
-<p><strong>Falsyfikacja:</strong> typ dnia po earnings nierozróżnialny od dni zwykłych. <strong>To najbardziej „nasza” karta katalogu</strong> — wykorzystuje specyfikę koncentracji Nasdaq-100 (rozdz. 3.4) i jest naturalnym kandydatem na wynik testu transferu „działa na NQ, nie działa na ES” z poprawnym mechanizmem. <strong>Crowding:</strong> niskie sformalizowanie w publicznym obiegu; ryzyko niskie.</p>
+<div class="hcard"><div class="hhead"><span class="hid">H014 — Dywergencja NQ–ES wokół szoków stóp</span><span class="htag">K6 × K4 · intraday/swing</span></div><div class="hbody">
+<p class="hyp">Hipoteza: Nasdaq-100 jest indeksem o wysokiej duracji (spółki wzrostowe), więc reaguje na szoki stopowe silniej niż szeroki rynek. Dynamika rozszerzania i powrotu spreadu NQ–ES w oknach zdarzeń makro ma strukturę predykcyjną.</p>
+<table class="kv">
+<tr><td>Mechanizm</td><td>Wrażliwość na stopy różnicuje oba indeksy fundamentalnie, ale przepływ egzekucyjny w pierwszych minutach po publikacji traktuje je często równolegle. Rozjazd między reakcją „mechaniczną" a „fundamentalnie należną" to okno.</td></tr>
+<tr><td>Publiczny benchmark</td><td>Handel spreadem NQ–ES jest znany; wersja warunkowana zdarzeniami stopowymi — znacznie mniej.</td></tr>
+<tr><td><strong>Różnica mechanizmu</strong></td><td>Nie handlujemy spreadu jako powrotu do średniej, lecz <strong>rozbieżność między obserwowaną a implikowaną duracją reakcji</strong> w wąskim oknie zdarzenia.</td></tr>
+<tr><td>Dane / siatka</td><td>ES z warstwy K6 (4.7). Siatka: okno reakcji 15 / 30 / 60 min; próg dywergencji: 2 poziomy → 6 wariantów</td></tr>
+<tr><td>Falsyfikacja</td><td>Spread NQ–ES w oknach stopowych nierozróżnialny od zachowania w oknach kontrolnych.</td></tr>
+</table>
 </div></div>
 
-<div class="hcard"><div class="hhead"><span class="hid">H010 — Interakcja zakresu nocnego z reżimem zmienności implikowanej</span><span class="htag">K3 × K1 · intraday</span></div><div class="hbody">
-<p class="hyp">Hipoteza: relacja między zakresem zrealizowanym nocą a poziomem oczekiwań zmienności (mierzonym naszym własnym proxy z danych cenowych: stosunek ATR krótkiego do długiego okna) przewiduje typ sesji RTH — noce „cichsze niż reżim” poprzedzają sesje trendowe, noce „głośniejsze niż reżim” poprzedzają sesje rotacyjne.</p>
-<p><strong>Mechanizm:</strong> zrealizowana cisza przy wysokich oczekiwaniach = odroczone odkrycie ceny (podobne do H001, ale znormalizowane reżimem — inna oś); zrealizowany hałas przy niskich oczekiwaniach = wyczerpanie ruchu przed RTH.</p>
-<p><strong>Eksploracja:</strong> dwuwymiarowa mapa (ON-range-percentyl × reżim ATR-ratio) → rozkład typu dnia (trend/range wg własnej klasyfikacji: pozycja close w zakresie + liczba przejść przez VWAP); szukamy narożników mapy o istotnie różnych rozkładach.</p>
-<table><tr><th>Siatka</th><th>Zakresy</th></tr>
-<tr><td>Proxy reżimu</td><td>ATR(5d)/ATR(60d): tercyle</td></tr>
-<tr><td>Handlowane narożniki</td><td>cisza-w-wysokim → breakout IB; hałas-w-niskim → mean-reversion IB</td></tr>
-<tr><td>Parametry wykonania</td><td>jak H001/H002 odpowiednio (współdzielone moduły)</td></tr></table>
-<p><strong>Falsyfikacja:</strong> mapa płaska (typ dnia niezależny od narożnika). <strong>Crowding:</strong> normalizacja reżimem własnym proxy jest niestandardowa; ryzyko niskie. Karta celowo <em>komplementarna</em> do H001 — jeśli obie przejdą eksplorację, konsolidujemy w jedną rodzinę o wspólnym liczniku prób.</p>
+<div class="hcard"><div class="hhead"><span class="hid">H016 — Reżim dyspersji składników indeksu</span><span class="htag">K6 × K3 · warstwa reżimowa</span></div><div class="hbody">
+<p class="hyp">Hipoteza: rozpad korelacji między megacapami (wysoka dyspersja) zmienia charakter dnia indeksu — z trendowego na rotacyjny — i może służyć jako filtr reżimowy dla pozostałych kart.</p>
+<table class="kv">
+<tr><td>Mechanizm</td><td>Gdy składniki poruszają się zgodnie, indeks trenduje; gdy się rozjeżdżają, ruchy wzajemnie się znoszą i indeks konsoliduje mimo dużej aktywności w pojedynczych spółkach. Dyspersja jest mierzalna wprost i wyprzedza charakter sesji.</td></tr>
+<tr><td>Publiczny benchmark</td><td>Handel dyspersją jest znany w świecie opcyjnym (korelacja implikowana vs realizowana), ale jako <em>filtr reżimowy dla strategii kierunkowych na kontrakcie</em> — rzadko formalizowany.</td></tr>
+<tr><td><strong>Różnica mechanizmu</strong></td><td>Nie handlujemy dyspersji jako aktywa; używamy jej jako <strong>zmiennej stanu</strong> opisującej, jaki typ dnia jest prawdopodobny — czyli jako warstwy warunkującej inne karty.</td></tr>
+<tr><td>Sposób oceny</td><td>Karta oceniana głównie <strong>przyrostem, jaki wnosi do innych kart</strong> (H005, H011, H013), a nie samodzielnym wynikiem. To nietypowe i wymaga osobnej procedury: filtr włączany i wyłączany w kartach bazowych, mierzona różnica.</td></tr>
+<tr><td>Dane / siatka</td><td>Składniki z warstwy K6. Siatka: okno dyspersji 5 / 10 / 20 dni; próg reżimu: tercyle → 6 wariantów</td></tr>
+</table>
 </div></div>
 
-<div class="hcard"><div class="hhead"><span class="hid">H011 — Sekwencja Azja→Europa jako predyktor RTH</span><span class="htag">K1 · intraday</span></div><div class="hbody">
-<p class="hyp">Hipoteza: konfiguracja dwóch segmentów nocy (kierunek i zakres Azji vs kierunek i zakres Europy — zgodne/przeciwne/rozszerzenie/absorpcja) niesie informację o rozkładzie pierwszej godziny RTH ponad to, co mówi sam łączny zakres nocny.</p>
-<p><strong>Mechanizm:</strong> Azja i Europa to różne populacje kapitału; Europa „głosująca” przeciw ruchowi Azji (absorpcja) sygnalizuje spór o wycenę, który RTH rozstrzyga z podwyższoną energią. Zgodność obu sesji sygnalizuje konsensus — RTH częściej kontynuuje spokojniej.</p>
-<p><strong>Eksploracja:</strong> klasyfikacja nocy na 6–8 typów sekwencji (definicje własne: znak zwrotu segmentu + zakres vs mediana segmentu); rozkłady pierwszej godziny RTH (zakres, |zwrot|, kierunek zgodny z Europą?) per typ; test istotności różnic z poprawką na liczbę porównań.</p>
-<table><tr><th>Siatka</th><th>Zakresy</th></tr>
-<tr><td>Definicja segmentów</td><td>Azja 19–02, Europa 02–08:30 ET (warianty granic: ±1h)</td></tr>
-<tr><td>Handlowane typy</td><td>wyłącznie 1–2 typy o najsilniejszym efekcie w eksploracji (reguła: wybór typu na IS, zamrożony przed OOS)</td></tr></table>
-<p><strong>Falsyfikacja:</strong> rozkłady RTH nierozróżnialne między typami sekwencji po poprawce na porównania. <strong>Crowding:</strong> analiza sesyjna jest popularna jakościowo („smart money koncept”), niemal nigdy formalizowana statystycznie; ryzyko niskie. Uwaga na tygodnie DST (flaga z 4.4).</p>
+<div class="hcard"><div class="hhead"><span class="hid">H015 — Price discovery NQ→MNQ</span><span class="htag">K6 · ZAREJESTROWANA, NIEBADALNA</span></div><div class="hbody">
+<p class="hyp">Hipoteza: odkrywanie ceny zachodzi na kontrakcie pełnym (NQ), a mikro (MNQ) podąża z opóźnieniem — mierzalna relacja lead-lag.</p>
+<div class="box accent">
+<div class="label">Karta świadomie wstrzymana</div>
+<p>Zjawiska lead-lag między kontraktami rozgrywają się w skali milisekund. <strong>Na barach minutowych każdy wynik byłby artefaktem agregacji, nie zjawiskiem rynkowym</strong> — i co gorsza, artefaktem wyglądającym przekonująco. Karta pozostaje w rejestrze ze statusem <em>warunkowym</em> i wróci wyłącznie wtedy, gdy projekt pozyska dane <code>trades</code> lub księgi zleceń. Do tego czasu <strong>nie zużywa ani jednej próby</strong>.</p>
+<p>Zapisujemy ją mimo to, bo jawne odnotowanie „wiemy o tym mechanizmie i wiemy, dlaczego go nie badamy" jest częścią uczciwego rejestru — chroni przyszłe iteracje przed przypadkowym wejściem w tę pułapkę.</p>
+</div>
 </div></div>
 
-<div class="hcard"><div class="hhead"><span class="hid">H012 — Mechanika końcówki sesji i proxy MOC</span><span class="htag">K2 × K1 · intraday</span></div><div class="hbody">
-<p class="hyp">Hipoteza: zachowanie MNQ w oknie 15:00–15:50 ET (kierunek względem VWAP i poprzedzającego trendu dnia) przewiduje statystycznie ruch okna 15:50–16:00 (publikacja imbalance MOC), a reguła podążania za tą mechaniką ma dodatnie oczekiwanie mimo krótkiego horyzontu.</p>
-<p><strong>Mechanizm:</strong> rebalancing pasywny i egzekucja końca dnia są częściowo prognozowalne z samego przebiegu sesji (fundusze doważają w kierunku dziennego ruchu indeksu); publikacja imbalance o 15:50 często tylko ujawnia przepływ, który wcześniejsza taśma już sygnalizowała.</p>
-<p><strong>Eksploracja:</strong> rozkład zwrotów 15:50–16:00 warunkowany: znakiem zwrotu dnia do 15:00, pozycją ceny vs VWAP o 15:45, dniem kalendarza (koniec miesiąca/kwartału vs zwykły, OPEX); wielkość efektu vs koszt (horyzont 10 min = wysoka wrażliwość na poślizg).</p>
-<table><tr><th>Siatka</th><th>Zakresy</th></tr>
-<tr><td>Warunek</td><td>|zwrot dnia| &gt; 0.5×ATR i cena po stronie trendu vs VWAP</td></tr>
-<tr><td>Wejście / wyjście</td><td>15:45–15:50 → zamknięcie 15:59 (flat przed 16:00, zero ryzyka rozliczenia)</td></tr>
-<tr><td>Wzmocnienia kalendarzowe</td><td>końce miesiąca/kwartału jako osobny wariant</td></tr></table>
-<p><strong>Falsyfikacja:</strong> zwroty końcówki niezależne od przebiegu dnia; lub efekt &lt; 2× koszt (horyzont krótki — wymagamy marginesu). <strong>Crowding:</strong> gra pod MOC jest znana instytucjonalnie na akcjach; wersja indeksowa futures z proxy zamiast danych imbalance — nasza własna; ryzyko średnie.</p>
-</div></div>
-
+<h3>9.6. Kolejność badań i logika portfela</h3>
+<table>
+<tr><th style="width:14%">Partia</th><th style="width:34%">Skład</th><th>Uzasadnienie kolejności</th></tr>
+<tr><td><strong>Partia 0</strong></td><td>Test wstępny dryfu nocnego + uruchomienie benchmarków B01–B04</td><td>Tanie, szybkie, rozstrzyga los H004 i dostarcza punktów odniesienia potrzebnych <em>wszystkim</em> późniejszym testom przyrostowym. Zero zużycia licznika prób.</td></tr>
+<tr><td><strong>Partia 1</strong></td><td>H011, H005, H010</td><td>Najniższe pokrycie z literaturą przy zadowalającej częstości sygnałów. H010 dodatkowo buduje warstwę reżimową użyteczną dalej.</td></tr>
+<tr><td><strong>Partia 2</strong></td><td>H013, H014, H016</td><td>Klasa K6 — wymaga gotowej warstwy danych z 4.7, więc naturalnie po partii 1. Najwyższy potencjał oryginalności, najwyższa złożoność danych.</td></tr>
+<tr><td><strong>Partia 3</strong></td><td>H001, H002, H003 (przeformułowane)</td><td>Najpierw muszą przejść kroki 1–2 testu oryginalności na papierze. Część prawdopodobnie odpadnie do benchmarków jeszcze przed testami.</td></tr>
+</table>
 <div class="box good">
 <div class="label">Logika portfela katalogu</div>
-<p>Katalog celowo pokrywa wszystkie pięć klas mechanizmów (K1–K5), trzy horyzonty (intraday, event, swing) i różne segmenty doby — bo <strong>szukamy nie „strategii”, lecz przewagi, a przewagi żyją w niszach</strong>. Karty H001/H010, H002/H012 i H004/H008 współdzielą infrastrukturę obliczeniową (te same rozkłady bazowe), co obniża koszt partii. Kolejność pierwszej partii: H001, H002, H005, H009 — najlepszy stosunek mocy statystycznej do niezależności mechanizmów.</p>
+<p>Katalog pokrywa wszystkie sześć klas mechanizmów, trzy horyzonty i różne segmenty doby — bo <strong>szukamy nie „strategii", lecz przewagi, a przewagi żyją w niszach</strong>. Kluczowa zmiana względem v1.0 jest jednak inna niż skład: <em>cztery karty przestały być kandydatami</em>, co zwalnia około czterdziestu prób w globalnym liczniku i bezpośrednio obniża próg DSR, który musi przeskoczyć każdy prawdziwy kandydat. Rezygnacja z badania rzeczy znanych jest tu wymierną korzyścią statystyczną, nie tylko kwestią uczciwości.</p>
 </div>
 
 <!-- ============ ROZDZIAŁ 10 ============ -->
@@ -763,10 +1008,20 @@ Wnioski przekrojowe:
 <tr><th>Kryterium</th><th>Ocena IBKR</th></tr>
 <tr><td>Konto paper</td><td>Pełnoprawne, darmowe, lustrzane API z kontem realnym — ta sama ścieżka kodu od paper do live.</td></tr>
 <tr><td>API</td><td>Dojrzałe (TWS API / Gateway), biblioteka <code>ib_async</code>; zlecenia bracket natywnie.</td></tr>
-<tr><td>Futures CME micro</td><td>Pełny dostęp, niskie prowizje, subskrypcja danych real-time ~15 USD/mies. (wymagana od Etapu 5).</td></tr>
-<tr><td>Ograniczenia symulatora paper</td><td>Wypełnienia paper są optymistyczne: brak realnej kolejki, limit fill przy dotknięciu ceny. <strong>Kompensacja:</strong> w księgowości równoległej nakładamy nasz model poślizgu z 5.5 na każde wypełnienie paper i raportujemy obie wersje P&amp;L; do decyzji GO liczy się wersja z narzutem.</td></tr>
-<tr><td>Alternatywy odrzucone</td><td>Tradovate/NinjaTrader (dobre, ale słabsze API do automatyzacji w Pythonie), Rithmic przez brokerów futures (koszt i złożoność nieuzasadnione w tej fazie).</td></tr>
+<tr><td>Futures CME micro</td><td>Pełny dostęp, niskie prowizje. Dane real-time: <strong>~10 USD/mies.</strong> (US Futures Value Bundle, ze zwolnieniem przy prowizjach ≥30 USD) albo <strong>1.55 USD</strong> za sam CME poziom 1. Głębokość księgi (+5 USD) nie jest nam potrzebna przy strategiach na barach minutowych. <span class="muted">v1.0 podawała ~15 USD — zawyżone.</span></td></tr>
+<tr><td>Ograniczenia symulatora paper<br><span class="small muted">(oficjalne, nie anegdotyczne)</span></td><td>Wypełnienia <strong>wyłącznie z wierzchu księgi</strong>; <strong>zlecenia stop są zawsze symulowane</strong>, co dokumentacja opisuje jako „zachowanie nieco odmienne od produkcyjnego"; część typów zleceń nieobsługiwana. Symulator bywa zbyt hojny przy zleceniach rynkowych i stopach w ruchu, ale nie jest konsekwentnie optymistyczny — przy zleceniach z limitem bywa odwrotnie.</td></tr>
+<tr><td>Kapitał konta paper</td><td>Domyślnie <strong>1 000 000 USD</strong> — wartość niereprezentatywna. <strong>Konto musi zostać zmniejszone do ~1× docelowego kapitału (10–30 tys. USD)</strong>, inaczej sizing, wykorzystanie depozytu i realizm limitów ryzyka są fikcją.</td></tr>
+<tr><td>Alternatywy odłożone</td><td>Tradovate i NinjaTrader (słabsze API do automatyzacji w Pythonie), Rithmic (~125 USD/mies. za API, C++/.NET, testy zgodności — zły dopasowanie do laboratorium w Pythonie), AMP. <strong>Nie „odrzucone", lecz odłożone jako test A/B jakości wykonania po ewentualnym przejściu na live</strong> — wtedy porównanie kosztów all-in ma sens.</td></tr>
 </table>
+<div class="box accent">
+<div class="label">Przebudowa roli paper tradingu (v1.1)</div>
+<p>Skoro stopy są w symulatorze zawsze syntetyczne, a wypełnienia pochodzą wyłącznie z wierzchu księgi, to <strong>paper trading nie może walidować przewagi wykonania</strong> — nie ma w nim kolejki CME Globex, więc nie ma czego mierzyć. Paper trading w tym projekcie ma dwie role, obie ważne i obie różne od pierwotnej:</p>
+<ol>
+<li><strong>Walidacja automatu:</strong> czy ścieżka sygnał → zlecenie → stan → odtworzenie po restarcie działa bez błędów przez tygodnie. To jest realny test i realne ryzyko.</li>
+<li><strong>Generator niezależnych danych OOS:</strong> każdy tydzień handlu papierowego dokłada T do szeregu, na którym liczymy DSR — <em>bez zużywania budżetu prób</em>. To jedyna ścieżka awansu z Tier 1 do Tier 2 (rozdz. 1.3).</li>
+</ol>
+<p><strong>Przewagę wykonania weryfikuje dopiero micro-live</strong> na jednym kontrakcie MNQ, po spełnieniu kryteriów z 11.4. Do tego czasu wszystkie wypełnienia paper obciążamy narzutem poślizgu z modelu 5.5 i raportujemy obie wersje P&amp;L — do decyzji liczy się wersja z narzutem.</p>
+</div>
 
 <h3>11.2. Architektura procesu live</h3>
 <pre>            ┌──────────────────────────── kontener/sesja agenta ───────────────────────────┐
@@ -785,33 +1040,58 @@ Wnioski przekrojowe:
 <ul>
 <li><strong>Jeden proces, jedna strategia, jeden kontrakt</strong> na start — złożoność dokładamy dopiero po stabilnym miesiącu.</li>
 <li><strong>Godziny pracy procesu</strong> zgodne z oknem strategii; poza oknem proces świadomie nie działa (mniejsza powierzchnia awarii).</li>
-<li><strong>Restart-safety:</strong> stan (pozycje, zlecenia) odtwarzany z API brokera przy starcie, nie z lokalnego pliku — broker jest źródłem prawdy.</li>
+<li><strong>Restart-safety:</strong> stan (pozycje, zlecenia) odtwarzany z API brokera przy starcie, nie z lokalnego pliku — broker jest źródłem prawdy. Uwaga na limity zapytań: seria żądań historycznych przy odtwarzaniu stanu potrafi wywołać throttling i rozłączenie, więc odtwarzanie jest rozłożone w czasie.</li>
+<li><strong>Idempotentny menedżer zleceń.</strong> Zlecenia bracket, częściowe wypełnienia i wyścigi między potwierdzeniami to najczęstsze źródło duplikatów pozycji. Każde zlecenie ma własny identyfikator klienta, a stan uzgadniany jest z brokerem po każdej zmianie.</li>
+<li><strong>Agregacja barów:</strong> IBKR dostarcza bary <strong>5-sekundowe</strong>, więc bar minutowy powstaje po naszej stronie. To źródło potencjalnego rozjazdu względem barów Databento — mierzymy go codzienną rekonsyliacją (11.3).</li>
+<li><strong>Ryzyka biblioteki:</strong> <code>ib_async</code> jest społecznościowym forkiem projektu zamrożonego po śmierci autora, utrzymywanym przez małą ekipę; rozłączenia bramki są w produkcji częste. Środki zaradcze: <strong>przypięcie wersji Pythona (3.11 lub 3.12), przypięcie wersji IB Gateway do gałęzi stabilnej, własna warstwa ponownego łączenia z resynchronizacją stanu i testy chaosu</strong> — celowe zrywanie połączenia w środowisku testowym, żeby sprawdzić, czy automat wraca do poprawnego stanu.</li>
 <li><strong>Rutyny agenta:</strong> Routine przed otwarciem RTH (sanity check: dane świeże? zdarzenia dziś? proces żyje?) i po zamknięciu (raport dzienny do dziennika + commit). Cotygodniowa Routine: pełne porównanie live vs backtest.</li>
 </ul>
 
 <h3>11.3. Tracking error — miara prawdy</h3>
-<p>Cotygodniowo liczymy dla okresu paper: <strong>(a)</strong> zgodność sygnałów — czy backtest uruchomiony na danych z tego tygodnia wygenerowałby te same wejścia co pętla live (rozjazd = bug albo różnica danych; cel: 100%); <strong>(b)</strong> koszt rzeczywisty vs modelowy — rozkład różnic cen wypełnień paper+narzut vs założenia z 5.5; <strong>(c)</strong> P&amp;L delta — skumulowana różnica wyniku live vs symulacja tego samego okresu. Progi alarmowe: zgodność sygnałów &lt; 95% = stop i debug; koszt rzeczywisty &gt; 150% modelowego przez 2 tygodnie = rewizja modelu kosztów i ponowna walidacja strategii z nowym modelem.</p>
+<p>Cotygodniowo, dla okresu paper, liczymy pięć osobnych serii. Kluczowe jest ich <strong>rozdzielenie</strong> — wersja 1.0 mieszała różnicę modelu z różnicą wykonania w jedną liczbę, przez co żadnej z nich nie dało się zdiagnozować:</p>
+<table>
+<tr><th style="width:8%"></th><th style="width:32%">Metryka</th><th>Próg alarmowy</th></tr>
+<tr><td><strong>(a)</strong></td><td><strong>Zgodność sygnałów</strong> — czy backtest na danych z tego tygodnia wygenerowałby te same wejścia co pętla live</td><td>&lt; 95% → stop i debugowanie. Rozjazd oznacza błąd albo różnicę danych, nigdy „szum".</td></tr>
+<tr><td><strong>(b)</strong></td><td><strong>Δ wypełnienia:</strong> cena paper − cena modelowa, <strong>osobno dla wejść, stopów i celów</strong> (średnia i 95. percentyl)</td><td>Agregat maskuje najważniejszą kategorię — patrz (c).</td></tr>
+<tr><td><strong>(c)</strong></td><td><strong>Poślizg na stopach</strong> zrealizowany vs modelowy, w rozbiciu na segmenty (RTH / otwarcie / zdarzenie / noc)</td><td><strong>p95 poślizgu stopa ≤ model + 1 tick przez ≥ 4 tygodnie</strong> — nowe, twarde kryterium GO. Stopy są w symulatorze zawsze syntetyczne, więc to tutaj kryje się największe ryzyko niedoszacowania.</td></tr>
+<tr><td><strong>(d)</strong></td><td><strong>Zgodność barów:</strong> bar minutowy złożony z 5-sekundowych danych IBKR vs bar Databento z dnia następnego</td><td>Systematyczny rozjazd zamknięć = sygnały liczone na innych danych niż backtest.</td></tr>
+<tr><td><strong>(e)</strong></td><td><strong>Incydenty operacyjne:</strong> rozłączenia, przymusowe zamknięcia, duplikaty zleceń, ręczne ingerencje</td><td>Każdy incydent opisany w dzienniku. Ręczna ingerencja unieważnia porównywalność tygodnia.</td></tr>
+</table>
+<p>Dodatkowo, oddzielnie: <strong>koszt rzeczywisty przekraczający 150% modelowego przez dwa tygodnie</strong> wymusza rewizję modelu kosztów z 5.5 <em>i ponowną walidację strategii na poprawionym modelu</em> — nie wolno tego zbyć korektą parametru.</p>
 
 <h3>11.4. Kryteria przejścia paper → rozmowa o live</h3>
 <pre>[ ] ≥ 100 transakcji paper           [ ] ≥ 8 tygodni kalendarzowych
-[ ] P&L paper (z narzutem) w przedziale ufności z walidacji (MC bootstrap)
+[ ] P&L paper (z narzutem poślizgu) w przedziale ufności z walidacji (bootstrap BCa)
 [ ] zgodność sygnałów ≥ 95%          [ ] zero incydentów ręcznej ingerencji
+[ ] p95 poślizgu stopa ≤ model + 1 tick przez ≥ 4 tygodnie
+[ ] zgodność barów IBKR vs Databento bez systematycznego rozjazdu
 [ ] DD paper < 1.0 × MDD_95 z walidacji
+[ ] status CERTIFIED: DSR ≥ 0.95 na szeregu łączonym (backtest OOS + paper)
 [ ] raport końcowy + rekomendacja agenta → DECYZJA WYŁĄCZNIE USERA</pre>
+<div class="box">
+<div class="label">Ile paper tradingu potrzeba do awansu na Tier 2</div>
+<p>Skoro paper dokłada niezależne dane OOS, można policzyć drogę awansu. Dla strategii o Sharpe rocznym ~0.9, która po backteście ma około 1200 dni OOS i N_eff = 5, brakuje jej mniej więcej 300–400 dni sesyjnych do przekroczenia DSR 0.95 — czyli <strong>około 15–18 miesięcy handlu papierowego</strong>. Dla strategii o Sharpe 1.2 przy tych samych warunkach próg jest już przekroczony w backteście.</p>
+<p>To jest realna cena umiarkowanej przewagi i trzeba ją przyjąć bez złudzeń: <em>im słabsza strategia, tym dłużej trwa dowiedzenie, że w ogóle istnieje.</em> Alternatywą nie jest szybsze przejście, lecz szukanie mocniejszego efektu.</p>
+</div>
 
 <!-- ============ ROZDZIAŁ 12 ============ -->
 <h2><span class="chapnum">Rozdział 12</span>Harmonogram: tygodnie 1–12</h2>
 <table>
 <tr><th style="width:14%">Tydzień</th><th style="width:30%">Praca</th><th>Kamień milowy / kryterium wyjścia</th></tr>
 <tr><td><strong>1</strong></td><td>Etap 0: struktura repo, pyproject, CI (pytest), draft PR-dziennik. Rdzeń silnika: loader, sessions, costs, backtest (pętla + tabela 5.4).</td><td>Testy jednostkowe rdzenia zielone; commit + push; PR otwarty.</td></tr>
-<tr><td><strong>2</strong></td><td>Dokończenie silnika: features, metrics, walkforward, montecarlo, dsr, robustness. <em>Równolegle: user zakłada konto Databento.</em></td><td>Pełny zestaw testów zielony; silnik czeka na dane.</td></tr>
+<tr><td><strong>2</strong></td><td>Dokończenie silnika: features, metrics, walkforward, montecarlo, dsr, robustness. <strong>+ moduły z v1.1: cpcv, pbo, spa.</strong> <em>Równolegle: user zakłada konto Databento.</em></td><td>Pełny zestaw testów zielony; silnik czeka na dane. <span class="muted">(+2–3 dni względem v1.0 z powodu nowych modułów walidacyjnych.)</span></td></tr>
 <tr><td><strong>3</strong></td><td>Etap 1: pobranie MNQ+NQ M1 2019→dziś, pipeline raw→clean, kontrakt ciągły, kalendarz zdarzeń, sanity-report.</td><td><code>data/clean/</code> w repo; <code>data_quality.md</code> bez czerwonych flag; manifest podpisany.</td></tr>
 <tr><td><strong>4</strong></td><td>Walidacja silnika na danych realnych (testy 5.6: zerowa przewaga, znany efekt, symetria, determinizm). Kalibracja modelu poślizgu o rozkłady spreadów per segment.</td><td><strong>Bramka: silnik udowodniony.</strong> Bez zielonego 5.6 nie zaczynamy badań.</td></tr>
-<tr><td><strong>5–6</strong></td><td>Partia 1 eksploracji: H001, H002, H005, H009 — rozkłady bazowe sesji (współdzielone), eksploracja per karta, werdykty wstępne.</td><td>≥ 2 karty z potwierdzonym efektem w rozkładach albo partia zamknięta z wnioskami W-xx.</td></tr>
-<tr><td><strong>7–8</strong></td><td>Backtesty IS przeżywających kart; walk-forward OOS najlepszej; start eksploracji partii 2 (H003, H006, H010) w tle.</td><td>Pierwszy pełny raport walidacyjny (choćby negatywny — proces udowodniony end-to-end).</td></tr>
-<tr><td><strong>9–10</strong></td><td>Iteracja: kolejne karty / warianty z wniosków; MC + DSR + siatki dla kandydatów; konsolidacja rodzin hipotez.</td><td>REGISTRY ≥ 8 kart z werdyktami; licznik prób i DSR raportowane.</td></tr>
-<tr><td><strong>11–12</strong></td><td>Jeśli jest CANDIDATE: pełna bramka 7.6 + lockbox + raport GO/NO-GO. Jeśli nie ma: przegląd strategiczny — analiza wniosków, projekt partii 3–4, decyzja o rozszerzeniu przestrzeni (nowe klasy features).</td><td>Decyzja usera: GO na paper (→ rozdz. 11, tygodnie 13–20) albo kontynuacja badań wg zrewidowanego planu partii.</td></tr>
+<tr><td><strong>5</strong></td><td><strong>Partia 0:</strong> test wstępny dryfu nocnego (weryfikacja zaniku na własnych danych) + uruchomienie benchmarków B01–B04 z parametrami z literatury.</td><td>Rozstrzygnięty los karty H004; komplet punktów odniesienia do testów przyrostowych. Zero zużycia licznika prób.</td></tr>
+<tr><td><strong>6–7</strong></td><td><strong>Partia 1:</strong> H011, H005, H010 — rozkłady bazowe sesji (współdzielone), eksploracja per karta, werdykty wstępne.</td><td>≥ 1 karta z potwierdzonym efektem albo partia zamknięta z wnioskami przekrojowymi.</td></tr>
+<tr><td><strong>8</strong></td><td>Backtesty IS przeżywających kart; walk-forward + CPCV najlepszej; budowa warstwy danych K6 (rozdz. 4.7) w tle.</td><td>Pierwszy pełny raport walidacyjny (choćby negatywny — proces udowodniony end-to-end).</td></tr>
+<tr><td><strong>9–10</strong></td><td><strong>Partia 2:</strong> H013, H014, H016 (klasa K6, wymaga gotowej warstwy danych). MC + PBO + SPA + DSR dla kandydatów; konsolidacja rodzin hipotez.</td><td>REGISTRY ≥ 8 kart z werdyktami; licznik prób i DSR raportowane.</td></tr>
+<tr><td><strong>11–12</strong></td><td>Jeśli jest kandydat: bramka Tier 1 (7.6) → status PROMISING → start forward paper tradingu. Jeśli nie ma: <strong>partia 3</strong> (przeformułowane H001–H003, po przejściu kroków 1–2 testu oryginalności) oraz przegląd strategiczny.</td><td>Decyzja usera: GO na paper (→ rozdz. 11) albo kontynuacja badań wg zrewidowanego planu partii.</td></tr>
 </table>
+<div class="box">
+<div class="label">Realizm horyzontu — poprawka wynikająca z v1.1</div>
+<p>Wersja 1.0 sugerowała, że dwanaście tygodni może wystarczyć do znalezienia zweryfikowanej strategii. Po audytach ten optymizm trzeba skorygować: <strong>status CERTIFIED wymaga DSR ≥ 0.95</strong>, a dla umiarkowanej przewagi (Sharpe ~0.9) oznacza to kilkanaście miesięcy forward paper tradingu ponad backtest (wyliczenie w 11.4). Dwanaście tygodni to realistyczny horyzont dla <em>zbudowania aparatu i przetestowania pierwszych dwóch–trzech partii hipotez</em> — nie dla zakończenia projektu. Projekt jest z założenia wieloletni i tak został zaprojektowany.</p>
+</div>
 <p><strong>Ścieżka krytyczna:</strong> klucz Databento (tydzień 2→3) — jedyna zewnętrzna blokada pierwszych 4 tygodni. <strong>Praca równoległa:</strong> silnik (T1–2) nie czeka na dane; eksploracja partii 2 nakłada się na walidację partii 1. <strong>Bufor:</strong> harmonogram zakłada tempo ~15–20 h pracy agenta tygodniowo; realne tempo skalibrujemy po T4 i zrewidujemy plan w PR.</p>
 
 <!-- ============ ROZDZIAŁ 13 ============ -->
@@ -827,7 +1107,27 @@ Wnioski przekrojowe:
 <tr><td>Halucynacja/błąd agenta w kodzie badawczym</td><td>Śr.</td><td>Wysoki</td><td>Testy jednostkowe silnika jako kontrakt; testy 5.6 wykrywają przecieki niezależnie od źródła błędu; wyniki „zbyt piękne” (PF&gt;2, SR&gt;3) traktowane jako objaw buga, nie sukcesu — protokół: najpierw szukamy błędu.</td></tr>
 <tr><td>Utrata dyscypliny procesu pod presją „braku wyników”</td><td>Śr.</td><td>Krytyczny</td><td>Progi zamrożone w tym dokumencie; zmiany wyłącznie jawną rewizją dokumentu z nowym numerem wersji i zgodą usera; seria odrzuceń zdefiniowana jako sukces procesu (2.4).</td></tr>
 <tr><td>Zdarzenie ekstremalne w fazie paper/live (flash crash, halt)</td><td>Nis.</td><td>Wysoki</td><td>Watchdog + flatten przy utracie łączności; brak pozycji przez zdarzenia rangi 1 (blackout); limity dzienne; w skrajności — pozycje micro, straty ograniczone konstrukcyjnie.</td></tr>
-<tr><td>Koszt danych/infrastruktury przekracza plan</td><td>Nis.</td><td>Niski</td><td>Budżet fazy badawczej znany z góry (~10–30 USD dane + 15 USD/mies. od Etapu 5); każda pozycja kosztowa akceptowana przez usera przed poniesieniem.</td></tr>
+<tr><td>Koszt danych/infrastruktury przekracza plan</td><td>Nis.</td><td>Niski</td><td>Budżet fazy badawczej znany z góry (25–60 USD dane, pokryte kredytami startowymi; ~10 USD/mies. od Etapu 5); każda pozycja kosztowa akceptowana przez usera przed poniesieniem.</td></tr>
+</table>
+
+<h3>13.1. Ryzyka techniczne stacku (dodane w v1.1)</h3>
+<p>Poniższe ryzyka wyszły z zewnętrznej weryfikacji stacku danych i brokera. Są bardziej przyziemne niż powyższe, ale dokładnie z tego powodu groźniejsze — nie objawiają się jako awaria, tylko jako cicho zafałszowany wynik.</p>
+<table>
+<tr><th style="width:30%">Ryzyko</th><th style="width:8%">Prawd.</th><th>Mitygacja</th></tr>
+<tr><td>Semantyka „brak bara = brak transakcji" wzięta za lukę w danych</td><td>Wys.</td><td>Klasyfikacja luk wg kalendarza CME; zakaz forward-fill dla barów wykonania (4.2); test jednostkowy w 5.6.</td></tr>
+<tr><td>Użycie serii continuous dostawcy bez własnego back-adjustu</td><td>Wys.</td><td>Ścieżka obowiązkowa: kontrakty surowe → własne rolowanie → własny adjust (4.3). Zakaz zapisany wprost w 4.1.</td></tr>
+<tr><td>Rozjazd barów dostawcy vs agregaty z transakcji (poprawki transakcji, znacznik zamknięcia bara)</td><td>Śr.</td><td>Opcjonalny zakup 3–6 mies. schematu <code>trades</code> i samodzielna rekonstrukcja barów jako test jakości (4.1).</td></tr>
+<tr><td>Stopy zawsze symulowane w paper → niedoszacowanie ryzyka</td><td>Wys.</td><td>Osobna kategoria poślizgu stopów w tracking error z twardym progiem GO (11.3c); przewaga wykonania weryfikowana dopiero na micro-live.</td></tr>
+<tr><td>Fork <code>ib_async</code>, rozłączenia bramki, niezgodność wersji Pythona</td><td>Wys.</td><td>Przypięcie wersji Pythona i Gateway, własna warstwa reconnect z resynchronizacją, testy chaosu (11.2).</td></tr>
+<tr><td>Throttling zapytań przy odtwarzaniu stanu po restarcie</td><td>Śr.</td><td>Rozłożone w czasie odtwarzanie; limit żądań historycznych respektowany w kodzie.</td></tr>
+<tr><td>Błędy stref czasowych (CT / ET / UTC) przy przerwie serwisowej i filtrach RTH</td><td>Wys.</td><td>Przechowywanie w UTC, definicje sesji w ET, kalendarz CME jako osobny artefakt, testy przy zmianie czasu (4.4).</td></tr>
+<tr><td>Zmiany opłat giełdowych i depozytów</td><td>Śr.</td><td>Prowizje i depozyty jako parametry konfiguracyjne, nie stałe w kodzie; przegląd kwartalny.</td></tr>
+<tr><td>Zmiana normalizacji danych po stronie dostawcy</td><td>Śr.</td><td>Wersja schematu i data pobrania w manifeście; regeneracja <code>clean/</code> przy zmianie (4.1).</td></tr>
+<tr><td>Pojedyncze źródło danych bez kontroli krzyżowej</td><td>Śr.</td><td>Kontrola pełnego miesiąca względem źródła wtórnego + sumy kontrolne (4.1).</td></tr>
+<tr><td>Konto paper z kapitałem 1 mln USD → nierealistyczny sizing</td><td>Śr.</td><td>Zmniejszenie konta do ~1× kapitału docelowego przed startem (11.1).</td></tr>
+<tr><td>Bar minutowy składany z danych 5-sekundowych ≠ bar Databento</td><td>Śr.</td><td>Codzienna rekonsyliacja zamknięć jako metryka tracking error (11.3d).</td></tr>
+<tr><td>Wyścigi i duplikaty przy zleceniach bracket i częściowych wypełnieniach</td><td>Wys.</td><td>Idempotentny menedżer zleceń z identyfikatorami klienta i uzgadnianiem stanu (11.2).</td></tr>
+<tr><td>Przekwalifikowanie z użytkownika niekomercyjnego na profesjonalnego</td><td>Nis. / Wys. skutek</td><td>Automatyzacja prowadzona w ramach działalności gospodarczej może podnieść opłaty za dane o rząd wielkości. Do sprawdzenia <em>przed</em> zmianą formy prowadzenia projektu.</td></tr>
 </table>
 
 <!-- ============ ROZDZIAŁ 14 ============ -->
@@ -883,7 +1183,7 @@ nie scommitowała, tego czegoś nie zrobiła.</pre>
 <li>Struktura katalogów + <code>pyproject.toml</code> + konfiguracja pytest + gitignore.</li>
 <li><code>engine/sessions.py</code> i <code>engine/costs.py</code> z testami (niezależne od danych).</li>
 <li>Rdzeń <code>engine/backtest.py</code>: pętla + pełna tabela rozstrzygnięć 5.4 + testy na spreparowanych barach.</li>
-<li><code>hypotheses/REGISTRY.md</code> z kartami H001–H012 w stanie IDEA + <code>validation/trial_counter.json</code> = 0.</li>
+<li><code>hypotheses/REGISTRY.md</code> z pełnym katalogiem v1.1: benchmarki B01–B04, karty przeformułowane H001–H004, kandydaci H005/H010/H011/H013/H014/H016, H015 jako warunkowa + <code>validation/trial_counter.json</code> = 0.</li>
 <li>Commit, push, draft PR z opisem-statusem; raport dla usera.</li>
 </ol>
 <h3>16.2. User — dwie rzeczy, w kolejności</h3>
@@ -891,22 +1191,54 @@ nie scommitowała, tego czegoś nie zrobiła.</pre>
 <li><strong>Teraz:</strong> konto na <code>databento.com</code> → klucz API przekazany jako zmienna środowiskowa sesji (nie plikiem w repo!). Kredyty startowe prawdopodobnie wystarczą na całość MNQ+NQ M1; jeśli nie — agent poda dokładny koszt przed pobraniem.</li>
 <li><strong>Bez pośpiechu (przed Etapem 5):</strong> konto paper IBKR; szczegóły konfiguracji API agent dostarczy, gdy będą potrzebne.</li>
 </ol>
-<h3>16.3. Pierwsza partia badawcza</h3>
-<p>Po bramce „silnik udowodniony” (tydzień 4): partia 1 = <strong>H001 + H002 + H005 + H009</strong>. Przed startem partii agent przedstawi userowi do akceptacji finalne karty z wypełnioną sekcją projektu eksperymentu (6.6). Od tego momentu projekt wchodzi w rytm: partia → werdykty → wnioski → następna partia — aż do pierwszego CANDIDATE, i dalej.</p>
+<h3>16.3. Pierwsze partie badawcze</h3>
+<p>Po bramce „silnik udowodniony” (tydzień 4) projekt wchodzi w rytm partii:</p>
+<ul>
+<li><strong>Partia 0</strong> (tydzień 5) — weryfikacja zaniku dryfu nocnego na własnych danych plus uruchomienie benchmarków B01–B04. Tania, szybka, nie zużywa licznika prób, a dostarcza punktów odniesienia potrzebnych wszystkim późniejszym testom przyrostowym.</li>
+<li><strong>Partia 1</strong> (tygodnie 6–7) — <strong>H011, H005, H010</strong>: karty o najniższym pokryciu z opublikowanymi strategiami.</li>
+<li><strong>Partia 2</strong> (tygodnie 9–10) — <strong>H013, H014, H016</strong> z klasy K6, po zbudowaniu warstwy danych z 4.7.</li>
+</ul>
+<p>Przed startem każdej partii agent przedstawia userowi finalne karty z wypełnionymi krokami 1–2 testu oryginalności (benchmark i różnica mechanizmu) oraz sekcją projektu eksperymentu (6.6). Karty, dla których różnicy mechanizmu nie da się obronić, schodzą do benchmarków <em>zanim</em> zużyją choć jedną próbę.</p>
 
 <!-- ============ ANEKS A ============ -->
 <h2><span class="chapnum">Aneks A</span>Wzory matematyczne — kompendium</h2>
 <h3>A.1. Wyniki i oczekiwanie</h3>
 <div class="formula">R_i = P&amp;L_i / ryzyko_i&nbsp;&nbsp;&nbsp;·&nbsp;&nbsp;&nbsp;E = (1/N)·Σ R_i = p·W̄ − (1−p)·L̄&nbsp;&nbsp;&nbsp;·&nbsp;&nbsp;&nbsp;SE(E) = σ_R / √N</div>
 <div class="formula">PF = Σ zyski / |Σ straty|&nbsp;&nbsp;&nbsp;·&nbsp;&nbsp;&nbsp;MDE(N, α=0.05) ≈ 1.96·σ_R/√N&nbsp;&nbsp;(minimalny wykrywalny efekt)</div>
+<div class="formula"><strong>Liczność próby z mocą testu:</strong>&nbsp;&nbsp; N = ( (z<sub>α/2</sub> + z<sub>β</sub>) · σ_R / E )²<br>
+moc 50%: N ≈ 384&nbsp;&nbsp;·&nbsp;&nbsp;moc 80%: N ≈ 785&nbsp;&nbsp;·&nbsp;&nbsp;moc 90%: N ≈ 1051&nbsp;&nbsp;<span class="small">(σ_R = 1.2R, E = 0.12R)</span></div>
+<p class="small muted">Wersja 1.0 podawała tu wyłącznie rachunek istotności (N ≈ 384), co odpowiada mocy 50%. σ_R estymujemy empirycznie per strategia; wzór analityczny służy planowaniu próby, a kryterium decyzyjnym jest bootstrapowy przedział BCa.</p>
 <h3>A.2. Sharpe i pochodne</h3>
-<div class="formula">SR_d = mean(r_d)/std(r_d)&nbsp;&nbsp;·&nbsp;&nbsp;SR_ann = √252·SR_d&nbsp;&nbsp;·&nbsp;&nbsp;σ(SR_d) ≈ √((1 + SR_d²/2)/T)</div>
+<div class="formula">SR_d = mean(r_d)/std(r_d)&nbsp;&nbsp;·&nbsp;&nbsp;SR_ann = √252·SR_d</div>
+<div class="formula"><strong>Błąd standardowy SR (postać Mertensa, bez założenia normalności):</strong><br>
+σ(SR_d) = √( (1 − γ₃·SR_d + ((γ₄−1)/4)·SR_d²) / (T−1) )</div>
+<p class="small muted">Wersja 1.0 używała uproszczenia √((1+SR²/2)/T), które zakłada normalność zwrotów i jest niespójne z mianownikiem DSR w A.3. Postać Mertensa redukuje się do tamtej dla γ₃=0, γ₄=3 — używamy jej wszędzie dla spójności.</p>
 <div class="formula">Poprawka Lo (autokorelacja):&nbsp;&nbsp;SR_adj = SR_ann · [1 + 2·Σ_{k=1..q} (1−k/(q+1))·ρ_k]^{−1/2}</div>
 <div class="formula">Sortino = √252 · mean(r_d) / √( (1/T)·Σ min(r_d,0)² )&nbsp;&nbsp;·&nbsp;&nbsp;SQN = √N · mean(R)/std(R)</div>
 <h3>A.3. Deflated Sharpe Ratio</h3>
 <div class="formula">SR₀ = σ_SR·[(1−γ)·Φ⁻¹(1−1/N_eff) + γ·Φ⁻¹(1−1/(N_eff·e))],&nbsp;&nbsp;γ ≈ 0.57722<br>
-DSR = Φ( ((SR−SR₀)·√(T−1)) / √(1 − γ₃·SR + ((γ₄−1)/4)·SR²) )&nbsp;&nbsp;→ wymagane &gt; 0.95</div>
-<p class="small">N_eff — efektywna liczba niezależnych prób: liczność klastrów po grupowaniu wariantów o korelacji wyników &gt; 0.7 (klastrowanie hierarchiczne na macierzy korelacji krzywych kapitału wariantów); γ₃, γ₄ — skośność i kurtoza dziennych zwrotów strategii.</p>
+DSR = Φ( ((SR−SR₀)·√(T−1)) / √(1 − γ₃·SR + ((γ₄−1)/4)·SR²) )&nbsp;&nbsp;→ wymagane <strong>≥ 0.95</strong></div>
+<div class="box accent">
+<div class="label">Warunki poprawnej implementacji — do sprawdzenia w code review</div>
+<ol>
+<li><strong>Częstotliwość dzienna.</strong> SR, γ₃ i γ₄ liczone na dziennych zwrotach, nigdy annualizowane. Wstawienie SR annualizowanego to najczęstszy błąd implementacji DSR.</li>
+<li><strong>γ₄ to kurtoza surowa</strong> (rozkład normalny = 3), nie nadwyżkowa — spójnie z członem ((γ₄−1)/4).</li>
+<li><strong>σ_SR = √V[{SR<sub>n</sub>}]</strong> — odchylenie standardowe SR-ów <em>w poprzek zarejestrowanych prób</em>, zgodnie z <em>False Strategy Theorem</em>. Uproszczenie 1/√T dopuszczalne wyłącznie jako jawnie oznaczony fallback przy zbyt małej liczbie prób do estymacji.</li>
+</ol>
+</div>
+<h4>Algorytm wyznaczania N_eff</h4>
+<pre>1. Zbierz krzywe dziennych zwrotów wszystkich zarejestrowanych wariantów: R = {r_1 ... r_n}
+2. Macierz korelacji C = corr(R)
+3. Metryka odległości:  d_ij = sqrt( 0.5 * (1 - C_ij) )     ← nie surowa korelacja
+4. Klastrowanie hierarchiczne (average linkage) na macierzy d
+5. Liczba klastrów: algorytm ONC (López de Prado & Lewis) — wybór przez
+   maksymalizację jakości podziału (silhouette), zamiast sztywnego progu
+6. N_eff = liczba klastrów
+7. SR wchodzące do SR_0 liczone z ZAGREGOWANYCH szeregów klastrów,
+   nie z pojedynczych wariantów
+8. Raport obowiązkowo zawiera analizę wrażliwości: N_eff dla odcięć 0.5-0.9
+9. W razie wątpliwości — fallback konserwatywny: N_eff = surowa liczba prób</pre>
+<p class="small muted">Wersja 1.0 przewidywała sztywne odcięcie korelacji na poziomie 0.7. Jest ono arbitralne: zbyt wysokie zawyża N_eff (nadmierna kara), zbyt niskie zaniża (kara pozorna). ONC wybiera podział na podstawie struktury danych, a analiza wrażliwości pokazuje, czy wynik od tego wyboru zależy.</p>
 <h3>A.4. Monte Carlo</h3>
 <div class="formula">Bootstrap: {R*_b} ~ próbkowanie z {R_i} ze zwracaniem, B = 5000 → CI₉₅(E) = [p2.5, p97.5]<br>
 Bootstrap blokowy (syntetyki): bloki długości L ~ geometryczne(1/L̄), L̄ = 1 dzień sesyjny</div>
@@ -1004,8 +1336,75 @@ Klasa mechanizmu: K1–K5 (min. 2)     Horyzont: intraday|event|swing
 <tr><td>Walk-forward</td><td>Sekwencyjna walidacja: optymalizacja na oknie IS, test na następującym OOS (7.1).</td></tr>
 </table>
 
+<!-- ============ CHANGELOG ============ -->
+<h2><span class="chapnum">Changelog</span>Wersja 1.0 → 1.1: co zmieniły audyty</h2>
+<p>Dokument w wersji 1.0 został poddany <strong>czterem niezależnym audytom zewnętrznym</strong>. Poniżej pełny wykaz — zarówno uwag przyjętych, jak i odrzuconych wraz z uzasadnieniem. Rejestrujemy oba rodzaje, bo audyt nie jest wyrocznią: kilka jego tez nie wytrzymało weryfikacji, a przemilczenie tego byłoby taką samą nieuczciwością jak zignorowanie tez trafnych.</p>
+
+<h3>Zmiany o największym znaczeniu</h3>
+<table>
+<tr><th style="width:22%">Obszar</th><th>Na czym polegał problem i co zmieniono</th></tr>
+<tr><td><strong>Definicja oryginalności</strong><br><span class="small muted">rozdz. 8.4</span></td><td>Reguła „dwie niezależne klasy mechanizmów = oryginalność" była <strong>fałszywa</strong>. Kontrprzykład: ORB z filtrem zmienności spełnia ją, będąc całkowicie standardowym setupem. Zastąpiona <strong>czterokrokowym testem</strong> z obowiązkowym benchmarkiem, nazwaną różnicą mechanizmu, testem przyrostowym i ablacjami. To najważniejsza pojedyncza zmiana w całej rewizji — dotyczy definicji sukcesu projektu, a nie parametru.</td></tr>
+<tr><td><strong>Nieprzechodnia bramka</strong><br><span class="small muted">rozdz. 1.3, 6.5</span></td><td>Kombinacja „Sharpe ≥ 0.8 + DSR &gt; 0.95" była matematycznie nieosiągalna — potwierdzone własnym rachunkiem: przy jednej próbie wymaga 4.2 lat czystego OOS, przy 30 wariantach nie przechodzi nawet Sharpe 1.5. Wprowadzono <strong>system dwustopniowy PROMISING/CERTIFIED</strong> i <strong>obniżono limit prób z 30 do 10</strong>. Paper trading awansował z testu do roli generatora danych OOS.</td></tr>
+<tr><td><strong>Katalog hipotez</strong><br><span class="small muted">rozdz. 9</span></td><td>Cztery karty okazały się tożsame z opublikowanymi setupami — przeniesione do <strong>benchmarków</strong> (nie zużywają licznika prób). Cztery przeformułowane z „czy efekt działa" na „jaki mechanizm decyduje, kiedy". Dodano <strong>klasę mechanizmu K6</strong> (transmisja międzyrynkowa) i cztery nowe karty, w tym rezydualny repricing zastępujący dawną H009.</td></tr>
+<tr><td><strong>Skrzywienie barów spornych</strong><br><span class="small muted">rozdz. 5.4</span></td><td>Reguła „SL wygrywa" nie jest neutralnym konserwatyzmem, lecz <strong>skrzywieniem</strong> karzącym strategie o wysokim R:R. Wprowadzono rozstrzyganie sub-barami sekundowymi dla spornych minut plus obowiązkowe pasmo wrażliwości.</td></tr>
+<tr><td><strong>Błąd w kosztach</strong><br><span class="small muted">rozdz. 3.2</span></td><td>Podany koszt 3.20 USD round-turn był niespójny z własnym wzorem (1.20 + 2×0.50 = 2.20). Poprawiono wraz z liczbami rocznymi; konserwatyzm przeniesiony do stress-testu.</td></tr>
+</table>
+
+<h3>Pełny wykaz przyjętych poprawek</h3>
+<table>
+<tr><th style="width:12%">Rozdział</th><th style="width:52%">Zmiana</th><th>Audyt</th></tr>
+<tr><td>1.3</td><td>System dwustopniowy; DSR ≥ 0.95 zamiast pustego „DSR &gt; 0"; podłoga transakcji 300 → 400, cel 800+; dodane bramki PBO i SPA</td><td>statystyczny</td></tr>
+<tr><td>1.4</td><td>Dopisane decyzje: baza kosztów, bramka sukcesu, zakres danych K6</td><td>wszystkie</td></tr>
+<tr><td>2.2</td><td>Dodana szósta klasa mechanizmu K6 — transmisja międzyrynkowa, basis, price discovery</td><td>oryginalności</td></tr>
+<tr><td>3.2</td><td>Korekta arytmetyczna kosztów; tabela wrażliwości kosztów rocznych; potwierdzenie prowizji przez źródła zewnętrzne</td><td>backtestingu, techniczny</td></tr>
+<tr><td>4.1</td><td>Realny koszt danych (25–60 USD, pokryty kredytami); zakaz używania continuous bez back-adjustu; rozdzielenie oceny FirstRate i Kibot; kontrola krzyżowa ze źródłem wtórnym; pinowanie wersji schematu</td><td>techniczny</td></tr>
+<tr><td>4.2</td><td>Klasyfikacja luk expected vs anomaly; zakaz forward-fill dla barów wykonania</td><td>techniczny</td></tr>
+<tr><td>4.3</td><td>Rozdzielenie serii: poziomy międzysesyjne na cenach surowych, P&amp;L na skorygowanych</td><td>backtestingu</td></tr>
+<tr><td>4.6</td><td>Sanity-report przebudowany pod semantykę braku barów; historyczna przerwa 2019–2021; kontrola rozjazdu serii</td><td>techniczny</td></tr>
+<tr><td>4.7</td><td><em>Nowy podrozdział</em> — dane uzupełniające dla klasy K6 w wersji oszczędnej</td><td>oryginalności</td></tr>
+<tr><td>5.4</td><td>Rozstrzyganie sub-barami 1 s; pasmo wrażliwości; poślizg stopa skalowany wielkością luki</td><td>backtestingu</td></tr>
+<tr><td>5.5</td><td>Model poślizgu skalowany zmiennością zamiast statycznej tabeli</td><td>backtestingu</td></tr>
+<tr><td>5.6</td><td>Nowe testy silnika: rozdzielenie serii, zakaz wykonania przy zerowym wolumenie</td><td>backtestingu, techniczny</td></tr>
+<tr><td>6.4</td><td>Dodany człon mocy testu; wyjaśnienie różnicy istotność vs moc; empiryczna estymacja σ_R</td><td>statystyczny</td></tr>
+<tr><td>6.5</td><td>Tabele wykonalności DSR; trzy warunki poprawnej implementacji; limit 10 wariantów; kategoria benchmarków</td><td>statystyczny</td></tr>
+<tr><td>7.1</td><td>Dodane CPCV jako bramka przed lockboxem; DSR liczone na pełnym zszytym OOS</td><td>backtestingu + statystyczny <span class="small">(zbieżnie)</span></td></tr>
+<tr><td>7.2</td><td>Bootstrap blokowy; 1000 serii syntetycznych z równym budżetem prób; dodane PBO/CSCV i SPA Hansena</td><td>statystyczny</td></tr>
+<tr><td>7.3</td><td>Purging i embargo rozszerzone na strategie intraday (≥60 min)</td><td>backtestingu</td></tr>
+<tr><td>7.6</td><td>Bramka rozbita na dwie listy kontrolne — Tier 1 i Tier 2</td><td>statystyczny</td></tr>
+<tr><td>8.1</td><td>Cykl życia hipotezy z nowym stanem PROMISING i pętlą paper tradingu</td><td>statystyczny</td></tr>
+<tr><td>8.4</td><td><em>Przepisany od zera</em> — czterokrokowy test oryginalności</td><td>oryginalności</td></tr>
+<tr><td>8.5</td><td>Limit siatki 30 → 10 wariantów; limit partii 120 → 40</td><td>statystyczny</td></tr>
+<tr><td>9</td><td><em>Przebudowany</em> — benchmarki B01–B04, karty przeformułowane, kandydaci z klasy K6, obowiązkowe pola benchmarku i ablacji</td><td>oryginalności</td></tr>
+<tr><td>11.1</td><td>Koszt danych ~10 USD; oficjalne ograniczenia symulatora; zmniejszenie konta paper; przebudowa roli paper tradingu</td><td>techniczny</td></tr>
+<tr><td>11.2</td><td>Agregacja barów 5 s; idempotentny menedżer zleceń; ryzyka biblioteki i testy chaosu</td><td>techniczny</td></tr>
+<tr><td>11.3</td><td>Pięć rozdzielonych serii metryk; twarde kryterium poślizgu stopów</td><td>techniczny</td></tr>
+<tr><td>11.4</td><td>Dodane kryteria: DSR łączne, poślizg stopów, zgodność barów; wyliczenie długości paper tradingu do awansu</td><td>techniczny + statystyczny</td></tr>
+<tr><td>13.1</td><td><em>Nowa sekcja</em> — czternaście ryzyk technicznych stacku</td><td>techniczny</td></tr>
+<tr><td>A.1</td><td>Wzór na liczność próby z członem mocy testu</td><td>statystyczny</td></tr>
+<tr><td>A.2</td><td>Błąd standardowy SR w postaci Mertensa zamiast wersji zakładającej normalność</td><td>statystyczny</td></tr>
+<tr><td>A.3</td><td>Algorytm wyznaczania N_eff (ONC, metryka odległości, analiza wrażliwości); warunki implementacji</td><td>statystyczny</td></tr>
+</table>
+
+<h3>Uwagi odrzucone lub zawężone</h3>
+<table>
+<tr><th style="width:26%">Uwaga audytu</th><th style="width:14%">Decyzja</th><th>Uzasadnienie</th></tr>
+<tr><td>Wnioskowanie kolejności zdarzeń w barze z położenia ceny otwarcia względem ekstremów</td><td><strong>Odrzucone</strong></td><td>Heurystyka bez walidacji empirycznej. Jej błędy byłyby skorelowane z kierunkiem ruchu — czyli występowałyby dokładnie tam, gdzie najbardziej szkodzą. Zastąpiona danymi sekundowymi i pasmem wrażliwości.</td></tr>
+<tr><td>VWAP musi być liczony na serii surowej</td><td><strong>Zawężone</strong></td><td>VWAP sesyjny mieści się w całości w jednym kontrakcie, więc stałe przesunięcie back-adjustu go nie zmienia. Korekta dotyczy wyłącznie poziomów międzysesyjnych, gdzie różnica jest realna.</td></tr>
+<tr><td>Warunek kolejkowy dla zleceń z limitem (wolumen na poziomie &gt; kolejka przed nami)</td><td><strong>Odrzucone</strong></td><td>Nieobliczalne z danych OHLCV — wymagałoby pełnej księgi zleceń. Zastąpione istniejącą regułą penetracji o tick plus testem wrażliwości.</td></tr>
+<tr><td>Progi Sharpe 1.5–2.0 jako wymóg dla intraday</td><td><strong>Zawężone</strong></td><td>Prawdziwe dla książek instytucjonalnych handlujących wieloma instrumentami. Dla systemu jednoinstrumentowego w skali detalicznej właściwym celem jest 1.2–1.5 — i tak wynika z tabeli wykonalności.</td></tr>
+<tr><td>Zanik dryfu overnight jako fakt ustalony</td><td><strong>Do weryfikacji</strong></td><td>Teza pochodzi z publikacji, której nie mogliśmy niezależnie potwierdzić. Zamiast przyjmować ją na wiarę lub odrzucać — <strong>sprawdzamy na własnych danych</strong> jako pierwszy test partii 0 (rozdz. 9.4, H004). Odpowiedź zajmie kilkadziesiąt minut i rozstrzygnie los karty.</td></tr>
+<tr><td>Mechaniczne stosowanie średniego zaniku po publikacji do wszystkich efektów</td><td><strong>Odrzucone</strong></td><td>Za samym audytem: twarde dowody zaniku istnieją dla nielicznych efektów. Reszta wymaga własnej weryfikacji, nie ryczałtowego dyskonta.</td></tr>
+</table>
+
+<div class="box good">
+<div class="label">Bilans</div>
+<p><strong>46 zmian</strong> wprowadzonych, <strong>6 uwag odrzuconych lub zawężonych</strong>, jeden konflikt między audytami rozstrzygnięty (sposób wyznaczania N_eff — wersja z algorytmem ONC zastąpiła sztywny próg korelacji), jedna zbieżność potwierdzająca (CPCV zarekomendowane niezależnie przez dwa audyty), jedna teza skierowana do weryfikacji na własnych danych zamiast przyjęcia na wiarę.</p>
+<p>Dwie korekty okazały się korzystne finansowo: dane historyczne mieszczą się w kredytach startowych, a subskrypcja danych bieżących kosztuje mniej, niż zakładano. Dwie były realnymi błędami w dokumencie: arytmetyka kosztów i puste kryterium DSR. Jedna — reguła oryginalności — była błędem koncepcyjnym o największych konsekwencjach dla całego projektu.</p>
+</div>
+
 <div class="footer-note">
-Projekt „G” · Dokument założycielski v1.0 · 31 lipca 2026 · Wygenerowano w repozytorium lippaol-art/G.<br>
+Projekt „G” · Dokument założycielski v1.1 · 31 lipca 2026 · Wygenerowano w repozytorium lippaol-art/G.<br>
+Wersja 1.1 uwzględnia wyniki czterech niezależnych audytów zewnętrznych (metodologia backtestingu, aparat statystyczny, oryginalność katalogu hipotez, weryfikacja stacku technicznego).<br>
 Dokument badawczo-inżynieryjny; nie stanowi doradztwa inwestycyjnego. Handel kontraktami futures wiąże się z istotnym ryzykiem straty, mogącej przekroczyć zainwestowany kapitał. Żaden wynik backtestu ani symulacji nie gwarantuje wyników rzeczywistych.
 </div>
 
