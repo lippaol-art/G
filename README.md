@@ -16,8 +16,8 @@ niezależnych audytach zewnętrznych.
 |------|--------|
 | Dokument założycielski v1.1 | ✅ zrobione |
 | Etap 0 — fundament repo | ✅ zrobione |
-| Etap 2 — silnik i aparat walidacyjny | ✅ kod + testy (bez testów wymagających danych) |
-| Etap 1 — pobranie danych | ⛔ **zablokowane**: host `hist.databento.com` odrzucany przez politykę egress środowiska |
+| Etap 2 — silnik i aparat walidacyjny | ✅ kompletny: 233 testy, pokrycie 90% |
+| Etap 1 — pobranie danych | ⛔ **zablokowane**: host `hist.databento.com` odrzucany przez politykę egress. Procedura wznowienia: **[HANDOFF.md](HANDOFF.md)** |
 | Etap 3 — fabryka hipotez | oczekuje na dane |
 
 ---
@@ -49,11 +49,21 @@ gdy zmiennej brak — nie ma wartości domyślnej.
 engine/          rdzeń silnika backtestowego
   sessions.py    segmentacja doby w ET, DST, kalendarz CME, klasyfikacja luk
   costs.py       model kosztów i poślizgu (baza 2.20 USD RT, skalowanie zmiennością)
-  backtest.py    pętla event-driven, tabela rozstrzygnięć wewnątrzbarowych, warstwa ryzyka
+  backtest.py    tabela rozstrzygnięć wewnątrzbarowych, warstwa ryzyka
+  guards.py      blokada lookaheadu, zakaz volume==0, rozdzielenie serii
+  roll.py        rolowanie wolumenowe, back-adjust różnicowy, px_raw/px_adj
+  features.py    ATR, VWAP, percentyle, poziomy referencyjne (tylko px_raw)
+  metrics.py     PF, Sharpe + poprawka Lo, Sortino, MDD, MAR, SQN, koncentracja
+  loader.py      GRANICA — wymaga danych w data/clean/
 
 validation/      aparat statystyczny
   dsr.py         Deflated Sharpe Ratio, SR₀ wg FST, N_eff przez klastrowanie ONC
   power.py       moc testu i planowanie wielkości próby
+  walkforward.py okna 12m/3m, purge + embargo, lockbox
+  cpcv.py        Combinatorial Purged CV — 15 ścieżek zamiast jednej
+  pbo.py         Probability of Backtest Overfitting (bramka < 0.20)
+  spa.py         test SPA Hansena
+  montecarlo.py  permutacja, bootstrap blokowy BCa, syntetyki
   trial_counter.json   globalny licznik prób — wejście do DSR
 
 hypotheses/
