@@ -58,6 +58,14 @@ select = ["E", "F", "W", "I", "B", "UP", "SIM"]
 ignore = ["E501"]   # dlugosc linii pilnuje formatter, nie linter
 
 [tool.mypy]
-python_version = "3.11"
+# CELOWO BEZ `python_version`. Ustawienie go na sztywno powoduje, ze mypy
+# odrzuca skladnie nowsza niz zadeklarowana takze w CUDZYCH stubach — a te
+# rozwiazuja sie do najnowszej wersji przy instalacji. Realnie: przy
+# `python_version = "3.11"` i runtime 3.12 w CI mypy przerywal na
+# `numpy/__init__.pyi` ("Type statement is only supported in Python 3.12
+# and greater") i nie sprawdzal juz ani jednego naszego pliku.
+#
+# Bez tego pola mypy celuje w wersje interpretera, pod ktorym biegnie: 3.11
+# lokalnie, 3.12 w CI. Kazde srodowisko jest wtedy spojne samo ze soba.
 warn_unused_ignores = true
 warn_redundant_casts = true
