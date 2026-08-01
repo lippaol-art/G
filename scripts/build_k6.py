@@ -25,6 +25,7 @@ from __future__ import annotations
 import argparse
 import os
 import sys
+import time
 from pathlib import Path
 
 RAW = Path("data/raw")
@@ -80,6 +81,46 @@ def odcinki() -> list[tuple[str, str]]:
     return out
 
 
+def pobierz_odcinek(c, symbole: list[str], a: str, b: str, cel: Path,
+                    proby: int = 5) -> None:
+    """Jeden odcinek roczny, z ponawianiem i ZAPISEM ATOMOWYM.
+
+    PONAWIANIE. Strumien potrafi sie urwac w polowie ("Response ended
+    prematurely") — to awaria przejsciowa, nie odmowa. Bez ponawiania jedno
+    drgniecie sieci przerywa caly przebieg; zdarzylo sie realnie po dwunastu
+    z trzydziestu trzech odcinkow.
+
+    ZAPIS ATOMOWY. Piszemy do pliku tymczasowego i dopiero po sukcesie
+    zmieniamy nazwe. Bez tego przerwany zapis zostawilby PLIK OBCIETY, ktory
+    przy wznowieniu zostalby uznany za gotowy i pominiety — czyli cicho
+    okrojone dane, najgorszy mozliwy tryb awarii w tym projekcie. Wznowienie
+    ma byc bezpieczne, a nie tylko wygodne.
+    """
+    import databento as db
+
+    tmp = cel.with_suffix(cel.suffix + ".part")
+    for proba in range(1, proby + 1):
+        try:
+            dane = c.timeseries.get_range(
+                dataset=DATASET, schema=SCHEMA, symbols=symbole,
+                stype_in="raw_symbol", start=a, end=b,
+            )
+            dane.to_file(tmp)
+            # Kontrola, ze plik da sie w ogole odczytac — obciety zst rzuci tu blad,
+            # zanim zostanie zatwierdzony pod docelowa nazwa.
+            _ = db.DBNStore.from_file(tmp).metadata
+            tmp.replace(cel)
+            return
+        except Exception as e:  # noqa: BLE001 — kazdy blad sieci/zapisu ponawiamy tak samo
+            tmp.unlink(missing_ok=True)
+            if proba == proby:
+                raise
+            czekaj = 2 ** proba
+            print(f"    proba {proba}/{proby} nieudana ({type(e).__name__}), "
+                  f"ponawiam za {czekaj}s", flush=True)
+            time.sleep(czekaj)
+
+
 def main() -> int:
     p = argparse.ArgumentParser(description="Pobranie warstwy danych K6")
     p.add_argument("--estimate-only", action="store_true",
@@ -108,11 +149,7 @@ def main() -> int:
                 print(f"  {cel.name}: juz jest, pomijam")
                 continue
             print(f"  {cel.name}: pobieram {a} -> {b} ...", flush=True)
-            dane = c.timeseries.get_range(
-                dataset=DATASET, schema=SCHEMA, symbols=symbole,
-                stype_in="raw_symbol", start=a, end=b,
-            )
-            dane.to_file(cel)
+            pobierz_odcinek(c, symbole, a, b, cel)
             print(f"    -> {cel.stat().st_size / 1e6:.1f} MB", flush=True)
 
     print("\nGotowe. Nastepny krok: pipeline wag NDX i pre-flight H013.")
