@@ -62,9 +62,88 @@ class TestDopasowaniaWspolczynnika:
         assert dopasuj_wspolczynnik(3.98) == pytest.approx(4.0)
         assert dopasuj_wspolczynnik(20.4) == pytest.approx(20.0)
 
-    def test_wartosc_miedzy_wspolczynnikami_jest_odrzucana(self):
-        assert dopasuj_wspolczynnik(2.6) is None
-        assert dopasuj_wspolczynnik(1.22) is None   # -18% po wynikach, nie split
+    def test_wartosc_daleka_od_kazdego_wspolczynnika_jest_odrzucana(self):
+        """Sama cena wystarcza tylko wtedy, gdy stosunek jest DALEKO od kazdego k."""
+        assert dopasuj_wspolczynnik(1.22) is None    # -18%, 39% od najblizszego (2.0)
+        assert dopasuj_wspolczynnik(1.36) is None    # krach META, 32% od 2.0
+        assert dopasuj_wspolczynnik(12.0) is None    # miedzy 10 a 15, 20% od obu
+
+    def test_sama_cena_NIE_wystarcza_blisko_wspolczynnika(self):
+        """Sedno projektu detektora, ujete jako test.
+
+        Stosunek 2.6 lezy 13% od 3.0, czyli w tolerancji — sama cena nie ma
+        podstaw go odrzucic. Dopiero wolumen rozstrzyga: przy prawdziwym splicie
+        3:1 obrot rosnie okolo trzykrotnie, przy krachu zachowuje sie inaczej.
+
+        Ten test pilnuje, zeby nikt nie "uproscil" detektora do samej ceny.
+        """
+        assert dopasuj_wspolczynnik(2.6) is not None, \
+            "przy tolerancji 15% cena sama nie rozstrzyga — i tak ma byc"
+        assert dopasuj_wspolczynnik(2.6, 2.9) is not None, "obrot x2.9 potwierdza split 3:1"
+        assert dopasuj_wspolczynnik(2.6, 1.1) is None, "obrot bez zmian wyklucza split"
+        assert dopasuj_wspolczynnik(2.6, 9.0) is None, "obrot x9 przy cenie x2.6 to nie split"
+
+
+class TestNaZmierzonychZdarzeniach:
+    """REGRESJA NA REALNYCH DANYCH — wszystkie liczby zmierzone w naszym zbiorze.
+
+    Detektor przeszedl testy na fixture'ach, a mimo to przeoczyl trzy z osmiu
+    prawdziwych splitow przy pierwszym uruchomieniu na realnych danych. Powod:
+    fixture'y zakladaly, ze w dniu splitu cena nie robi nic innego, a TSLA
+    urosla wtedy o 12.6%.
+
+    Te przypadki sa wiec czyms wiecej niz testem jednostkowym — sa pamiecia
+    o tym, czego reczna konstrukcja danych nie przewidziala.
+
+    Uwaga metodologiczna: to jest strojenie DETEKTORA CZYSZCZACEGO wzgledem
+    znanej prawdy (opublikowane splity), a nie strojenie strategii wzgledem
+    zwrotow. Nie zuzywa licznika prob i nie podlega bramce DSR.
+    """
+
+    SPLITY = [
+        ("AAPL 2020-08-31, split 4:1", 3.871, 4.44, 4.0),
+        ("TSLA 2020-08-31, split 5:1", 4.441, 5.49, 5.0),
+        ("NVDA 2021-07-20, split 4:1", 4.038, 2.32, 4.0),
+        ("AMZN 2022-06-06, split 20:1", 19.600, 13.04, 20.0),
+        ("GOOGL 2022-07-18, split 20:1", 20.514, 18.91, 20.0),
+        ("TSLA 2022-08-25, split 3:1", 3.010, 2.38, 3.0),
+        ("SOXX 2024-03-07, split 3:1", 2.900, 2.94, 3.0),
+        ("NVDA 2024-06-10, split 10:1", 9.935, 5.62, 10.0),
+    ]
+
+    NIE_SPLITY = [
+        ("META 2022-02-03, -26% po wynikach", 1.358, 4.08),
+        ("META 2022-10-27, -25% po wynikach", 1.326, 2.76),
+        ("AVGO 2020-03-16, krach covidowy", 1.249, 1.41),
+        ("TSLA 2020-09-08, -21% po wykluczeniu z S&P", 1.267, 0.72),
+        ("hipotetyczny krach -50% z wybuchem obrotu", 2.000, 4.50),
+    ]
+
+    @pytest.mark.parametrize("opis,cena,wolumen,oczekiwany", SPLITY)
+    def test_prawdziwy_split_jest_wykryty(self, opis, cena, wolumen, oczekiwany):
+        got = dopasuj_wspolczynnik(cena, wolumen)
+        assert got == pytest.approx(oczekiwany), (
+            f"{opis}: wykryto {got}, oczekiwano {oczekiwany}. "
+            "Przeoczony split zostawia w szeregu skok rzedu -75%."
+        )
+
+    @pytest.mark.parametrize("opis,cena,wolumen", NIE_SPLITY)
+    def test_ruch_rynku_nie_jest_brany_za_split(self, opis, cena, wolumen):
+        got = dopasuj_wspolczynnik(cena, wolumen)
+        assert got is None, (
+            f"{opis}: zaklasyfikowane jako split {got}. "
+            "Korekta skasowalaby prawdziwe zdarzenie rynkowe — dla H013 "
+            "wlasnie te zdarzenia sa przedmiotem badania."
+        )
+
+    def test_wolumen_rozstrzyga_gdy_cena_nie_rozstrzyga(self):
+        """TSLA 2020-08-31: cena x4.441 pasuje i do 4 (blad 11.0%), i do 5
+        (blad 11.2%). Sama cena wskazalaby 4. Wolumen x5.49 daje iloraz 1.10
+        przy k=5 wobec 1.37 przy k=4 — i to on decyduje."""
+        assert dopasuj_wspolczynnik(4.441) == pytest.approx(4.0), \
+            "bez wolumenu cena faktycznie wskazuje 4"
+        assert dopasuj_wspolczynnik(4.441, 5.49) == pytest.approx(5.0), \
+            "z wolumenem musi wyjsc 5"
 
 
 class TestOdrozniniaSplituOdKrachu:
