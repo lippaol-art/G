@@ -84,12 +84,29 @@ samoczyszczącą.
 
 | ID | Karta | Klasa | Priorytet | Status | Warianty |
 |----|-------|-------|-----------|--------|----------|
-| H011 | Sekwencja Azja→Europa jako predyktor RTH | K1 | **najwyższy** — najniższe pokrycie z literaturą | IDEA | 0/6 |
-| H005 | Mikrostruktura kolejnych testów poziomu | K5 | wysoki | IDEA | 0/6 |
-| H010 | Zmienność zrealizowana wobec oczekiwanej | K3 × K1 | wysoki (+ warstwa reżimowa dla innych kart) | IDEA | 0/6 |
+| H011 | Sekwencja Azja→Europa jako predyktor RTH | K1 | ~~najwyższy~~ | **REJECTED (pre-flight)** | **0/6** |
+| H005 | Mikrostruktura kolejnych testów poziomu | K5 | ~~wysoki~~ | **REJECTED (pre-flight)** | **0/6** |
+| H010 | Zmienność zrealizowana wobec oczekiwanej | K3 × K1 | ~~wysoki~~ | **REJECTED w tej roli (pre-flight)** | **0/6** |
 | H013 | Rezydualny repricing po wynikach megacapów | K6 × K4 | wysoki (wymaga warstwy danych K6) | IDEA | 0/8 |
 | H014 | Dywergencja NQ–ES wokół szoków stóp | K6 × K4 | średni (wymaga ES) | IDEA | 0/6 |
 | H016 | Reżim dyspersji składników NDX | K6 × K3 | średni (oceniana przyrostem w innych kartach) | IDEA | 0/6 |
+
+### Partia 1 — odrzucona w pre-flight (W004, 01.08.2026)
+
+Pełny raport: [`reports/W004_partia1_preflight.md`](../reports/W004_partia1_preflight.md).
+**Zużyte próby: 0 z budżetu 18.** Trzy karty zginęły, zanim kosztowały choć jedną próbę.
+
+| Karta | Powód odrzucenia |
+|-------|------------------|
+| **H011** | Oba przewidywania mechanizmu zawodzą (kontrast kierunkowy t = −0.44; efficiency ratio t = −1.34, ze znakiem **przeciwnym** do przewidywanego). Karta o najwyższym priorytecie w katalogu nie ma przesłanki. |
+| **H010** | Efekt jest — i to najsilniejszy w całym projekcie (szeroka noc → szerszy zakres RTH, **t = +10.2**) — ale dotyczy **amplitudy, nie charakteru**. Efficiency ratio nie różni się między reżimami (t ≈ 0). Karta zakładała filtr trend/piłowanie; tego dane nie dają. Zostaje jako wejście do **wielkości pozycji**, nie jako filtr kierunkowy. |
+| **H005** | Sygnał PDH przy k ≥ 4: +5.07 pkt, t = +2.98, przeszedł kontrolę pory dnia (nadwyżka t = +3.11), zmianę czterech parametrów i podział próbki na połowy. **Upadł na trzech kontrolach z mechanizmu:** brak symetrii (PDL t = +0.89), brak monotoniczności w k (skok przy 4, spadek przy 5), koncentracja czasowa (**rok 2026, niepełny, daje 52% wyniku**; 3 z 8 lat ujemne). |
+
+**Skład partii 1 do przeprojektowania.** Trzy karty z sześciu kandydatów odpadły
+bez kosztu. Pozostają H013, H014, H016 — wszystkie z klasy K6, wymagające warstwy
+danych z rozdz. 4.7 (partia 2).
+
+---
 
 ### H015 — zarejestrowana, niebadalna
 
@@ -107,7 +124,7 @@ badamy" chroni przyszłe iteracje przed przypadkowym wejściem w tę pułapkę.
 | Partia | Skład | Uzasadnienie |
 |--------|-------|--------------|
 | **0** ✅ | ~~Test dryfu nocnego~~ W001 + ~~benchmarki B01–B04~~ | **WYKONANA 01.08.2026.** W001 rozstrzygnął H004; B01–B04 zmierzone (`reports/B00_benchmarks.md`, liczby maszynowe w `reports/benchmarks.json`). Zero zużytych prób. |
-| **1** | H011, H005, H010 | Najniższe pokrycie z literaturą przy zadowalającej częstości sygnałów. |
+| **1** ✅ | ~~H011, H005, H010~~ | **ODRZUCONE W PRE-FLIGHT (W004).** Zero zużytych prób z budżetu 18. Żadna z trzech kart nie miała przesłanki mierzalnej w danych. |
 | **2** | H013, H014, H016 | Klasa K6 — wymaga gotowej warstwy danych (PLAN rozdz. 4.7). |
 | **3** | H001, H002, H003 | Po przejściu kroków 1–2 testu oryginalności. Część prawdopodobnie odpadnie do benchmarków. |
 
@@ -120,6 +137,8 @@ Fakty o rynku i o procesie odkryte przy okazji badań. Zasilają projektowanie k
 | ID | Wniosek | Źródło |
 |----|---------|--------|
 | **W001** | **Poziomy bezwarunkowe są poza zasięgiem tego projektu.** Przy dziennym odchyleniu zwrotu nocnego ~0.75% odróżnienie dryfu 3.7%/rok od zera wymaga ~86 lat danych. Każda karta, której teza brzmi „efekt X o sile kilku procent rocznie istnieje / wygasł", jest z góry nierozstrzygalna — **nie wolno na nią wydawać próby**. Dotyczy to też cudzych twierdzeń tej klasy: nie opieramy na nich decyzji projektowych, niezależnie od źródła. | W001 |
+| **W005** | **Silny efekt to nie to samo co użyteczny efekt.** H010 dała najmocniejszy pojedynczy wynik projektu (t > 10) i została odrzucona, bo mierzyła **amplitudę** tam, gdzie karta potrzebowała **kierunku**. Przed uruchomieniem karty pytamy nie tylko „czy efekt istnieje", ale „czy istnieje w zmiennej, której karta faktycznie używa". | W004 |
+| **W004** | **Kontrole wyprowadzone z mechanizmu odrzucają więcej i wcześniej niż kontrole statystyczne.** Sygnał H005 przeszedł kontrolę pozorności, zmianę czterech parametrów i podział próbki — a upadł na symetrii, monotoniczności i stabilności rocznej, czyli na trzech przewidywaniach, które robi jego własny mechanizm. **Kolejność kontroli: najpierw mechanizm, potem statystyka.** Dodatkowo: pre-flight rozkładów kosztujący 0 prób uratował cały budżet 18 prób partii 1. | W004 |
 | **W003** | **Metryki w R są niezdefiniowane bez stopa, a koncentracja bez zysku.** Strategia z wyjściem czasowym ma `r_multiple = 0` dla każdej transakcji → PF, win rate, expectancy i SQN wychodziły **zerami wyglądającymi na pomiar**. Tak samo `top5_concentration` zwracała 0.0 dla strategii stratnej, co czytało się jako „koncentracja wzorowa". Oba naprawione na NaN + flagę `r_metrics_valid`. **Wniosek procesowy: metryka, która przy zdegenerowanym wejściu zwraca liczbę zamiast błędu, jest pułapką** — przy przeglądzie każdej nowej metryki pytamy najpierw, co robi na wejściu bez sensu. | B00 |
 | **W002** | **Warunkowanie ma cenę rosnącą jak 1/√f.** Sharpe liczymy po wszystkich dniach (rozdz. 6.3), więc strategia handlująca ułamek *f* okazji musi mieć na każdej z nich edge większy o czynnik 1/√f. Progi dla dryfu nocnego przy DSR ≥ 0.95 i 4 wariantach (SR ≥ 1.13): połowa nocy **3.6×**, kwintyl **5.6×**, decyl **8.0×** obecnej przewagi bezwarunkowej. **Każda karta warunkowa deklaruje *f* z góry** i uzasadnia, skąd weźmie koncentrację. Warunek odsiewający 90% okazji „bo tak wygląda lepiej" niemal na pewno nie przejdzie bramki — i można to stwierdzić **przed** testem. | W001 |
 
