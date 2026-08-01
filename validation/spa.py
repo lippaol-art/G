@@ -138,7 +138,7 @@ def superior_predictive_ability(
 
     if not force_fallback:
         try:
-            from arch.bootstrap import SPA  # type: ignore
+            from arch.bootstrap import SPA
 
             benchmark = np.zeros(M.shape[0])
             spa = SPA(benchmark, M, reps=n_bootstrap, block_size=int(block_size), seed=seed)

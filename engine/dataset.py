@@ -20,6 +20,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import date, datetime
+from typing import cast
 
 import polars as pl
 
@@ -259,8 +260,11 @@ def build_continuous(
     rep.zero_volume_bars = int(df.filter(pl.col("volume") == 0).height)
     rep.n_final = df.height
     if df.height:
-        rep.first_ts = df["ts_utc"].min()
-        rep.last_ts = df["ts_utc"].max()
+        # `Series.min()` jest typowane jako unia wszystkich typow polars, bo
+        # sygnatura nie zalezy od dtype kolumny. Kolumna `ts_utc` jest z definicji
+        # schematu datetime — rzutowanie jest tu stwierdzeniem faktu, nie obejsciem.
+        rep.first_ts = cast(datetime, df["ts_utc"].min())
+        rep.last_ts = cast(datetime, df["ts_utc"].max())
 
     brakuje = [c for c in REQUIRED_COLUMNS if c not in df.columns]
     if brakuje:

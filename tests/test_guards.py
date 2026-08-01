@@ -178,6 +178,35 @@ class TestSecrets:
 # ==========================================================================
 
 class TestDeterminism:
+    def test_wbudowany_hash_nie_sluzy_za_ziarno(self):
+        """`hash()` na stringu jest RANDOMIZOWANY przy kazdym starcie procesu.
+
+        TRYB AWARII, KTORY SIE WYDARZYL. Raport W001 wyznaczal ziarno bootstrapu
+        jako `abs(hash(symbol + okres)) % 2**31`. Kazde uruchomienie dawalo inne
+        granice przedzialow ufnosci — raport badawczy nie byl odtwarzalny, mimo
+        ze nie zawieral ani jednego jawnego wywolania losowosci bez seeda.
+        Wykryte dopiero przez porownanie dwoch kolejnych regeneracji.
+
+        `hashlib` i pola nazwane `*_hash` sa w porzadku — chodzi wylacznie
+        o wbudowana funkcje `hash()` uzyta jako zrodlo determinizmu.
+        """
+        naruszenia = []
+        for d in ("engine", "validation", "research", "scripts"):
+            kat = ROOT / d
+            if not kat.is_dir():
+                continue
+            for path in kat.rglob("*.py"):
+                tree = ast.parse(path.read_text(encoding="utf-8"))
+                for node in ast.walk(tree):
+                    if (isinstance(node, ast.Call) and isinstance(node.func, ast.Name)
+                            and node.func.id == "hash"):
+                        naruszenia.append(f"{d}/{path.name}:{node.lineno}")
+        assert not naruszenia, (
+            "Wbudowany `hash()` w kodzie liczacym:\n" + "\n".join(naruszenia)
+            + "\nUzyj `zlib.crc32` albo jawnej stalej — `hash()` na stringu zmienia "
+              "sie miedzy procesami i cicho psuje odtwarzalnosc."
+        )
+
     def test_brak_nieziarnowanej_losowosci_w_silniku(self):
         """`random` bez seeda w engine/ lamie odtwarzalnosc wynikow.
 
@@ -321,3 +350,72 @@ class TestTestHygiene:
                 if not m.group(1) or "reason" not in m.group(1):
                     naruszenia.append(f"{path.name}: skip bez reason")
         assert not naruszenia, "\n".join(naruszenia)
+
+
+# ==========================================================================
+# 10. PAKOWALNOSC — zielony pytest lokalnie nie dowodzi, ze CI wstanie
+# ==========================================================================
+
+class TestPakowalnosc:
+    """CI instaluje projekt przez `pip install -e .`; lokalne testy tego nie robia.
+
+    TRYB AWARII, KTORY SIE WYDARZYL. Dodanie katalogu `reports/` sprawilo, ze
+    setuptools w trybie flat-layout zobaczyl szesc kandydatow na pakiet
+    top-level (`data`, `engine`, `reports`, `research`, `hypotheses`,
+    `validation`) i odmowil budowy. CI bylo czerwone przez trzy commity, a kazdy
+    z nich raportowal komplet zielonych testow — bo lokalnie nikt nie instalowal
+    paczki. Bledu nie widac w pytest, ruff ani mypy.
+
+    Straznik zamyka te luke: kazdy katalog z kodem w korzeniu repo musi byc albo
+    zadeklarowany jako pakiet, albo jawnie wymieniony jako niepakiet.
+    """
+
+    #: Katalogi z kodem, ktore CELOWO nie sa pakietami instalowanymi.
+    #: `scripts` i `tests` uruchamiane sa z korzenia repo przez PYTHONPATH,
+    #: nie importowane z zainstalowanej dystrybucji.
+    NIE_PAKIETY = {"scripts", "tests"}
+
+    @staticmethod
+    def _zadeklarowane() -> list[str]:
+        import tomllib
+        cfg = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
+        return cfg.get("tool", {}).get("setuptools", {}).get("packages", [])
+
+    def test_lista_pakietow_jest_jawna(self):
+        """Automatyczne wykrywanie pakietow jest tu bledem, nie wygoda —
+        repo ma katalogi danych i raportow obok katalogow kodu."""
+        assert self._zadeklarowane(), (
+            "pyproject.toml nie deklaruje [tool.setuptools] packages. Bez jawnej "
+            "listy setuptools probuje zgadnac i wywraca instalacje, gdy w korzeniu "
+            "pojawi sie katalog niebedacy pakietem (data/, reports/, hypotheses/)."
+        )
+
+    def test_kazdy_katalog_z_kodem_jest_rozstrzygniety(self):
+        zadeklarowane = set(self._zadeklarowane())
+        pominiete = {".git", "__pycache__", ".pytest_cache", ".ruff_cache",
+                     ".mypy_cache", ".github", ".claude", "docs", "data",
+                     "reports", "hypotheses", ".venv"}
+        nierozstrzygniete = []
+        for p in ROOT.iterdir():
+            if not p.is_dir() or p.name in pominiete or p.name.startswith("."):
+                continue
+            if not any(p.rglob("*.py")):
+                continue
+            if p.name not in zadeklarowane and p.name not in self.NIE_PAKIETY:
+                nierozstrzygniete.append(p.name)
+        assert not nierozstrzygniete, (
+            f"Katalogi z kodem nierozstrzygniete w pyproject.toml: {nierozstrzygniete}.\n"
+            "Dopisz je do [tool.setuptools] packages albo do NIE_PAKIETY w tym tescie. "
+            "Inaczej `pip install -e .` w CI moze zaczac zgadywac."
+        )
+
+    def test_zadeklarowane_pakiety_istnieja_i_maja_init(self):
+        """Pakiet zadeklarowany, ale bez `__init__.py`, instaluje sie niekompletnie."""
+        braki = []
+        for nazwa in self._zadeklarowane():
+            kat = ROOT / nazwa
+            if not kat.is_dir():
+                braki.append(f"{nazwa}: katalog nie istnieje")
+            elif not (kat / "__init__.py").exists():
+                braki.append(f"{nazwa}: brak __init__.py")
+        assert not braki, "Niespojna deklaracja pakietow:\n" + "\n".join(braki)

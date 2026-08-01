@@ -221,7 +221,7 @@ def effective_trials(
         return int(labels.max()), labels
 
     # ONC: wybor liczby klastrow maksymalizujacy silhouette
-    from sklearn.metrics import silhouette_score  # type: ignore
+    from sklearn.metrics import silhouette_score
 
     best_k, best_score, best_labels = 1, -1.0, np.ones(n, dtype=int)
     for k in range(2, min(n, 20) + 1):

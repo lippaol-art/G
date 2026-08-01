@@ -18,6 +18,7 @@ data = [
 ]
 validation = [
     "arch>=6.3",             # test SPA Hansena (rozdz. 7.2)
+    "scikit-learn>=1.4",     # silhouette dla ONC przy N_eff (rozdz. 6.5, A.3)
 ]
 live = [
     "ib_async>=1.0",         # Etap 5 — paper trading
@@ -28,6 +29,18 @@ dev = [
     "ruff>=0.6",
     "mypy>=1.11",
 ]
+
+# JAWNA LISTA PAKIETOW. Bez niej setuptools stosuje automatyczne wykrywanie
+# "flat-layout" i traktuje KAZDY katalog w korzeniu jako kandydata na pakiet —
+# w tym `data/`, `reports/` i `hypotheses/`, ktore pakietami nie sa. Instalacja
+# konczy sie wtedy bledem "Multiple top-level packages discovered in a
+# flat-layout" i wywraca CI juz na kroku instalacji zaleznosci.
+#
+# Zdarzylo sie to realnie: CI bylo czerwone od commita 9dfc0ee (dodanie
+# `reports/`), a lokalne `pytest` przechodzilo, bo lokalnie nikt nie robil
+# `pip install -e .`. Lista musi rosnac razem z katalogami kodu.
+[tool.setuptools]
+packages = ["engine", "validation", "research"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

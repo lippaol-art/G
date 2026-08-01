@@ -20,17 +20,21 @@ jobs:
           cache: pip
 
       - name: Instalacja zależności
+        # `validation` instalowane ŚWIADOMIE: bez `arch` i `scikit-learn` moduły
+        # spa.py i dsr.py cicho schodzą na ścieżkę zapasową, więc ich ścieżka
+        # główna nie byłaby wykonana ani razu — ani lokalnie, ani w CI.
         run: |
           python -m pip install --upgrade pip
-          pip install -e '.[dev]'
+          pip install -e '.[dev,validation]'
           pip install ruff mypy
 
       - name: Linter (ruff)
         run: ruff check engine validation scripts tests research
 
       - name: Kontrola typów (mypy)
+        # Blokujące od 01.08.2026 — wszystkie błędy usunięte, więc `continue-on-error`
+        # zamieniłoby kontrolę w ozdobę.
         run: mypy engine validation --ignore-missing-imports
-        continue-on-error: true   # na razie informacyjnie; zaostrzyć po dopisaniu adnotacji
 
       - name: Testy + pokrycie
         # Bramka 5.6 świadomie wyłączona z pomiaru pokrycia: jej testy przepuszczają

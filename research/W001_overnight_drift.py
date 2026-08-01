@@ -25,6 +25,7 @@ Wyjscie: reports/W001_overnight_drift.md
 from __future__ import annotations
 
 import sys
+import zlib
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -99,6 +100,20 @@ def rocznie(mu_dzienne: float) -> float:
 
 def sharpe(x: np.ndarray) -> float:
     return float(x.mean() / x.std(ddof=1) * np.sqrt(DNI_W_ROKU))
+
+
+def ziarno(etykieta: str) -> int:
+    """Deterministyczne ziarno z etykiety tekstowej.
+
+    NIE `hash()`. Python randomizuje hash stringow przy kazdym starcie procesu
+    (PYTHONHASHSEED), wiec `hash(sym + okres)` dawal INNE ziarno w kazdym
+    przebiegu — a wraz z nim inne granice bootstrapu w raporcie. Raport badawczy,
+    ktory przy powtorzeniu daje inne liczby, lamie wymog odtwarzalnosci
+    z rozdz. 5.6 i podwaza kazdy wniosek, ktory z niego wyciagniemy.
+
+    Wykryte przez porownanie dwoch kolejnych regeneracji tego samego raportu.
+    """
+    return zlib.crc32(etykieta.encode("utf-8"))
 
 
 def t_stat(x: np.ndarray) -> float:
@@ -187,7 +202,7 @@ def main() -> int:
         for etykieta, m in (("2019-2020", lata < ROK_PODZIALU),
                             (f"{ROK_PODZIALU}-2026", lata >= ROK_PODZIALU)):
             x = noc[m]
-            lo, hi = boot_mean_ci(x, seed=abs(hash(sym + etykieta)) % 2**31)
+            lo, hi = boot_mean_ci(x, seed=ziarno(sym + etykieta))
             podsumowanie[sym][etykieta] = dict(
                 n=int(m.sum()), mu=float(x.mean()), lo=lo, hi=hi,
                 sharpe=sharpe(x), t=t_stat(x))
