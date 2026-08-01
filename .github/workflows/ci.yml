@@ -33,11 +33,21 @@ jobs:
         continue-on-error: true   # na razie informacyjnie; zaostrzyć po dopisaniu adnotacji
 
       - name: Testy + pokrycie
+        # Bramka 5.6 świadomie wyłączona z pomiaru pokrycia: jej testy przepuszczają
+        # 2.5 mln barów przez pętlę Pythona, a instrumentacja coverage spowalnia to
+        # o rząd wielkości. Uruchamiana jest osobnym krokiem, bez `--cov`.
         run: |
           PYTHONPATH=. pytest -q \
+            --ignore=tests/test_engine_on_real_data.py \
             --cov=engine --cov=validation \
             --cov-report=term-missing \
             --cov-fail-under=75
+
+      - name: Bramka silnika na realnych danych (rozdz. 5.6)
+        # Kryterium GO/NO-GO całego projektu: zerowa przewaga, znany efekt,
+        # symetria, determinizm. Osobny krok, żeby awaria była widoczna jako
+        # awaria BRAMKI, a nie jako jeden czerwony test wśród trzystu.
+        run: PYTHONPATH=. pytest tests/test_engine_on_real_data.py -v
 
       - name: Strażnicy niezmienników projektu
         # Uruchamiane osobno, żeby awaria była widoczna w logu jako odrębny krok:

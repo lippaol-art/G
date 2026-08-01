@@ -128,21 +128,31 @@ bez przypiętej wersji nie odtworzysz później, na czym liczone były wyniki.
 
 ---
 
-## 5. Po pobraniu danych: udowodnij, że silnik działa
+## 5. Bramka silnika — ✅ ZALICZONA 01.08.2026
 
 **Zanim uruchomisz jakiekolwiek badanie**, silnik musi przejść testy z `docs/PLAN.pdf`
 rozdz. 5.6. Niesprawdzony silnik produkuje śmieci z dokładnością do sześciu miejsc
 po przecinku.
 
-| Test | Oczekiwany wynik | Co oznacza porażka |
-|------|------------------|--------------------|
-| **Zerowa przewaga** — losowe wejścia, losowy SL/TP | wynik ≈ −(koszty × liczba transakcji), rozkład symetryczny przed kosztami | przeciek informacji w silniku |
-| **Znany efekt** — kup na close RTH / sprzedaj na open vs odwrotnie | odtworzenie znanej asymetrii overnight/intraday co do znaku i rzędu wielkości | silnik źle mierzy — to linijka, nie strategia |
-| **Symetria** — odwrócenie long↔short na strategii losowej | wynik lustrzany przed kosztami | błąd w obsłudze jednej ze stron |
-| **Determinizm** — dwa przebiegi z tym samym ziarnem | wyniki bitowo identyczne | nieziarnowana losowość gdzieś w ścieżce |
+**Status: GO.** Cztery testy zaliczone na pełnych 2 551 265 barach MNQ
+(2019-05-05 → 2026-07-30). Kod: `tests/test_engine_on_real_data.py`.
+Liczby: `reports/engine_gate.md` (odtworzenie: `python3 scripts/engine_gate_report.py`).
 
-Testy `@pytest.mark.needs_data` w `tests/test_features_loader.py` odblokują się automatycznie,
-gdy pojawi się `data/clean/mnq_1m_cont.parquet`.
+| Test | Oczekiwany wynik | Co oznacza porażka | Wynik 01.08.2026 |
+|------|------------------|--------------------|------------------|
+| **Zerowa przewaga** — losowe wejścia, losowy SL/TP | wynik ≈ −(koszty × liczba transakcji), rozkład symetryczny przed kosztami | przeciek informacji w silniku | **t = −2.21** na 11 494 losowych transakcjach przed kosztami (próg \|t\| < 3.0); żaden z 5 seedów nie wyszedł na plus |
+| **Znany efekt** — kup na close RTH / sprzedaj na open vs odwrotnie | odtworzenie znanej asymetrii overnight/intraday co do znaku i rzędu wielkości | silnik źle mierzy — to linijka, nie strategia | overnight **+13 193 pkt** (t = 2.20) vs intraday **+3 956 pkt** (t = 0.51); noc = **76.9%** ruchu |
+| **Symetria** — odwrócenie long↔short na strategii losowej | wynik lustrzany przed kosztami | błąd w obsłudze jednej ze stron | rozjazd **dokładnie 0.0 USD** na 1 980 transakcjach |
+| **Determinizm** — dwa przebiegi z tym samym ziarnem | wyniki bitowo identyczne | nieziarnowana losowość gdzieś w ścieżce | identyczny SHA-256 listy transakcji; inne ziarno → inny wynik (kontrola) |
+
+Testy `@pytest.mark.needs_data` odblokowują się automatycznie, gdy istnieje
+`data/clean/mnq_1m_cont.parquet`.
+
+**Uwaga o ujemnym odchyleniu w teście zerowej przewagi.** Wynik lekko ujemny jest
+POŻĄDANY i nie wolno go „naprawiać". Rozbicie w `reports/engine_gate.md` pokazuje
+źródła: 0.9% transakcji wychodzi jako `stop_gap` (open bara już poza stopem — realny
+koszt luki, tabela 5.4), a limit wymaga przebicia o tick, gdy stop wyzwala samo
+dotknięcie. Dodatnie t byłoby alarmem; ujemne o tej wielkości jest projektem.
 
 ---
 
@@ -150,11 +160,8 @@ gdy pojawi się `data/clean/mnq_1m_cont.parquet`.
 
 | Element | Uwagi |
 |---------|-------|
-| Pipeline czyszczenia `raw → clean` | Krok 5 z sekcji 4. Specyfikacja: PLAN rozdz. 4.2 (osiem kroków). Moduł `engine/roll.py` ma już gotowe rolowanie i back-adjust — trzeba je spiąć z wczytywaniem plików dostawcy. |
-| Sanity-report | PLAN rozdz. 4.6. Uwaga krytyczna: **brak bara nie jest luką w danych** — Databento nie drukuje bara, gdy nie było transakcji. Raport ma rozróżniać `expected_gap` od `anomaly_gap` przez kalendarz CME (`engine/sessions.py` ma gotową funkcję `is_expected_gap`). |
 | Kalendarz zdarzeń makro | PLAN rozdz. 4.5. Scraping do `data/clean/events.csv`. |
 | Warstwa danych K6 | PLAN rozdz. 4.7 — ES, wagi NDX, ceny after-hours megacapów. Potrzebna dopiero do partii 2. |
-| Pętla główna backtestu | `engine/backtest.py` ma rozstrzyganie wewnątrzbarowe i warstwę ryzyka; brakuje spinającej pętli iterującej po barach. |
 
 ---
 

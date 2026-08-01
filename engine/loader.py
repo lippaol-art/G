@@ -117,3 +117,42 @@ def describe(symbol: str, timeframe: str = "1m") -> DatasetInfo:
         first_ts=df["ts_utc"].min(),
         last_ts=df["ts_utc"].max(),
     )
+
+
+def to_bars(df, *, price: str = "adj", limit: int | None = None) -> list:
+    """DataFrame -> lista `engine.backtest.Bar`.
+
+    KTORA SERIA. Kolumny `open/high/low/close` w pliku sa SUROWE — to ceny,
+    ktore realnie widniały na tablicy danego kontraktu. Kolumna `px_adj` niesie
+    close po back-adjuscie roznicowym. Roznica `px_adj - close` jest w obrebie
+    jednego kontraktu STALA, wiec caly bar przesuwamy o nia (rozdz. 4.3).
+
+    Domyslne `price="adj"` jest jedynym poprawnym wyborem do P&L i statystyk
+    zwrotow: bez niego kazde rolowanie wstawialoby w serie sztuczny skok rzedu
+    kilkudziesieciu punktow, na ktorym strategia "zarabialaby" bez pokrycia.
+    `price="raw"` sluzy wylacznie poziomom miedzysesyjnym — i wtedy obowiazuje
+    `engine.guards.assert_raw_series`.
+
+    Kazdy bar niesie `px_raw_offset = px_raw - px_adj`, wiec z serii ciaglej
+    da sie odtworzyc cene surowa bez ponownego siegania do pliku.
+    """
+    from engine.backtest import Bar
+
+    if price not in {"adj", "raw"}:
+        raise ValueError(f"price musi byc 'adj' albo 'raw', jest {price!r}")
+
+    if limit is not None:
+        df = df.head(limit)
+
+    offset = (df["px_adj"] - df["close"]).to_list()   # 0 dla kontraktu najnowszego
+    o, h, low, c = (df[k].to_list() for k in ("open", "high", "low", "close"))
+    ts, vol, seg, td = (df[k].to_list() for k in ("ts_utc", "volume", "segment", "trade_date"))
+
+    shift = offset if price == "adj" else [0.0] * len(offset)
+    return [
+        Bar(ts=ts[i], open=o[i] + shift[i], high=h[i] + shift[i],
+            low=low[i] + shift[i], close=c[i] + shift[i],
+            volume=int(vol[i]), segment=seg[i],
+            px_raw_offset=-offset[i], trade_date=td[i])
+        for i in range(len(ts))
+    ]
