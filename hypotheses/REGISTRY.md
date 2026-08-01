@@ -30,10 +30,10 @@ literatury, bez optymalizacji. Służą jako grupa kontrolna w teście przyrosto
 
 | ID | Karta | Publiczny odpowiednik | Status | Wynik |
 |----|-------|----------------------|--------|-------|
-| B01 | Gap otwarcia i domknięcie | Gap-fill (klasyka indeksowa) | IDEA | — |
-| B02 | Cykl kontrakcja–ekspansja | NR7 i pochodne, Crabel ~1990 | IDEA | — |
-| B03 | Asymetria piątek→poniedziałek | Weekend effect, Cross 1973 / French 1980 | IDEA | — |
-| B04 | Mechanika zamknięcia / proxy MOC | Momentum wewnątrzdzienne, Gao i in. JFE 2018 | IDEA | — |
+| B01 | Gap otwarcia i domknięcie | Gap-fill (klasyka indeksowa) | **ZMIERZONY** | N=1551, netto −5 786 USD, SR −0.25, PF 0.95 |
+| B02 | Cykl kontrakcja–ekspansja | NR7 i pochodne, Crabel ~1990 | **ZMIERZONY** | N=279, netto **+1 611 USD**, SR +0.13, PF 1.06 |
+| B03 | Asymetria piątek→poniedziałek | Weekend effect, Cross 1973 / French 1980 | **ZMIERZONY** | N=355, netto −16 098 USD, SR −0.73, PF 0.74 |
+| B04 | Mechanika zamknięcia / proxy MOC | Momentum wewnątrzdzienne, Gao i in. JFE 2018 | **ZMIERZONY** | N=1799, netto −10 658 USD, SR −0.91, PF 0.84 |
 | B05 | **Dryf nocny, bezwarunkowo** | Cooper–Cliff–Gulen 2008 | **ZMIERZONY** | SR 0.68 (2019–26) / **0.47** (2021–26) — poniżej progu 0.8. Zdegradowana z H004 po W001. |
 
 ---
@@ -106,7 +106,7 @@ badamy" chroni przyszłe iteracje przed przypadkowym wejściem w tę pułapkę.
 
 | Partia | Skład | Uzasadnienie |
 |--------|-------|--------------|
-| **0** | ~~Test dryfu nocnego~~ ✅ W001 + benchmarki B01–B04 | Tanie, szybkie, dostarcza punktów odniesienia dla testów przyrostowych. Zero zużycia licznika prób. **W001 wykonany 01.08.2026** — H004 rozstrzygnięta, B05 dodany. |
+| **0** ✅ | ~~Test dryfu nocnego~~ W001 + ~~benchmarki B01–B04~~ | **WYKONANA 01.08.2026.** W001 rozstrzygnął H004; B01–B04 zmierzone (`reports/B00_benchmarks.md`, liczby maszynowe w `reports/benchmarks.json`). Zero zużytych prób. |
 | **1** | H011, H005, H010 | Najniższe pokrycie z literaturą przy zadowalającej częstości sygnałów. |
 | **2** | H013, H014, H016 | Klasa K6 — wymaga gotowej warstwy danych (PLAN rozdz. 4.7). |
 | **3** | H001, H002, H003 | Po przejściu kroków 1–2 testu oryginalności. Część prawdopodobnie odpadnie do benchmarków. |
@@ -120,6 +120,7 @@ Fakty o rynku i o procesie odkryte przy okazji badań. Zasilają projektowanie k
 | ID | Wniosek | Źródło |
 |----|---------|--------|
 | **W001** | **Poziomy bezwarunkowe są poza zasięgiem tego projektu.** Przy dziennym odchyleniu zwrotu nocnego ~0.75% odróżnienie dryfu 3.7%/rok od zera wymaga ~86 lat danych. Każda karta, której teza brzmi „efekt X o sile kilku procent rocznie istnieje / wygasł", jest z góry nierozstrzygalna — **nie wolno na nią wydawać próby**. Dotyczy to też cudzych twierdzeń tej klasy: nie opieramy na nich decyzji projektowych, niezależnie od źródła. | W001 |
+| **W003** | **Metryki w R są niezdefiniowane bez stopa, a koncentracja bez zysku.** Strategia z wyjściem czasowym ma `r_multiple = 0` dla każdej transakcji → PF, win rate, expectancy i SQN wychodziły **zerami wyglądającymi na pomiar**. Tak samo `top5_concentration` zwracała 0.0 dla strategii stratnej, co czytało się jako „koncentracja wzorowa". Oba naprawione na NaN + flagę `r_metrics_valid`. **Wniosek procesowy: metryka, która przy zdegenerowanym wejściu zwraca liczbę zamiast błędu, jest pułapką** — przy przeglądzie każdej nowej metryki pytamy najpierw, co robi na wejściu bez sensu. | B00 |
 | **W002** | **Warunkowanie ma cenę rosnącą jak 1/√f.** Sharpe liczymy po wszystkich dniach (rozdz. 6.3), więc strategia handlująca ułamek *f* okazji musi mieć na każdej z nich edge większy o czynnik 1/√f. Progi dla dryfu nocnego przy DSR ≥ 0.95 i 4 wariantach (SR ≥ 1.13): połowa nocy **3.6×**, kwintyl **5.6×**, decyl **8.0×** obecnej przewagi bezwarunkowej. **Każda karta warunkowa deklaruje *f* z góry** i uzasadnia, skąd weźmie koncentrację. Warunek odsiewający 90% okazji „bo tak wygląda lepiej" niemal na pewno nie przejdzie bramki — i można to stwierdzić **przed** testem. | W001 |
 
 ---

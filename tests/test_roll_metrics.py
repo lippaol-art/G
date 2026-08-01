@@ -5,6 +5,7 @@ Fixture'y kontraktow konstruowane recznie — to dane testowe, nie rynkowe.
 
 from __future__ import annotations
 
+import math
 from datetime import date
 
 import numpy as np
@@ -245,3 +246,78 @@ class TestMetrics:
         assert expectancy(np.array([])) == 0.0
         assert sharpe_ratio(np.array([1.0])) == 0.0
         assert drawdown_stats(np.array([])) == (0.0, 0)
+
+
+class TestMetrykRBezStopa:
+    """Strategia bez stopa ma R niezdefiniowane — i musi to POWIEDZIEC.
+
+    Wykryte na benchmarkach B03/B04, ktorych regula literaturowa nie przewiduje
+    stopa. Przed poprawka raport pokazywal `PF = 0.00` obok realnego wyniku
+    w dolarach: liczba wygladajaca na pomiar, a bedaca cicha awaria pomiaru.
+    """
+
+    def test_wszystkie_r_zerowe_uniewazniaja_metryki_r(self):
+        import numpy as np
+
+        from engine.metrics import summarize
+        m = summarize(np.zeros(40), np.array([10.0, -5.0, 3.0] * 30))
+        assert m.r_metrics_valid is False
+        assert math.isnan(m.profit_factor), "PF bez stopa musi byc NaN, nie zero"
+        assert math.isnan(m.expectancy_r)
+        assert math.isnan(m.sqn)
+        assert math.isnan(m.win_rate)
+
+    def test_metryki_dolarowe_pozostaja_poprawne(self):
+        """Sharpe, MDD i koncentracja licza sie z dziennego P&L, nie z R —
+        brak stopa ich nie uniewaznia."""
+        import numpy as np
+
+        from engine.metrics import summarize
+        d = np.array([10.0, -5.0, 3.0] * 30)
+        m = summarize(np.zeros(40), d)
+        assert not math.isnan(m.sharpe) and m.sharpe != 0.0
+        assert m.max_drawdown > 0
+        assert 0.0 <= m.top5_concentration <= 1.0
+
+    def test_choc_jedno_niezerowe_r_przywraca_metryki(self):
+        import numpy as np
+
+        from engine.metrics import summarize
+        r = np.zeros(40)
+        r[7] = 1.5
+        m = summarize(r, np.array([10.0, -5.0, 3.0] * 30))
+        assert m.r_metrics_valid is True
+        assert not math.isnan(m.profit_factor)
+
+    def test_pusty_zbior_transakcji_nie_wybucha(self):
+        import numpy as np
+
+        from engine.metrics import summarize
+        m = summarize(np.array([]), np.array([1.0, -1.0]))
+        assert m.n_trades == 0
+        assert m.r_metrics_valid is False
+
+    def test_koncentracja_niezdefiniowana_dla_strategii_stratnej(self):
+        """Poprzednia wersja zwracala 0.0, co w raporcie czytalo sie jako
+        'koncentracja wzorowa' — przy strategii, ktora po prostu traci."""
+        import numpy as np
+
+        from engine.metrics import top_n_concentration
+        assert math.isnan(top_n_concentration(np.array([-10.0, -5.0, -1.0, 2.0])))
+        assert math.isnan(top_n_concentration(np.array([])))
+
+    def test_koncentracja_liczona_dla_strategii_zyskownej(self):
+        import numpy as np
+
+        from engine.metrics import top_n_concentration
+        # 100 dni: piec po +10, reszta zerowa -> caly zysk z piatki
+        d = np.zeros(100)
+        d[:5] = 10.0
+        assert top_n_concentration(d, 5) == pytest.approx(1.0)
+
+    def test_koncentracja_rozproszona_jest_niska(self):
+        import numpy as np
+
+        from engine.metrics import top_n_concentration
+        d = np.full(100, 1.0)
+        assert top_n_concentration(d, 5) == pytest.approx(0.05)

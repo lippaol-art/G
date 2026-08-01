@@ -66,13 +66,25 @@ class Bar:
 
 @dataclass(frozen=True)
 class Order:
+    """Zlecenie zlozone przez strategie na barze i, rozpatrywane od bara i+1.
+
+    `kind="mkt"` wykonuje sie po OPEN bara nastepnego i nie przezywa dluzej.
+    `kind="stop"` / `"limit"` LEZY W KSIEDZE do wyzwolenia albo do konca dnia
+    sesyjnego (zlecenie dzienne — tak dziala domyslnie zlecenie na CME; GTC
+    przez noc wymagaloby modelowania ryzyka luki na samym zleceniu, czego nie
+    robimy). `oco_group` laczy zlecenia przeciwstawne: wypelnienie jednego
+    kasuje pozostale z tej samej grupy — bez tego wybicie dwustronne
+    otwieraloby dwie pozycje na tym samym sygnale.
+    """
+
     side: Side
     qty: int = 1
     kind: Literal["mkt", "stop", "limit"] = "mkt"
-    px: float | None = None       # dla stop/limit
+    px: float | None = None       # poziom wyzwolenia dla stop/limit
     sl: float | None = None
     tp: float | None = None
     tag: str = ""
+    oco_group: str = ""
 
 
 @dataclass
@@ -85,6 +97,8 @@ class Position:
     tp: float | None = None
     tag: str = ""
     entry_bar_index: int = -1    # bar wejscia — wyjscie dopuszczalne od nastepnego (5.4)
+    entry_trade_date: object = None
+    oco_group: str = ""          # grupa, ktorej reszte skasowalo to wypelnienie
 
 
 @dataclass
@@ -119,6 +133,9 @@ class Result:
     skipped_zero_volume: int = 0 # ile wykonan zablokowano brakiem wolumenu
     rejected_orders: int = 0     # odrzucone przez warstwe ryzyka lub zajeta pozycje
     blocked_bars: int = 0        # bary, w ktorych limit dzienny/tygodniowy wylaczyl strategie
+    expired_orders: int = 0      # zlecenia oczekujace skasowane koncem dnia sesyjnego
+    final_position: object = None   # pozycja otwarta na ostatnim barze, jesli jakas zostala
+    resting_orders: int = 0         # zlecenia wciaz lezace w ksiedze na koncu przebiegu
 
     @property
     def net_usd(self) -> float:
@@ -285,6 +302,55 @@ def default_slippage_points(bar: Bar) -> float:
     return BASE_SLIPPAGE_TICKS.get(bar.segment, 2) * TICK_SIZE
 
 
+def entry_fill_price(order: Order, bar: Bar, slip: float) -> float | None:
+    """Cena wypelnienia zlecenia wejscia w tym barze albo None, gdy nie wyzwolone.
+
+    Realizuje wiersze tabeli 5.4 dotyczace wejscia:
+
+      mkt   -> po OPEN bara nastepnego +- poslizg;
+      stop  -> wymaga PRZEBICIA poziomu; gdy open juz go przeskoczyl (luka),
+               wypelnienie po OPEN, nie po poziomie zlecenia — inaczej backtest
+               obiecywalby cene, ktorej nie bylo na tablicy;
+      limit -> wymaga przebicia o >= 1 tick, tak samo jak take-profit. Samo
+               dotkniecie poziomu nie gwarantuje wypelnienia przy odleglej
+               pozycji w kolejce, a kolejki z OHLCV M1 nie odtworzymy.
+    """
+    long = order.side == "long"
+
+    if order.kind == "mkt":
+        return bar.open + slip if long else bar.open - slip
+
+    if order.px is None:
+        raise ValueError(f"zlecenie {order.kind} wymaga poziomu px")
+
+    if order.kind == "stop":
+        # Long stop-entry lezy NAD rynkiem: wyzwala go wzrost.
+        if long:
+            if bar.open >= order.px:
+                return bar.open + slip           # luka ponad poziom
+            if bar.high >= order.px:
+                return order.px + slip
+        else:
+            if bar.open <= order.px:
+                return bar.open - slip
+            if bar.low <= order.px:
+                return order.px - slip
+        return None
+
+    # limit — long lezy POD rynkiem
+    if long:
+        if bar.open <= order.px:
+            return bar.open + slip               # luka ponizej: wypelnienie lepsze,
+        if bar.low <= order.px - TICK_SIZE:      # ale liczymy po open, nie po px
+            return order.px + slip
+    else:
+        if bar.open >= order.px:
+            return bar.open - slip
+        if bar.high >= order.px + TICK_SIZE:
+            return order.px - slip
+    return None
+
+
 def _week_key(td: object) -> object:
     """Klucz tygodnia sesyjnego dla limitu tygodniowego."""
     iso = getattr(td, "isocalendar", None)
@@ -335,7 +401,7 @@ def run_backtest(
 
     state: dict = {}
     pos: Position | None = None
-    pending: list[Order] = []
+    pending: list[tuple[Order, object]] = []
     realized_usd = 0.0
 
     def _close(bar: Bar, px: float, reason: str, idx: int) -> None:
@@ -378,23 +444,54 @@ def run_backtest(
             px = bar.close - slip if pos.side == "long" else bar.close + slip
             _close(bar, px, "flat_by", i)
 
-        # --- 3. WYPELNIENIE ZLECEN Z POPRZEDNIEGO BARA — po OPEN
+        # --- 3. ZLECENIA OCZEKUJACE
+        # Kolejnosc wewnatrz tego kroku tez jest specyfikacja: najpierw kasujemy
+        # to, co wygaslo z koncem dnia sesyjnego, potem probujemy wypelniac.
+        # Odwrotna kolejnosc pozwalalaby wczorajszemu zleceniu wykonac sie na
+        # dzisiejszym otwarciu — czyli na luce, ktorej nikt by nie przehandlowal.
+        if pending:
+            zywe = [q for q in pending if q[1] == bar.trade_date]
+            res.expired_orders += len(pending) - len(zywe)
+            pending = zywe
+
         if pending:
             if not bar.tradeable:
                 # Bar bez transakcji: nie bylo gdzie sie wykonac (rozdz. 4.2).
-                res.skipped_zero_volume += len(pending)
+                # Zlecenia rynkowe przepadaja, oczekujace leza dalej w ksiedze.
+                rynkowe = [q for q in pending if q[0].kind == "mkt"]
+                res.skipped_zero_volume += len(rynkowe)
+                pending = [q for q in pending if q[0].kind != "mkt"]
             elif pos is not None:
                 res.rejected_orders += len(pending)
+                pending = []
             else:
-                o = pending[0]
-                res.rejected_orders += len(pending) - 1
                 slip = slip_fn(bar)
-                fill = bar.open + slip if o.side == "long" else bar.open - slip
-                pos = Position(
-                    side=o.side, qty=o.qty, entry_px=fill, entry_ts=bar.ts,
-                    sl=o.sl, tp=o.tp, tag=o.tag, entry_bar_index=i,
-                )
-            pending = []
+                zostaje: list[tuple[Order, object]] = []
+                for o, td_zlecenia in pending:
+                    if pos is not None:
+                        # Pozycja otwarta w tym samym kroku — kasowanie grupy OCO
+                        # zalatwiamy po petli, zeby objelo takze zlecenia juz
+                        # przejrzane. Tu odrzucamy tylko usrednianie.
+                        if not (o.oco_group and o.oco_group == pos.oco_group):
+                            res.rejected_orders += 1
+                        continue
+                    fill = entry_fill_price(o, bar, slip)
+                    if fill is None:
+                        if o.kind == "mkt":
+                            res.rejected_orders += 1   # rynkowe nie przezywa bara
+                        else:
+                            zostaje.append((o, td_zlecenia))
+                        continue
+                    pos = Position(
+                        side=o.side, qty=o.qty, entry_px=fill, entry_ts=bar.ts,
+                        sl=o.sl, tp=o.tp, tag=o.tag, entry_bar_index=i,
+                        entry_trade_date=bar.trade_date, oco_group=o.oco_group,
+                    )
+                # OCO: wypelnienie kasuje CALA reszte grupy, takze zlecenia,
+                # ktore w tej petli zdazyly juz trafic do `zostaje`.
+                if pos is not None and pos.oco_group:
+                    zostaje = [q for q in zostaje if q[0].oco_group != pos.oco_group]
+                pending = zostaje
 
         # --- 4. LIMITY RYZYKA — twarde, przed strategia
         if gate.blocked(bar.trade_date, _week_key(bar.trade_date)):
@@ -414,7 +511,7 @@ def run_backtest(
                 except ValueError:
                     res.rejected_orders += 1
                     continue
-                pending.append(o)
+                pending.append((o, bar.trade_date))
 
         # --- 6. KSIEGOWANIE
         if pos is None:
@@ -423,4 +520,10 @@ def run_backtest(
             otw = (bar.close - pos.entry_px) if pos.side == "long" else (pos.entry_px - bar.close)
             res.equity.append(realized_usd + points_to_usd(otw, pos.qty))
 
+    # Stan koncowy jest CZESCIA WYNIKU, nie smieciem. Lista `trades` zawiera
+    # wylacznie pozycje zamkniete, wiec bez tego pola pozycja wisząca do konca
+    # historii bylaby niewidoczna — a to dokladnie ten rodzaj bledu, ktory
+    # w regule wybiciowej OCO objawia sie druga pozycja z jednego sygnalu.
+    res.final_position = pos
+    res.resting_orders = len(pending)
     return res

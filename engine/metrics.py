@@ -39,18 +39,19 @@ class Metrics:
     mar: float
     sqn: float
     top5_concentration: float
+    r_metrics_valid: bool = True
 
     @property
     def suspicious(self) -> bool:
         """PF > 2 przy strategii intraday — protokol: najpierw szukamy bledu."""
-        return self.profit_factor > PF_SUSPICIOUS
+        return bool(self.profit_factor > PF_SUSPICIOUS)
 
     def gate_report(self) -> dict[str, bool]:
         """Ktore progi z rozdz. 1.3 sa spelnione."""
         return {
-            "profit_factor": self.profit_factor >= PF_GATE,
-            "sharpe": self.sharpe >= SHARPE_GATE,
-            "koncentracja": self.top5_concentration < CONCENTRATION_GATE,
+            "profit_factor": bool(self.profit_factor >= PF_GATE),
+            "sharpe": bool(self.sharpe >= SHARPE_GATE),
+            "koncentracja": bool(self.top5_concentration < CONCENTRATION_GATE),
         }
 
 
@@ -155,22 +156,69 @@ def sqn(r_multiples: np.ndarray) -> float:
 
 
 def top_n_concentration(daily_pnl: np.ndarray, n: int = 5) -> float:
-    """Udzial n najlepszych dni w calym zysku (rozdz. 1.3).
+    """Udzial n najlepszych dni w calym zysku (rozdz. 1.3). Prog: < 40%.
 
-    Chroni przed strategia "z trzech szczesliwych dni". Prog: < 40%.
+    Chroni przed strategia "z trzech szczesliwych dni".
+
+    NIEZDEFINIOWANA DLA STRATEGII STRATNEJ. "Jaka czesc zysku pochodzi z pieciu
+    dni" nie ma sensu, gdy zysku nie ma — iloraz przez ujemna sume daje liczbe
+    ujemna, a przez sume bliska zeru dowolnie duza. Zwracamy NaN.
+
+    Wczesniejsza wersja zwracala w tym miejscu 0.0, co w raporcie czytalo sie
+    jako "koncentracja zerowa, czyli wzorowa" — dokladnie odwrotnie do prawdy.
+    Wykryte na benchmarkach B01/B03/B04 (wszystkie stratne, wszystkie z 0%).
     """
     arr = np.asarray(daily_pnl, dtype=float)
+    if arr.size == 0:
+        return float("nan")
     total = arr.sum()
-    if total <= 0 or arr.size == 0:
-        return 0.0
+    if total <= 0:
+        return float("nan")
     najlepsze = np.sort(arr)[-min(n, arr.size):].sum()
     return float(najlepsze / total)
 
 
+def r_metrics_defined(r_multiples: np.ndarray) -> bool:
+    """Czy metryki wyrazone w R maja w ogole sens dla tego zbioru transakcji.
+
+    POWOD ISTNIENIA. `r_multiple` liczymy jako pnl / |wejscie - stop|. Strategia
+    BEZ STOPA (wyjscie czasowe, wyjscie na sygnal) ma to zero dla kazdej
+    transakcji — a wtedy PF, win rate, expectancy i SQN wychodza zerami, ktore
+    wygladaja jak zmierzone. Zerowy profit factor przy dodatnim wyniku w USD to
+    nie jest metryka, tylko cicha awaria pomiaru; raport wyswietlilby ja bez
+    mrugniecia okiem.
+
+    Wykryto na benchmarkach B03 i B04, ktorych regula literaturowa nie
+    przewiduje stopa. Metryki dolarowe (Sharpe, MDD, koncentracja) pozostaja
+    poprawne — one licza sie z dziennego P&L, nie z R.
+    """
+    arr = np.asarray(r_multiples, dtype=float)
+    return bool(arr.size and np.any(arr != 0.0))
+
+
 def summarize(r_multiples: np.ndarray, daily_pnl: np.ndarray) -> Metrics:
-    """Pelny zestaw metryk hipotezy."""
+    """Pelny zestaw metryk hipotezy.
+
+    Gdy strategia nie ma stopa, metryki w R sa NIEZDEFINIOWANE i zwracamy je
+    jako NaN z flaga `r_metrics_valid=False` — NIE jako zera. Zero jest
+    wartoscia, ktora czytelnik zinterpretuje; NaN jest pytaniem, ktore zada.
+    """
     r = np.asarray(r_multiples, dtype=float)
     d = np.asarray(daily_pnl, dtype=float)
+
+    if not r_metrics_defined(r):
+        equity_ = np.cumsum(d)
+        mdd_, dd_len_ = drawdown_stats(equity_)
+        nan = float("nan")
+        return Metrics(
+            n_trades=int(r.size), expectancy_r=nan, profit_factor=nan,
+            win_rate=nan, payoff_ratio=nan,
+            sharpe=sharpe_ratio(d), sharpe_lo_adjusted=sharpe_lo_correction(d),
+            sortino=sortino_ratio(d), max_drawdown=mdd_, max_dd_duration_days=dd_len_,
+            mar=float(d.mean() * TRADING_DAYS / mdd_) if mdd_ > 0 else 0.0,
+            sqn=nan, top5_concentration=top_n_concentration(d, 5),
+            r_metrics_valid=False,
+        )
 
     wins = r[r > 0]
     losses = r[r < 0]

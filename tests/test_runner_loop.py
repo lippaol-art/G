@@ -343,3 +343,169 @@ class TestWidokuStrategii:
         run_backtest(bars, Czyta(), risk=RiskLimits(require_stop=False), **BEZ_KOSZTOW)
         assert strony[0] is None
         assert strony[2] == "short", "silnik nie poinformowal strategii o otwartej pozycji"
+
+
+# ==========================================================================
+# ZLECENIA OCZEKUJACE — stop-entry, limit, OCO, wygasanie
+# ==========================================================================
+
+class TestZlecenOczekujacych:
+    """Wybicie z konsolidacji to zlecenie LEZACE W KSIEDZE, nie rynkowe.
+
+    Bez tego benchmark B02 (NR7 Crabela) i cala rodzina hipotez wybiciowych
+    musialyby udawac wybicie zleceniem rynkowym po fakcie — a to inna cena
+    i inny moment. Tabela 5.4 przewiduje stop-entry wprost.
+    """
+
+    def test_stop_entry_czeka_az_cena_dojdzie(self):
+        bars = [bar(0, 100, 100, 100, 100), bar(1, 100, 101, 99, 100),
+                bar(2, 100, 106, 100, 105), bar(3, 105, 105, 105, 105)]
+        r = run_backtest(bars, NaBarze(0, Order(side="long", kind="stop", px=105.0, sl=95.0)),
+                         **BEZ_KOSZTOW)
+        assert len(r.trades) == 0, "pozycja bez SL/TP dotknietego nie zamyka sie"
+        assert r.equity[1] == 0.0, "bar 1 nie siega 105 — zlecenie nie moze byc wypelnione"
+        assert r.equity[2] == pytest.approx(0.0), "wejscie po 105, close 105 -> zero"
+        assert r.equity[3] == pytest.approx(0.0)
+
+    def test_stop_entry_wypelnia_sie_po_poziomie_nie_po_ekstremum(self):
+        """Wypelnienie po cenie zlecenia, nie po maksimum bara — inaczej silnik
+        obiecywalby najlepsza cene z minuty, ktorej nikt by nie dostal."""
+        bars = [bar(0, 100, 100, 100, 100), bar(1, 100, 110, 100, 108)]
+        r = run_backtest(bars, NaBarze(0, Order(side="long", kind="stop", px=105.0, sl=95.0)),
+                         **BEZ_KOSZTOW)
+        assert r.equity[1] == pytest.approx((108 - 105) * 2.0)
+
+    def test_stop_entry_przeskoczony_luka_wypelnia_sie_po_open(self):
+        """Open 107 przeskakuje poziom 105. Wejscie po 107 — cena, ktora byla
+        na tablicy — a nie po 105, ktorej juz nie bylo (tabela 5.4)."""
+        bars = [bar(0, 100, 100, 100, 100), bar(1, 107, 110, 107, 109)]
+        r = run_backtest(bars, NaBarze(0, Order(side="long", kind="stop", px=105.0, sl=95.0)),
+                         **BEZ_KOSZTOW)
+        assert r.equity[1] == pytest.approx((109 - 107) * 2.0)
+
+    def test_stop_entry_short_wyzwala_spadek(self):
+        bars = [bar(0, 100, 100, 100, 100), bar(1, 100, 100, 94, 96)]
+        r = run_backtest(bars, NaBarze(0, Order(side="short", kind="stop", px=95.0, sl=105.0)),
+                         **BEZ_KOSZTOW)
+        assert r.equity[1] == pytest.approx((95 - 96) * 2.0)
+
+    def test_limit_wymaga_przebicia_o_tick(self):
+        """Symetrycznie do take-profit: samo dotkniecie poziomu nie gwarantuje
+        wypelnienia, bo kolejki zlecen nie odtworzymy z OHLCV M1."""
+        dotkniecie = [bar(0, 100, 100, 100, 100), bar(1, 100, 100, 95.0, 97),
+                      bar(2, 97, 97, 97, 97)]
+        r = run_backtest(dotkniecie, NaBarze(0, Order(side="long", kind="limit", px=95.0, sl=90.0)),
+                         **BEZ_KOSZTOW)
+        assert r.equity[2] == 0.0, "dotkniecie 95.00 nie wystarcza do wypelnienia"
+
+        przebicie = [bar(0, 100, 100, 100, 100), bar(1, 100, 100, 94.75, 97),
+                     bar(2, 97, 97, 97, 97)]
+        r2 = run_backtest(przebicie, NaBarze(0, Order(side="long", kind="limit", px=95.0, sl=90.0)),
+                          **BEZ_KOSZTOW)
+        assert r2.equity[2] == pytest.approx((97 - 95) * 2.0), "przebicie o tick musi wypelnic"
+
+    def test_zlecenie_wygasa_z_koncem_dnia_sesyjnego(self):
+        """Zlecenie dzienne — tak dziala domyslnie zlecenie na CME. Gdyby lezalo
+        dalej, wykonaloby sie na luce otwarcia nastepnej sesji, ktorej nikt by
+        nie przehandlowal."""
+        d2 = date(2026, 3, 11)
+        bars = [bar(0, 100, 100, 100, 100), bar(1, 100, 101, 99, 100),
+                Bar(ts=T0 + timedelta(minutes=2), open=110, high=112, low=110, close=111,
+                    volume=100, segment="midday", trade_date=d2)]
+        r = run_backtest(bars, NaBarze(0, Order(side="long", kind="stop", px=105.0, sl=95.0)),
+                         **BEZ_KOSZTOW)
+        assert r.expired_orders == 1
+        assert r.trades == [] and r.equity[2] == 0.0, \
+            "wczorajsze zlecenie wykonalo sie na dzisiejszej luce"
+
+    def test_oco_wypelnienie_kasuje_strone_przeciwna(self):
+        """Wybicie dwustronne: jedna noga wypelniona, druga MUSI zniknac.
+        Bez tego ten sam sygnal otwieralby dwie pozycje."""
+        class Wybicie:
+            def __init__(self):
+                self.i = -1
+
+            def on_bar(self, b, history, state):
+                self.i += 1
+                if self.i != 0:
+                    return []
+                return [
+                    Order(side="long", kind="stop", px=105.0, sl=95.0, oco_group="orb"),
+                    Order(side="short", kind="stop", px=95.0, sl=105.0, oco_group="orb"),
+                ]
+
+        # Bar 1 wybija w gore, bar 2 wraca ponizej dolnej nogi.
+        bars = [bar(0, 100, 100, 100, 100), bar(1, 100, 106, 100, 106),
+                bar(2, 106, 106, 90, 92), bar(3, 92, 92, 92, 92)]
+        r = run_backtest(bars, Wybicie(), risk=RiskLimits(max_positions=1), **BEZ_KOSZTOW)
+        assert len(r.trades) == 1, f"OCO nie zadzialalo — {len(r.trades)} transakcji"
+        assert r.trades[0].side == "long"
+        assert r.trades[0].exit_reason == "stop_loss"
+
+    def test_bez_oco_druga_noga_probuje_wejsc(self):
+        """Kontrola przeciwna: bez `oco_group` druga noga jest odrzucana dopiero
+        przez warstwe ryzyka — czyli mechanizm OCO faktycznie cos wnosi."""
+        class Wybicie:
+            def __init__(self):
+                self.i = -1
+
+            def on_bar(self, b, history, state):
+                self.i += 1
+                if self.i != 0:
+                    return []
+                return [Order(side="long", kind="stop", px=105.0, sl=95.0),
+                        Order(side="short", kind="stop", px=95.0, sl=105.0)]
+
+        bars = [bar(0, 100, 100, 100, 100), bar(1, 100, 106, 100, 106),
+                bar(2, 106, 106, 90, 92), bar(3, 92, 92, 92, 92)]
+        r = run_backtest(bars, Wybicie(), risk=RiskLimits(max_positions=1), **BEZ_KOSZTOW)
+        assert r.rejected_orders > 0, "bez OCO druga noga powinna dobijac sie do wejscia"
+
+    def test_zlecenie_oczekujace_przezywa_bar_bez_wolumenu(self):
+        """Rynkowe przepada (nie bylo gdzie sie wykonac), oczekujace lezy dalej —
+        brak transakcji w minucie nie kasuje zlecenia z ksiegi."""
+        bars = [bar(0, 100, 100, 100, 100), bar(1, 100, 100, 100, 100, vol=0),
+                bar(2, 100, 106, 100, 106)]
+        r = run_backtest(bars, NaBarze(0, Order(side="long", kind="stop", px=105.0, sl=95.0)),
+                         **BEZ_KOSZTOW)
+        assert r.skipped_zero_volume == 0, "to nie bylo zlecenie rynkowe"
+        assert r.equity[2] == pytest.approx((106 - 105) * 2.0), "zlecenie musi przezyc pusta minute"
+
+    def test_oco_kasuje_noge_ktora_juz_lezala_w_ksiedze(self):
+        """Przypadek, ktory naprawde grozi w benchmarku B02.
+
+        Noga PRZECIWNA jest rozpatrywana jako pierwsza, nie wyzwala sie i wraca
+        do ksiegi. Dopiero potem wypelnia sie noga druga. Jesli kasowanie OCO
+        dziala tylko wewnatrz petli, ta pierwsza LEZY DALEJ — i przy powrocie
+        ceny w tej samej sesji otwiera druga pozycje na tym samym sygnale.
+
+        Kolejnosc zlecen w liscie jest tu istotna i celowa: odwrotna kolejnosc
+        (najpierw noga wypelniana) NIE wykrywa tego bledu. Sprawdzone mutacja.
+        """
+        class WybicieOdwrotnaKolejnosc:
+            def __init__(self):
+                self.i = -1
+
+            def on_bar(self, b, history, state):
+                self.i += 1
+                if self.i != 0:
+                    return []
+                return [
+                    Order(side="short", kind="stop", px=95.0, sl=105.0, oco_group="orb"),
+                    Order(side="long", kind="stop", px=105.0, sl=95.0, oco_group="orb"),
+                ]
+
+        bars = [bar(0, 100, 100, 100, 100),
+                bar(1, 100, 106, 100, 106),     # wybicie w gore: long wchodzi
+                bar(2, 106, 106, 94, 94),       # zjazd: stop longa + poziom shorta
+                bar(3, 94, 106, 94, 106),       # powrot w gore — domyka ewentualnego shorta
+                bar(4, 106, 106, 106, 106)]
+        r = run_backtest(bars, WybicieOdwrotnaKolejnosc(),
+                         risk=RiskLimits(max_positions=1), **BEZ_KOSZTOW)
+        assert len(r.trades) == 1, (
+            f"OCO nie skasowalo nogi lezacej w ksiedze — {len(r.trades)} transakcje "
+            f"z jednego sygnalu wybicia: {[(t.side, t.exit_reason) for t in r.trades]}"
+        )
+        assert r.trades[0].side == "long"
+        assert r.final_position is None, "z jednego wybicia zostala otwarta druga pozycja"
+        assert r.resting_orders == 0, "noga przeciwna nadal lezy w ksiedze"
