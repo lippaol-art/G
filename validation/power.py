@@ -95,3 +95,48 @@ def achieved_power(
     z_alpha = norm.ppf(1.0 - alpha / 2.0)
     z = expectancy_r * math.sqrt(n) / sigma_r - z_alpha
     return float(norm.cdf(z))
+
+
+# --------------------------------------------------------------------------
+# Cena warunkowania — wniosek W001/W002, PLAN.pdf rozdz. 6.3 (pulapka 2)
+# --------------------------------------------------------------------------
+
+def conditional_edge_multiplier(active_fraction: float) -> float:
+    """O ile musi urosnac przewaga na POJEDYNCZA okazje przy zawezeniu do `f`.
+
+    Sharpe liczymy po WSZYSTKICH dniach, nie tylko po czynnych (rozdz. 6.3,
+    pulapka 2) — inaczej strategia rzadka mialaby sztucznie zawyzony wynik.
+    Dla strategii czynnej w ulamku f dni, o sredniej `mu` na dzien czynny:
+
+        mean_po_wszystkich = f * mu
+        sd_po_wszystkich    = sd * sqrt(f)          (dla malych mu)
+        SR = sqrt(252) * f * mu / (sd * sqrt(f)) = sqrt(252) * (mu/sd) * sqrt(f)
+
+    Zeby utrzymac ten sam SR przy mniejszym f, `mu` musi rosnac jak 1/sqrt(f).
+
+    KONSEKWENCJA PROJEKTOWA (W002): warunek odsiewajacy 90% okazji wymaga
+    przewagi ~3.2x wiekszej na kazdej pozostalej. Karta warunkowa musi wiec
+    deklarowac f Z GORY i uzasadniac, skad wezmie te koncentracje — inaczej
+    zawezanie okna pogarsza jej szanse, zamiast je poprawiac.
+    """
+    if not 0.0 < active_fraction <= 1.0:
+        raise ValueError(f"active_fraction musi byc w (0, 1], jest {active_fraction}")
+    return 1.0 / math.sqrt(active_fraction)
+
+
+def required_daily_edge(
+    target_sharpe: float,
+    sigma_daily: float,
+    active_fraction: float = 1.0,
+    trading_days: int = 252,
+) -> float:
+    """Sredni zwrot na OKAZJE CZYNNA, by osiagnac `target_sharpe` annualizowany.
+
+    Uzywane w sekcji "projekt eksperymentu" karty hipotezy: przed testem widac,
+    czy zakladana przewaga jest w ogole w zasiegu mechanizmu, ktory karta opisuje.
+    """
+    if sigma_daily <= 0:
+        raise ValueError("sigma_daily musi byc dodatnia")
+    return target_sharpe / math.sqrt(trading_days) * sigma_daily * conditional_edge_multiplier(
+        active_fraction
+    )

@@ -27,7 +27,7 @@ from engine.guards import (
 )
 
 ROOT = Path(__file__).resolve().parent.parent
-CODE_DIRS = ["engine", "validation", "scripts", "tests"]
+CODE_DIRS = ["engine", "validation", "scripts", "tests", "research"]
 
 
 def _py_files() -> list[Path]:

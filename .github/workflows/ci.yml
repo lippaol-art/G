@@ -26,7 +26,7 @@ jobs:
           pip install ruff mypy
 
       - name: Linter (ruff)
-        run: ruff check engine validation scripts tests
+        run: ruff check engine validation scripts tests research
 
       - name: Kontrola typów (mypy)
         run: mypy engine validation --ignore-missing-imports

@@ -6,6 +6,8 @@ regresja wzgledem dokumentu.
 
 from __future__ import annotations
 
+import math
+
 import pytest
 
 from engine.costs import (
@@ -141,3 +143,59 @@ def test_sigma_wieksza_podnosi_wymagana_probe():
     male = required_sample_size(sigma_r=1.2).n_required
     duze = required_sample_size(sigma_r=2.0).n_required
     assert duze > 2 * male
+
+
+class TestCenyWarunkowania:
+    """Wniosek W002 — warunkowanie kosztuje 1/sqrt(f).
+
+    Reguly, wedlug ktorych bedziemy oceniac przyszle karty, musza byc testowane
+    tak samo jak reszta kodu. Ta akurat powstala z badania W001 i decyduje
+    o tym, ktore hipotezy w ogole warto uruchamiac.
+    """
+
+    def test_brak_warunkowania_nie_kosztuje_nic(self):
+        from validation.power import conditional_edge_multiplier
+        assert conditional_edge_multiplier(1.0) == pytest.approx(1.0)
+
+    def test_polowa_okazji_kosztuje_pierwiastek_z_dwoch(self):
+        from validation.power import conditional_edge_multiplier
+        assert conditional_edge_multiplier(0.5) == pytest.approx(math.sqrt(2), rel=1e-12)
+
+    def test_decyl_kosztuje_ponad_trzykrotnie(self):
+        """Liczba z raportu W001: zawezenie do 10% nocy wymaga ~3.16x przewagi."""
+        from validation.power import conditional_edge_multiplier
+        assert conditional_edge_multiplier(0.1) == pytest.approx(3.1623, abs=1e-4)
+
+    def test_mnoznik_rosnie_monotonicznie_przy_zwezaniu(self):
+        from validation.power import conditional_edge_multiplier
+        m = [conditional_edge_multiplier(f) for f in (1.0, 0.5, 0.25, 0.1, 0.05)]
+        assert m == sorted(m), "zwezanie okna nie moze potaniec"
+
+    def test_ulamek_poza_zakresem_jest_bledem(self):
+        from validation.power import conditional_edge_multiplier
+        for zly in (0.0, -0.1, 1.5):
+            with pytest.raises(ValueError):
+                conditional_edge_multiplier(zly)
+
+    def test_wymagany_edge_odtwarza_liczby_z_W001(self):
+        """Regresja na raporcie: sd nocna MNQ 0.755%, prog DSR SR 1.13.
+
+        Raport W001 podaje 0.054% na noc dla wszystkich nocy i 0.170% dla decyla.
+        Modul musi te liczby odtworzyc, inaczej raport i kod rozjezdzaja sie
+        w czasie i nie wiadomo, ktory ma racje.
+        """
+        from validation.power import required_daily_edge
+        sd = 0.00755
+        assert required_daily_edge(1.13, sd, 1.0) == pytest.approx(0.000538, abs=5e-6)
+        assert required_daily_edge(1.13, sd, 0.1) == pytest.approx(0.001700, abs=5e-6)
+
+    def test_wymagany_edge_skaluje_sie_z_sharpem_liniowo(self):
+        from validation.power import required_daily_edge
+        a = required_daily_edge(0.8, 0.0075, 0.5)
+        b = required_daily_edge(1.6, 0.0075, 0.5)
+        assert b == pytest.approx(2 * a, rel=1e-12)
+
+    def test_zerowa_zmiennosc_jest_bledem(self):
+        from validation.power import required_daily_edge
+        with pytest.raises(ValueError):
+            required_daily_edge(1.0, 0.0)

@@ -34,6 +34,7 @@ literatury, bez optymalizacji. Służą jako grupa kontrolna w teście przyrosto
 | B02 | Cykl kontrakcja–ekspansja | NR7 i pochodne, Crabel ~1990 | IDEA | — |
 | B03 | Asymetria piątek→poniedziałek | Weekend effect, Cross 1973 / French 1980 | IDEA | — |
 | B04 | Mechanika zamknięcia / proxy MOC | Momentum wewnątrzdzienne, Gao i in. JFE 2018 | IDEA | — |
+| B05 | **Dryf nocny, bezwarunkowo** | Cooper–Cliff–Gulen 2008 | **ZMIERZONY** | SR 0.68 (2019–26) / **0.47** (2021–26) — poniżej progu 0.8. Zdegradowana z H004 po W001. |
 
 ---
 
@@ -48,17 +49,34 @@ obronić, karta schodzi do benchmarków — decyzja zapada na papierze, zanim sp
 | H001 | Kompresja nocna: przyczyna, nie fakt | B02 + ORB | Kompresja z braku uczestników vs z równowagi sił (wolumen przy wąskim zakresie) | IDEA | 0/8 |
 | H002 | Powrót do VWAP: kto stoi po drugiej stronie | „lunch VWAP fade" | Struktura wolumenu, która wytworzyła odchylenie — szum egzekucyjny vs informacja | IDEA | 0/6 |
 | H003 | Reakcja na publikację: odwrócenie vs kontynuacja | „fade the news" | Relacja impulsu do struktury płynności sprzed publikacji, nie wielkość impulsu | IDEA | 0/6 |
-| H004 | Dryf nocny — czy jeszcze istnieje | Cooper–Cliff–Gulen 2008 | **Blokada:** test wstępny musi najpierw wykazać, że efekt bazowy nie wygasł | IDEA | 0/4 |
+| H004 | Dryf nocny — czy jeszcze istnieje | Cooper–Cliff–Gulen 2008 | **Blokada zdjęta przez W001.** Postać bezwarunkowa → B05. Postać warunkowa wymaga deklaracji *f* i progu **przed** testem | IDEA (warunkowa) | 0/4 |
 
-### H004 — test wstępny obowiązkowy przed jakąkolwiek pracą
+### H004 — test wstępny WYKONANY (W001, 01.08.2026)
 
-Zewnętrzne badania wskazują na wygaśnięcie dryfu overnight na indeksach US po 2020 r.
-**Nie przyjmujemy tego na wiarę ani nie odrzucamy** — sprawdzamy na własnych danych:
-dekompozycja zwrotów close→open rok po roku, 2019–2026, z przedziałami ufności.
+Pełny raport: [`reports/W001_overnight_drift.md`](../reports/W001_overnight_drift.md).
+Odtworzenie: `python3 research/W001_overnight_drift.py`. **Zero zużytych prób.**
 
-- Dryf obecny w ostatnich latach → karta wchodzi do badań z pytaniem o warunkowość reżimową.
-- Dryf wygasł → karta schodzi do benchmarków, a wynik trafia do wniosków przekrojowych jako
-  **własny, policzony dowód zaniku znanego efektu**.
+**Wynik nie jest tym, którego oczekiwały obie strony sporu.** Teza NY Fed o wygaśnięciu
+dryfu jest na naszych danych **nierozstrzygalna, a nie fałszywa lub prawdziwa**: przedział
+ufności dla dryfu nocnego MNQ 2021–2026 wynosi **[−4.4%, +16.4%] rocznie**. Zarówno 0%,
+jak i 3.7% leży wewnątrz. Odróżnienie tych dwóch wartości przy mocy 80% wymagałoby
+**86 lat danych**.
+
+Rozstrzygające okazało się pytanie postawione inaczej — nie „czy efekt istnieje", lecz
+„czy przechodzi bramkę projektu":
+
+| Okres | Dni | Sharpe nocny (przed kosztami) | Próg 0.8 |
+|---|---|---|---|
+| 2019–2026 | 1863 | 0.68 | nie przechodzi |
+| 2021–2026 | 1438 | **0.47** | nie przechodzi |
+
+Spójne na trzech instrumentach (MNQ, NQ, ES) — nie jest to artefakt jednego zbioru.
+
+**Decyzja:** postać bezwarunkowa → **B05** (benchmark, nie zużywa prób). Postać warunkowa
+pozostaje otwarta, ale przed pierwszą próbą karta **musi zadeklarować**: (1) jaki ułamek
+nocy *f* wybiera jej warunek, (2) jaki zwrot na noc czynną zakłada, (3) dlaczego mechanizm
+miałby dawać taką koncentrację. Progi w W002. Bez tego karta schodzi do benchmarków regułą
+samoczyszczącą.
 
 ---
 
@@ -88,7 +106,7 @@ badamy" chroni przyszłe iteracje przed przypadkowym wejściem w tę pułapkę.
 
 | Partia | Skład | Uzasadnienie |
 |--------|-------|--------------|
-| **0** | Test dryfu nocnego + benchmarki B01–B04 | Tanie, szybkie, rozstrzyga los H004 i dostarcza punktów odniesienia dla wszystkich testów przyrostowych. Zero zużycia licznika prób. |
+| **0** | ~~Test dryfu nocnego~~ ✅ W001 + benchmarki B01–B04 | Tanie, szybkie, dostarcza punktów odniesienia dla testów przyrostowych. Zero zużycia licznika prób. **W001 wykonany 01.08.2026** — H004 rozstrzygnięta, B05 dodany. |
 | **1** | H011, H005, H010 | Najniższe pokrycie z literaturą przy zadowalającej częstości sygnałów. |
 | **2** | H013, H014, H016 | Klasa K6 — wymaga gotowej warstwy danych (PLAN rozdz. 4.7). |
 | **3** | H001, H002, H003 | Po przejściu kroków 1–2 testu oryginalności. Część prawdopodobnie odpadnie do benchmarków. |
@@ -101,7 +119,8 @@ Fakty o rynku i o procesie odkryte przy okazji badań. Zasilają projektowanie k
 
 | ID | Wniosek | Źródło |
 |----|---------|--------|
-| — | *(brak — projekt przed pierwszą partią)* | |
+| **W001** | **Poziomy bezwarunkowe są poza zasięgiem tego projektu.** Przy dziennym odchyleniu zwrotu nocnego ~0.75% odróżnienie dryfu 3.7%/rok od zera wymaga ~86 lat danych. Każda karta, której teza brzmi „efekt X o sile kilku procent rocznie istnieje / wygasł", jest z góry nierozstrzygalna — **nie wolno na nią wydawać próby**. Dotyczy to też cudzych twierdzeń tej klasy: nie opieramy na nich decyzji projektowych, niezależnie od źródła. | W001 |
+| **W002** | **Warunkowanie ma cenę rosnącą jak 1/√f.** Sharpe liczymy po wszystkich dniach (rozdz. 6.3), więc strategia handlująca ułamek *f* okazji musi mieć na każdej z nich edge większy o czynnik 1/√f. Progi dla dryfu nocnego przy DSR ≥ 0.95 i 4 wariantach (SR ≥ 1.13): połowa nocy **3.6×**, kwintyl **5.6×**, decyl **8.0×** obecnej przewagi bezwarunkowej. **Każda karta warunkowa deklaruje *f* z góry** i uzasadnia, skąd weźmie koncentrację. Warunek odsiewający 90% okazji „bo tak wygląda lepiej" niemal na pewno nie przejdzie bramki — i można to stwierdzić **przed** testem. | W001 |
 
 ---
 
