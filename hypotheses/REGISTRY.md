@@ -48,17 +48,19 @@ obronić, karta schodzi do benchmarków — decyzja zapada na papierze, zanim sp
 |----|-------|-----------|----------------------------|--------|----------|
 | H001 | Kompresja nocna: przyczyna, nie fakt | B02 + ORB | Wolumen przy zadanym zakresie | **[REJECTED (pre-flight)](H001.md)** → B02 | **0/8** |
 | H002 | Powrót do VWAP: gdzie odchylenie powstało | „lunch VWAP fade" | Moment powstania odchylenia, nie jego wielkość | **[REJECTED (pre-flight)](H002.md)** | **0/6** |
-| H003 | Reakcja na publikację: impuls wobec równowagi | „fade the news" | Iloraz impulsu do zakresu przedpublikacyjnego, nie wielkość impulsu | [IDEA — zablokowana](H003.md) brakiem kalendarza makro | 0/6 |
+| H003 | Reakcja na publikację: impuls wobec równowagi | „fade the news" | Iloraz impulsu do zakresu przedpublikacyjnego | **[REJECTED (pre-flight)](H003.md)** | **0/6** |
+| H004 | Dryf nocny — czy jeszcze istnieje | Cooper–Cliff–Gulen 2008 | **Blokada zdjęta przez W001.** Postać bezwarunkowa → B05. Postać warunkowa wymaga deklaracji *f* i progu **przed** testem | IDEA (warunkowa) | 0/4 |
 
-### Partia 3 — pre-flight W010 (02.08.2026)
+### Partia 3 — odrzucona w pre-flight (W010, W013)
 
-Pełny raport: [`reports/W010_partia3_preflight.md`](../reports/W010_partia3_preflight.md).
-**Zużyte próby: 0 z budżetu 14.**
+Raporty: [`W010`](../reports/W010_partia3_preflight.md) (H001, H002) i [`W013`](../reports/W013_H003_preflight.md) (H003).
+**Zużyte próby: 0 z budżetu 20.**
 
 | Karta | Powód odrzucenia |
 |-------|------------------|
 | **H001** | Przesłanka fałszywa. Po kontroli dokładnego zakresu wolumen nie wnosi nic o charakterze sesji (β₂, t = **−0.10**); różnica efficiency ratio między dwoma kompresjami t = +0.91. Rozstrzygnęła regresja ciągła, dodana po przeglądzie kodu — podział kubełkowy dałoby się tłumaczyć małą grupą. |
 | **H002** | **Odrzucona własnym falsyfikatorem 2** („działa tylko jeden koniec skali"). Koniec odziedziczony nie kontynuuje (t = −0.16). Przy tym karta przeszła cztery kontrole, w tym ablację, której się bała: pochodzenie odchylenia rozdziela powroty (t = +2.21), a prosty wolumen nie (t = +0.29). Zabił ją brak przełożenia na zwrot: t = +0.69 przy **symetrycznych MFE/MAE** (+0.506% / −0.506%). |
+| **H003** | Pięć z sześciu przewidywań zawiedzionych (W013, N = 232). **Rozstrzygająca ablacja: iloraz |I|/R daje −3.0 pkt, sama wielkość |I| +5.1 pkt — zmienna karty jest gorsza od tej, którą miała poprawić.** Niemonotonicznie (środkowy tercyl +13.8 pkt, t = +2.61 — pułapka, którą łapie kryterium zadeklarowane z góry). Żaden typ nie niesie efektu, znak odwraca się między 2023 a 2024, netto −5.0 pkt. **Tym razem mocy nie brakuje:** do wykrycia efektu 20 pkt potrzeba 40 obserwacji, mamy 111. |
 
 **H002 była najbliżej ze wszystkich dotąd badanych kart** i to jest informacja
 sama w sobie: przeszła więcej kontroli niż jakakolwiek wcześniejsza, a i tak nie
@@ -69,7 +71,6 @@ do **wielkości pozycji** lub warstwę reżimową — tak jak H010 po W004.
 błąd czasowy dający cenę wyjścia sprzed sygnału i błędnie liczoną σ_VWAP. Żadna
 nie rzucałaby wyjątku. Lista w docstringu modułu; σ_VWAP objęta testem
 regresyjnym wobec kanonicznej `engine.features.vwap_sigma`.
-| H004 | Dryf nocny — czy jeszcze istnieje | Cooper–Cliff–Gulen 2008 | **Blokada zdjęta przez W001.** Postać bezwarunkowa → B05. Postać warunkowa wymaga deklaracji *f* i progu **przed** testem | IDEA (warunkowa) | 0/4 |
 
 ### H004 — test wstępny WYKONANY (W001, 01.08.2026)
 
@@ -181,7 +182,46 @@ badamy" chroni przyszłe iteracje przed przypadkowym wejściem w tę pułapkę.
 | **0** ✅ | ~~Test dryfu nocnego~~ W001 + ~~benchmarki B01–B04~~ | **WYKONANA 01.08.2026.** W001 rozstrzygnął H004; B01–B04 zmierzone (`reports/B00_benchmarks.md`, liczby maszynowe w `reports/benchmarks.json`). Zero zużytych prób. |
 | **1** ✅ | ~~H011, H005, H010~~ | **ODRZUCONE W PRE-FLIGHT (W004).** Zero zużytych prób z budżetu 18. Żadna z trzech kart nie miała przesłanki mierzalnej w danych. |
 | **2** ✅ | ~~H014~~ (W006) · ~~H013~~ (W009) · H016 bez nosiciela | **ODRZUCONA W PRE-FLIGHT.** Zero zużytych prób z budżetu 20. Koszt danych $7.82. Klasa K6 wyczerpana w obecnym zakresie danych. |
-| **3** ◐ | ~~H001~~ ~~H002~~ (W010) · H003 zablokowana | **Dwie z trzech odrzucone w pre-flight**, zero prób z budżetu 14. H003 wymaga kalendarza makro (BLS, Fed — darmowe, wymaga pipeline'u). Decyzja o jego budowie po tej partii. |
+| **3** ✅ | ~~H001~~ ~~H002~~ (W010) · ~~H003~~ (W013) | **Wszystkie trzy odrzucone w pre-flight**, zero prób z budżetu 20. Kalendarz makro zbudowany z darmowych źródeł urzędowych i zostaje jako infrastruktura. |
+
+---
+
+## ORYGINALNY KATALOG ZAMKNIĘTY — 02.08.2026
+
+**Wszystkie szesnaście kart rozstrzygnięte. Licznik prób: 0. Wydane: $7.82.**
+
+| Los | Karty |
+|---|---|
+| Odrzucone w pre-flight | H001, H002, H003, H005, H010, H011, H013, H014 |
+| Zdegradowane do benchmarków | H004 → B05, H006 → B01, H007 → B02, H008 → B03, H012 → B04 |
+| Warunkowe, bez nosiciela lub bez danych | H009 → zastąpiona przez H013 · H015 (wymaga `trades`/MBP) · H016 (straciła nosiciela) |
+
+**Żadna karta nie zużyła próby.** Cały katalog padł na pre-flightach kosztujących
+czas i osiem dolarów, przy budżecie 20 prób na partię i limicie 10 wariantów
+na kartę.
+
+### Czego to NIE znaczy
+
+Nie znaczy, że na MNQ nie ma przewagi. Znaczy, że **szesnaście konkretnych
+mechanizmów, wymyślonych w jednym podejściu i w dużej mierze zainspirowanych
+literaturą, nie miało mierzalnej przesłanki** na siedmiu latach danych minutowych.
+
+### Czego to wymaga przed następną generacją kart
+
+**Aparat działa — i to jest realny dorobek.** Zabił szesnaście kart bez wydania
+próby, a przy okazji wyłapał: przepełnienie Int8 w polars, niejednolitą strefę
+w `acceptanceDateTime` SEC, `startswith` łapiące „Employment Situation of
+Veterans", konferencje prasowe przy awaryjnych cięciach FOMC, błąd czasowy
+dający cenę wyjścia sprzed sygnału i błędnie liczoną σ_VWAP.
+
+Ale **licznik prób równy 0 nie znaczy, że dane są nietknięte.** Projekt kart był
+informowany danymi: H001 powstała wprost z wniosków W004/W005, H003 z porażki
+H014. To jest selekcja, której DSR nie mierzy, bo DSR liczy warianty, a nie
+decyzje o tym, które hipotezy w ogóle napisać.
+
+**Konsekwencja dla następnej generacji: prawdziwy forward albo lockbox jest
+konieczny, nie ostrożnościowy.** Dane historyczne posłużyły już do wyboru
+kierunków badań i nie są dla nowych kart czystym testem OOS.
 
 ---
 
