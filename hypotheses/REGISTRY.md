@@ -96,11 +96,36 @@ samoczyszczącą.
 | Karta | Powód odrzucenia |
 |-------|------------------|
 | **H014** | Rezyduum NQ−βES kontynuuje zamiast wracać, a warunkowanie na wielkości szoku **pogarsza** wynik (t = −2.28 na wszystkich dniach wobec −0.66 w górnym decylu). Wariant kontynuacyjny miał Sharpe brutto 0.85, ale koszty dwóch nóg zjadały 73% przewagi. |
-| **H013** | Pięć z sześciu przewidywań mechanizmu zawiedzionych (W009). Rozstrzygające: warunkowanie na wielkości rezyduum pogarsza wynik, znak efektu odwraca się między 2022 a 2023, a człon składników nie wnosi nic ponad samą lukę nocną NQ. |
+| **H013** | Pięć z sześciu przewidywań mechanizmu zawiedzionych (W009). Warunkowanie na wielkości rezyduum pogarsza wynik, znak efektu odwraca się między 2022 a 2023, a człon składników nie poprawia wyniku handlowego wobec samej luki nocnej. Potwierdzone audytem zamykającym (W011, W012) na próbie zgodnej z pierwotną definicją karty. |
 
-**Klasa K6 wyczerpana w obecnym zakresie danych.** Obie karty niosące własny P&L
-odpadły w pre-flight, H016 nie ma czego filtrować, H015 pozostaje niebadalne bez
-danych `trades`/MBP. **Łączny koszt: $7.82 i zero zużytych prób z budżetu 20.**
+**Zaplanowany katalog K6 wyczerpany.** Obie karty niosące własny P&L odpadły
+w pre-flight, H016 nie ma czego filtrować, H015 pozostaje niebadalne bez danych
+`trades`/MBP. **Łączny koszt: $7.82 i zero zużytych prób z budżetu 20.**
+
+Sformułowanie jest celowo węższe niż „klasa K6 wyczerpana": wyczerpaliśmy karty,
+które **zaplanowaliśmy**, a nie przestrzeń mechanizmów transmisji międzyrynkowej.
+Warstwa danych K6 zostaje w repo i jest opłacona — nowa karta tej klasy nie
+wymagałaby już zakupu.
+
+### Audyt zamykający H013 (W011, W012)
+
+Wykonany na żądanie właściciela projektu **przed** zamknięciem karty, zero prób.
+
+- **W011** wykazał, że W007 walidował **inny model** niż ten, którym odrzucono
+  kartę. Model nocny zwalidowany osobno wypada lepiej niż dzienny (OOS R² 0.9753
+  wobec 0.9436, MAE 8.18‱ wobec 26.31‱, kalibracja γ = 1.013). Rezyduum użyte
+  do werdyktu jest więc sensowne. Znaleziono przy tym **usterkę pre-flightu**:
+  model jest obciążony w sesje zdarzeń (+3.05‱), przez co asymetria stron
+  106/79 była artefaktem — po korekcie 93/92.
+- **W012** powtórzył rachunek na próbie zgodnej z pierwotną definicją karty
+  (kwartalne wyniki, AMC, N = 157), rozdzielonej z **treści komunikatów**, nie
+  z reakcji ceny. Kierunek wniosków nie zmienił się w żadnym przekroju;
+  najczystszy mechanizmowo (noce z jedną publikacją) wypadł najgorzej.
+
+Werdykt osłabiony językowo i to jest poprawka merytoryczna, nie kosmetyczna:
+**nie twierdzimy, że udowodniono brak edge'u** — przy tej próbie nie sposób.
+Twierdzimy, że układ wyników jest niezgodny z zadeklarowanymi przewidywaniami,
+i to wystarcza, by nie wydawać ośmiu prób.
 
 ### Partia 1 — odrzucona w pre-flight (W004, 01.08.2026)
 
@@ -146,6 +171,8 @@ Fakty o rynku i o procesie odkryte przy okazji badań. Zasilają projektowanie k
 
 | ID | Wniosek | Źródło |
 |----|---------|--------|
+| **W011** | **Model, którym odrzucamy kartę, musi być zwalidowany tak samo starannie jak model, którym byśmy ją przyjęli.** W007 walidował QQQ na zwrotach dziennych; W009 odrzucił H013 rezyduum z modelu NQ na zwrotach nocnych z ES i SOXX. To dwa różne estymatory, a jedyną podaną liczbą o jakości drugiego była statystyka **in-sample**. Osobna walidacja pokazała, że model nocny jest dobry (OOS R² 0.9753, γ = 1.013) — ale **wykryła obciążenie +3.05‱ w sesje zdarzeń**, przez które jedno z sześciu przewidywań zawiodło z powodu wewnętrznego dla modelu, nie własności rynku. Reguła: **przed zamknięciem karty waliduj dokładnie ten obiekt, który dał werdykt** — importowany, nie odtworzony. | W011 |
+| **W012** | **Zbiór zdarzeń zbudowany z rejestru wymaga jeszcze rozdzielenia RODZAJÓW zdarzeń.** Kalendarz EDGAR dał 261 poprawnych publikacji 8-K item 2.02, ale karta H013 była zaprojektowana na kwartalne wyniki po zamknięciu — a w zbiorze były też 29 komunikatów Tesli o produkcji i dostawach. Rozdzielenie **z treści komunikatów** (nigdy z reakcji ceny) jest tanie i daje kontrolę wewnętrzną: każda spółka wyszła po 28–30 raportów, TSLA rozpadła się na dokładnie 29 i 29. **Przekroje próbki nie są wariantami strategii i nie zużywają prób** — nie zmieniają reguły wejścia, tylko odpowiedź na pytanie, które zdarzenia są zdarzeniami tej karty. | W012 |
 | **W009** | **Odwrócenie znaku efektu w środku próbki jest mocniejszym dowodem braku mechanizmu niż koncentracja w jednym roku.** H005 zginęło na tym, że jeden rok dawał 52% wyniku. H013 zginęło na czymś gorszym: lata 2019–2022 dają średnio ujemny wynik, 2023–2026 dodatni — **efekt nie jest skoncentrowany, tylko zmienia kierunek**. Karta z koncentracją może mieć mechanizm działający w jednym reżimie; karta ze zmianą znaku nie ma mechanizmu wcale. Wniosek procesowy: **rozkład wyniku po latach raportujemy zawsze ze znakiem i udziałem, nie samą wartością bezwzględną** — inaczej te dwa różne tryby porażki są nieodróżnialne. Dodatkowo potwierdzone po raz drugi (po H014): **warunkowanie, które pogarsza wynik, obala przesłankę niezależnie od znaku efektu**. | W009 |
 | **W008** | **Etykiety zdarzeń biorą się z rejestru, nigdy z reakcji rynku — i sam pomiar reakcji też trzeba zweryfikować.** Kalendarz z SEC EDGAR (8-K item 2.02, 261 publikacji) definiuje próbę; detektor służy wyłącznie kontroli. Kontrola potwierdziła przesłankę H013: mediana ruchu po zamknięciu w dni publikacji **3.56% wobec 0.11%** w pozostałe (32×), obrót **96× tła**, zero publikacji z pustym oknem danych. Ujawniła też dwie pułapki pomiarowe: (1) pole `acceptanceDateTime` z API bywa czasem ET z sufiksem `Z` — 29 publikacji MSFT trafiłoby w środek sesji; (2) **pojedynczy odczyt o 17:00 ma przeciwny znak niż stan przed otwarciem w 16% zdarzeń**, bo kurs potrafi przejść całą amplitudę reakcji i wrócić. Wniosek procesowy: **definicja okna pomiaru jest częścią mechanizmu, nie detalem implementacyjnym**, i musi być rozstrzygnięta kryterium pomiarowym przed backtestem, nigdy po zobaczeniu P&L. | W008 |
 | **W007** | **R² in-sample nie jest walidacją i nie wolno go publikować jako dowodu.** Model wrażliwości opublikowałem z tabelą R² 0.887–0.982 liczoną na tym samym oknie, na którym dopasowano współczynniki — przy ośmiu regresorach taka tabela wychodzi dobrze zawsze. Pomiar OOS (predykcja dnia t z okna do t−1, 1692 dni) daje R² **0.9436** wobec **0.9209** dla modelu naiwnego: przewaga realna, ale **skromna**. Przy okazji obalone własne twierdzenie, że ridge rozwiązuje współliniowość — OLS daje wynik identyczny do czterech miejsc po przecinku. **Reguła procesowa: żadna liczba nie trafia do karty ani do docstringa, dopóki nie została policzona out-of-sample przez skrypt w `research/`.** | W007 |

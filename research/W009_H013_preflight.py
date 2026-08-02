@@ -196,6 +196,9 @@ def zbuduj(okno: str) -> dict:
     gotowe = np.isfinite(rez)
     return {
         "tab": tab, "dni": dni, "y": y, "rez": rez,
+        # X i kol wychodza na zewnatrz, zeby W011 walidowal DOKLADNIE ten model,
+        # ktory posluzyl do werdyktu — a nie jego rekonstrukcje
+        "X": X, "kol": kol, "idx_kontroli": idx_kontroli,
         "rez_bez": rez_bez_skladnikow,
         "jest": jest, "gotowe": gotowe, "maska": jest & gotowe,
         "wy": tab["wy_1030"].to_numpy(), "wy_kon": tab["wy_kon"].to_numpy(),
@@ -327,19 +330,22 @@ def main() -> int:
         "",
         "Zaden rok nie moze dawac ponad 40% wyniku. **Tak uplo H005** (52% z jednego roku).",
         "",
-        "| Rok | N | Sredni wynik | t | Udzial w wyniku |",
-        "|---|---|---|---|---|",
+        "Raportujemy **sumy i srednie bezwzgledne, nie udzialy procentowe**. Przy ujemnym",
+        "wyniku calkowitym udzialy sa mylace: rok stratny wychodzi wtedy `+118%`,",
+        "a zyskowny `−77%`, co czyta sie dokladnie odwrotnie do tego, co sie stalo.",
+        "",
+        "| Rok | N | Suma (pkt MNQ) | Sredni wynik | t | Znak |",
+        "|---|---|---|---|---|---|",
     ]
     lata_m = lata[maska]
-    suma = p_masked.sum()
     udzialy = {}
     for rok in sorted(set(lata_m.tolist())):
         m = lata_m == rok
         x = p_masked[m]
-        u = x.sum() / suma if suma != 0 else float("nan")
-        udzialy[rok] = u
-        L.append(f"| {rok} | {int(m.sum())} | {x.mean()*100:+.4f}% | {t_stat(x):+.2f} | "
-                 f"{u:+.0%} |")
+        udzialy[rok] = float(x.mean())
+        L.append(f"| {rok} | {int(m.sum())} | {x.sum()*poziom:+.0f} | "
+                 f"{x.mean()*100:+.4f}% | {t_stat(x):+.2f} | "
+                 f"{'+' if x.mean() > 0 else '−'} |")
     dodatnie_lata = sum(1 for r in udzialy if p_masked[lata_m == r].mean() > 0)
 
     # --- przewidywanie 6: kontrola pozornosci -------------------------------
@@ -347,8 +353,9 @@ def main() -> int:
     pnl_luka = -np.sign(y) * wy
     L += [
         "",
-        f"Lat dodatnich: **{dodatnie_lata} z {len(udzialy)}**. Najwiekszy udzial "
-        f"pojedynczego roku: **{max(udzialy.values(), key=abs):+.0%}**.",
+        f"Lat dodatnich: **{dodatnie_lata} z {len(udzialy)}**. "
+        f"Rozstep srednich rocznych: od {min(udzialy.values())*100:+.4f}% "
+        f"do {max(udzialy.values())*100:+.4f}% — **zmiana znaku, nie koncentracja**.",
         "",
         "## 6. Przewidywanie 6 — kontrola pozornosci",
         "",
@@ -423,14 +430,30 @@ def main() -> int:
         f"({ci_gora*100:+.4f}%) lezy blisko progu. Gdyby jedynym wynikiem byl brak",
         "istotnosci, werdykt brzmialby \"nierozstrzygniete\", jak w W001.",
         "",
-        "**Ale to nie jest jedyny wynik.** Karta upada nie na braku istotnosci, tylko",
-        "na tym, ze **wlasne przewidywania jej mechanizmu sa lamane co do znaku**:",
-        "warunkowanie na wielkosci rezyduum pogarsza wynik, strony sa asymetryczne,",
-        "a znak efektu odwraca sie w polowie probki. Zadna z tych rzeczy nie jest",
-        "kwestia mocy testu — to sa sprzecznosci wewnetrzne.",
+        "**Ale to nie jest jedyny wynik.** Uklad wynikow jest niezgodny z wczesniej",
+        "zadeklarowanymi przewidywaniami mechanizmu: warunkowanie na wielkosci",
+        "rezyduum pogarsza wynik, strony sa asymetryczne, a znak efektu odwraca sie",
+        "w polowie probki.",
+        "",
+        "> **Mimo ograniczonej mocy uklad wynikow jest niezgodny z wczesniej",
+        "> zadeklarowanymi przewidywaniami mechanizmu, dlatego karta nie spelnia",
+        "> bramki GO.**",
+        "",
+        "Swiadomie NIE twierdze, ze te niezgodnosci sa niezalezne od mocy testu.",
+        "Mala proba sama w sobie potrafi wytworzyc niestabilnosc znakow, pozorna",
+        "asymetrie i skrajny odczyt w decylu liczacym 19 obserwacji. Do odrzucenia",
+        "karty wystarcza, ze przewidywania sie nie potwierdzily — nie trzeba do tego",
+        "twierdzic, ze udowodniono brak jakiegokolwiek edge'u. Nie udowodniono.",
         "",
         "**Ta sama lekcja co W004: kontrole z mechanizmu odrzucaja wczesniej",
         "i pewniej niz kontrole statystyczne.**",
+        "",
+        "**Audyt zamykajacy:** [W011](W011_model_nocny_oos.md) waliduje OOS dokladnie",
+        "ten model, ktory posluzyl do werdyktu, i znajduje w nim obciazenie w sesje",
+        "zdarzen (+3.05‱), przez ktore czesc asymetrii z przewidywania 4 jest",
+        "artefaktem modelu. [W012](W012_H013_przekroje.md) powtarza rachunek na probie",
+        "zgodnej z pierwotna definicja karty (kwartalne wyniki, AMC, N = 157).",
+        "**Kierunek wnioskow nie zmienia sie w zadnym z tych sprawdzen.**",
         "",
     ]
 
@@ -441,7 +464,7 @@ def main() -> int:
     t_decyl = t_stat(p_masked[np.abs(r_masked) >= np.quantile(np.abs(r_masked), 0.9)])
     t_dod = t_stat(p_masked[r_masked > 0])
     t_ujem = t_stat(p_masked[r_masked < 0])
-    naj_udzial = max(udzialy.values(), key=abs)
+    rozstep = (min(udzialy.values()) * 100, max(udzialy.values()) * 100)
     L += [
         "## 10. Werdykt: **NO-GO**",
         "",
@@ -456,7 +479,7 @@ def main() -> int:
         f"| 4 | Symetria stron | dodatnie t = {t_dod:+.2f}, ujemne t = {t_ujem:+.2f} "
         "— przeciwne znaki | **zawiedzione** |",
         f"| 5 | Stabilnosc roczna | {dodatnie_lata}/{len(udzialy)} lat dodatnich, "
-        f"jeden rok {naj_udzial:+.0%} wyniku | **zawiedzione** |",
+        f"srednie roczne od {rozstep[0]:+.3f}% do {rozstep[1]:+.3f}% | **zawiedzione** |",
         f"| 6 | Skladniki cos wnosza | pelny model t = {t_glowne:+.2f}, "
         f"sama luka NQ t = {t_stat(pnl_luka[maska]):+.2f} | **zawiedzione** |",
         "",

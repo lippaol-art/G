@@ -70,18 +70,22 @@ Mechanizm arytmetyczny nie ma powodu dzialac tylko w jedna strone.
 
 Zaden rok nie moze dawac ponad 40% wyniku. **Tak uplo H005** (52% z jednego roku).
 
-| Rok | N | Sredni wynik | t | Udzial w wyniku |
-|---|---|---|---|---|
-| 2019 | 4 | -0.2621% | -2.50 | +16% |
-| 2020 | 24 | -0.1439% | -0.90 | +51% |
-| 2021 | 27 | -0.1673% | -1.87 | +67% |
-| 2022 | 30 | -0.2642% | -2.15 | +118% |
-| 2023 | 31 | +0.0356% | +0.37 | -16% |
-| 2024 | 28 | +0.1283% | +1.14 | -53% |
-| 2025 | 26 | +0.1995% | +1.95 | -77% |
-| 2026 | 15 | +0.0233% | +0.12 | -5% |
+Raportujemy **sumy i srednie bezwzgledne, nie udzialy procentowe**. Przy ujemnym
+wyniku calkowitym udzialy sa mylace: rok stratny wychodzi wtedy `+118%`,
+a zyskowny `−77%`, co czyta sie dokladnie odwrotnie do tego, co sie stalo.
 
-Lat dodatnich: **4 z 8**. Najwiekszy udzial pojedynczego roku: **+118%**.
+| Rok | N | Suma (pkt MNQ) | Sredni wynik | t | Znak |
+|---|---|---|---|---|---|
+| 2019 | 4 | -188 | -0.2621% | -2.50 | − |
+| 2020 | 24 | -620 | -0.1439% | -0.90 | − |
+| 2021 | 27 | -810 | -0.1673% | -1.87 | − |
+| 2022 | 30 | -1422 | -0.2642% | -2.15 | − |
+| 2023 | 31 | +198 | +0.0356% | +0.37 | + |
+| 2024 | 28 | +645 | +0.1283% | +1.14 | + |
+| 2025 | 26 | +931 | +0.1995% | +1.95 | + |
+| 2026 | 15 | +63 | +0.0233% | +0.12 | + |
+
+Lat dodatnich: **4 z 8**. Rozstep srednich rocznych: od -0.2642% do +0.1995% — **zmiana znaku, nie koncentracja**.
 
 ## 6. Przewidywanie 6 — kontrola pozornosci
 
@@ -136,14 +140,30 @@ wielkosci, ktorej karta potrzebuje** — gorny koniec przedzialu ufnosci
 (+0.0532%) lezy blisko progu. Gdyby jedynym wynikiem byl brak
 istotnosci, werdykt brzmialby "nierozstrzygniete", jak w W001.
 
-**Ale to nie jest jedyny wynik.** Karta upada nie na braku istotnosci, tylko
-na tym, ze **wlasne przewidywania jej mechanizmu sa lamane co do znaku**:
-warunkowanie na wielkosci rezyduum pogarsza wynik, strony sa asymetryczne,
-a znak efektu odwraca sie w polowie probki. Zadna z tych rzeczy nie jest
-kwestia mocy testu — to sa sprzecznosci wewnetrzne.
+**Ale to nie jest jedyny wynik.** Uklad wynikow jest niezgodny z wczesniej
+zadeklarowanymi przewidywaniami mechanizmu: warunkowanie na wielkosci
+rezyduum pogarsza wynik, strony sa asymetryczne, a znak efektu odwraca sie
+w polowie probki.
+
+> **Mimo ograniczonej mocy uklad wynikow jest niezgodny z wczesniej
+> zadeklarowanymi przewidywaniami mechanizmu, dlatego karta nie spelnia
+> bramki GO.**
+
+Swiadomie NIE twierdze, ze te niezgodnosci sa niezalezne od mocy testu.
+Mala proba sama w sobie potrafi wytworzyc niestabilnosc znakow, pozorna
+asymetrie i skrajny odczyt w decylu liczacym 19 obserwacji. Do odrzucenia
+karty wystarcza, ze przewidywania sie nie potwierdzily — nie trzeba do tego
+twierdzic, ze udowodniono brak jakiegokolwiek edge'u. Nie udowodniono.
 
 **Ta sama lekcja co W004: kontrole z mechanizmu odrzucaja wczesniej
 i pewniej niz kontrole statystyczne.**
+
+**Audyt zamykajacy:** [W011](W011_model_nocny_oos.md) waliduje OOS dokladnie
+ten model, ktory posluzyl do werdyktu, i znajduje w nim obciazenie w sesje
+zdarzen (+3.05‱), przez ktore czesc asymetrii z przewidywania 4 jest
+artefaktem modelu. [W012](W012_H013_przekroje.md) powtarza rachunek na probie
+zgodnej z pierwotna definicja karty (kwartalne wyniki, AMC, N = 157).
+**Kierunek wnioskow nie zmienia sie w zadnym z tych sprawdzen.**
 
 ## 10. Werdykt: **NO-GO**
 
@@ -153,7 +173,7 @@ i pewniej niz kontrole statystyczne.**
 | 2 | Rezyduum sie domyka | korelacja +0.0808 (10:30), -0.0746 (koniec); t = -0.79 | **zawiedzione** |
 | 3 | Efekt rosnie z wielkoscia rezyduum | t: -0.79 → -1.42 w gornym decylu — **pogorszenie** | **zawiedzione** |
 | 4 | Symetria stron | dodatnie t = +0.47, ujemne t = -1.40 — przeciwne znaki | **zawiedzione** |
-| 5 | Stabilnosc roczna | 4/8 lat dodatnich, jeden rok +118% wyniku | **zawiedzione** |
+| 5 | Stabilnosc roczna | 4/8 lat dodatnich, srednie roczne od -0.264% do +0.199% | **zawiedzione** |
 | 6 | Skladniki cos wnosza | pelny model t = -0.79, sama luka NQ t = +0.65 | **zawiedzione** |
 
 **Piec z szesciu przewidywan zawiedzionych. Jedyne spelnione to warunek 1,
