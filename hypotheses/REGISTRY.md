@@ -135,12 +135,47 @@ Fakty o rynku i o procesie odkryte przy okazji badań. Zasilają projektowanie k
 
 | ID | Wniosek | Źródło |
 |----|---------|--------|
+| **W007** | **R² in-sample nie jest walidacją i nie wolno go publikować jako dowodu.** Model wrażliwości opublikowałem z tabelą R² 0.887–0.982 liczoną na tym samym oknie, na którym dopasowano współczynniki — przy ośmiu regresorach taka tabela wychodzi dobrze zawsze. Pomiar OOS (predykcja dnia t z okna do t−1, 1692 dni) daje R² **0.9436** wobec **0.9209** dla modelu naiwnego: przewaga realna, ale **skromna**. Przy okazji obalone własne twierdzenie, że ridge rozwiązuje współliniowość — OLS daje wynik identyczny do czterech miejsc po przecinku. **Reguła procesowa: żadna liczba nie trafia do karty ani do docstringa, dopóki nie została policzona out-of-sample przez skrypt w `research/`.** | W007 |
 | **W001** | **Poziomy bezwarunkowe są poza zasięgiem tego projektu.** Przy dziennym odchyleniu zwrotu nocnego ~0.75% odróżnienie dryfu 3.7%/rok od zera wymaga ~86 lat danych. Każda karta, której teza brzmi „efekt X o sile kilku procent rocznie istnieje / wygasł", jest z góry nierozstrzygalna — **nie wolno na nią wydawać próby**. Dotyczy to też cudzych twierdzeń tej klasy: nie opieramy na nich decyzji projektowych, niezależnie od źródła. | W001 |
 | **W006** | **Redukcja szumu przez hedge nie jest darmowa i przy małym edge'u jest stratna.** Druga noga podwaja koszt round-turn (2.20 → 4.40 USD). Zmierzone na H014: hedge ES obniża sd NQ o **63%**, podnosząc Sharpe brutto do 0.85 — ale koszty dwóch nóg zjadają **73%** przewagi, netto SR spada do **0.23**, a pod stress-testem ×2 jest **ujemne**. Próg opłacalności hedge'u przy naszych kosztach: ok. **2.2 pkt MNQ** przewagi brutto na transakcję ponad wersję jednonożną. Karta hedgowana musi to wykazać, zanim policzy Sharpe'a. | W006 |
 | **W005** | **Silny efekt to nie to samo co użyteczny efekt.** H010 dała najmocniejszy pojedynczy wynik projektu (t > 10) i została odrzucona, bo mierzyła **amplitudę** tam, gdzie karta potrzebowała **kierunku**. Przed uruchomieniem karty pytamy nie tylko „czy efekt istnieje", ale „czy istnieje w zmiennej, której karta faktycznie używa". | W004 |
 | **W004** | **Kontrole wyprowadzone z mechanizmu odrzucają więcej i wcześniej niż kontrole statystyczne.** Sygnał H005 przeszedł kontrolę pozorności, zmianę czterech parametrów i podział próbki — a upadł na symetrii, monotoniczności i stabilności rocznej, czyli na trzech przewidywaniach, które robi jego własny mechanizm. **Kolejność kontroli: najpierw mechanizm, potem statystyka.** Dodatkowo: pre-flight rozkładów kosztujący 0 prób uratował cały budżet 18 prób partii 1. | W004 |
 | **W003** | **Metryki w R są niezdefiniowane bez stopa, a koncentracja bez zysku.** Strategia z wyjściem czasowym ma `r_multiple = 0` dla każdej transakcji → PF, win rate, expectancy i SQN wychodziły **zerami wyglądającymi na pomiar**. Tak samo `top5_concentration` zwracała 0.0 dla strategii stratnej, co czytało się jako „koncentracja wzorowa". Oba naprawione na NaN + flagę `r_metrics_valid`. **Wniosek procesowy: metryka, która przy zdegenerowanym wejściu zwraca liczbę zamiast błędu, jest pułapką** — przy przeglądzie każdej nowej metryki pytamy najpierw, co robi na wejściu bez sensu. | B00 |
 | **W002** | **Warunkowanie ma cenę rosnącą jak 1/√f.** Sharpe liczymy po wszystkich dniach (rozdz. 6.3), więc strategia handlująca ułamek *f* okazji musi mieć na każdej z nich edge większy o czynnik 1/√f. Progi dla dryfu nocnego przy DSR ≥ 0.95 i 4 wariantach (SR ≥ 1.13): połowa nocy **3.6×**, kwintyl **5.6×**, decyl **8.0×** obecnej przewagi bezwarunkowej. **Każda karta warunkowa deklaruje *f* z góry** i uzasadnia, skąd weźmie koncentrację. Warunek odsiewający 90% okazji „bo tak wygląda lepiej" niemal na pewno nie przejdzie bramki — i można to stwierdzić **przed** testem. | W001 |
+
+---
+
+## Reguły trwałe projektu (R1–R3)
+
+Zapisane 02.08.2026 na podstawie kontekstu właściciela projektu: ograniczony budżet,
+docelowo konto fundowane 200 000 USD z limitem 5% dziennie i 10% całkowicie.
+**Reguły obowiązują niezależnie od wyniku którejkolwiek karty.**
+
+| # | Reguła |
+|---|--------|
+| **R1** | **Każde nowe płatne źródło danych lub narzędzie wymaga czterech rzeczy przed zakupem:** uzasadnienia (co konkretnie odblokowuje), oszacowania kosztu, sprawdzenia darmowej alternatywy i **zgody właściciela**. Formalizuje procedurę zastosowaną przy zakupie warstwy K6 za $7.82. |
+| **R2** | **Zakaz strojenia pod wynik docelowy.** Żadna zmiana specyfikacji, parametru ani reguły wejścia po zobaczeniu P&L, jeśli motywem jest zbliżenie się do zakładanego wyniku miesięcznego. Deklarowane 1–2%/mies. jest potrzebą finansową właściciela, **nie targetem strategii**. Jeśli przewagi nie ma, projekt ma to wykazać, a nie dopasować. Wzmacnia W002 i W004. |
+| **R3** | **Limity firmowe 5%/10% są barierami awaryjnymi, nie roboczymi.** Wewnętrzne limity strategii muszą być istotnie niższe. Metryką bramki operacyjnej jest **prawdopodobieństwo utrzymania konta**, nie zwrot ani Sharpe. |
+
+### Bramka badawcza a bramka operacyjna
+
+Rozróżnienie wprowadzone razem z R3, bo mieszanie ich byłoby błędem:
+
+| Bramka | Pytanie | Metryka | Kiedy |
+|---|---|---|---|
+| **Badawcza** | Czy przewaga w ogóle istnieje? | SR, DSR, PBO | teraz |
+| **Operacyjna** | Czy przy tej przewadze da się utrzymać konto z limitem 10%? | prawdopodobieństwo ruiny | po GO |
+
+Strategia o dobrym Sharpie może mieć nieakceptowalne ryzyko ruiny przy limicie 10%,
+jeśli jej rozkład ma gruby lewy ogon. Odwrotnie też: skromna przewaga o łagodnym
+obsunięciu może być operacyjnie lepsza.
+
+**Nie wolno cofać się z bramki operacyjnej do badawczej.** Gdyby karta przeszła badanie,
+a potem okazała się zbyt ryzykowna dla konta, odpowiedzią jest zmiana **wielkości
+pozycji**, nie zmiana reguły wejścia — to drugie byłoby strojeniem sygnału pod
+ograniczenie kapitałowe, czyli dokładnie tym, czego zakazuje R2.
+
+**Odłożone świadomie:** symulator zasad kont fundowanych. Wraca po GO/NO-GO dla H013.
 
 ---
 

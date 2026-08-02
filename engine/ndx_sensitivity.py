@@ -1,41 +1,65 @@
 """Wrazliwosc indeksu na skladniki — PLAN.pdf rozdz. 4.7, karta H013.
 
-CO TEN MODUL LICZY I DLACZEGO NIE SA TO WAGI INDEKSU.
+CO TEN MODUL LICZY. Wspolczynnik regresji zwrotu indeksu na zwroty osmiu
+megacapow, estymowany z okna kroczacego. Jest to **historyczna reakcja indeksu**
+na ruch skladnika — wielkosc zmierzona, obejmujaca zarowno mechaniczny udzial
+skladnika w koszyku, jak i wspolruch reszty koszyka z tym skladnikiem.
 
-Karta H013 w pierwotnym brzmieniu zakladala uzycie WAG NDX ze snapshotow
-kwartalnych. Odstepujemy od tego swiadomie, z dwoch powodow — pierwszy jest
-praktyczny, drugi metodologiczny i wazniejszy.
+TO NIE JEST ZAMIENNIK WAG, TYLKO INNY ESTYMAND.
 
-PRAKTYCZNY. Historyczne wagi NDX za lata 2019-2026 nie sa dostepne z zadnego
-darmowego zrodla. Publikowany jest sklad BIEZACY; archiwum kwartalne to produkt
-platny. Przyjecie wag dzisiejszych dla calej historii byloby powaznym bledem —
-waga NVDA wzrosla w tym okresie kilkukrotnie.
+Karta H013 w pierwotnym brzmieniu zakladala WAGI NDX ze snapshotow kwartalnych.
+Zmiana nie polega na wzieciu tej samej wielkosci z innego zrodla — pytanie jest
+inne i kontrfaktyk jest inny:
 
-METODOLOGICZNY. Nawet majac prawdziwe wagi, uzycie ich byloby ZANIZENIEM.
-Karta pyta: "o ile POWINIEN poruszyc sie indeks, skoro skladnik poruszyl sie
-o r?". Odpowiedz "w * r" jest poprawna tylko w swiecie, w ktorym pozostale
-92 spolki stoja w miejscu. W rzeczywistosci wynik megacapa przenosi sie
-na caly sektor: gdy NVDA rosnie 8% po wynikach, rosna takze AMD, AVGO
-i polowa koszyka polprzewodnikowego. Oczekiwany ruch indeksu jest wiec
-WIEKSZY niz sama waga przemnozona przez zwrot.
+  waga w:        o ile zmieni sie wartosc indeksu, jesli poruszy sie WYLACZNIE
+                 ten jeden skladnik, a pozostale 92 stoja w miejscu.
+                 Wielkosc ksiegowa, wynika z konstrukcji koszyka.
 
-Wielkoscia, ktora to obejmuje, jest WRAZLIWOSC — wspolczynnik regresji zwrotu
-indeksu na zwrot skladnika. Zawiera oba kanaly: mechaniczny (waga) i posredni
-(korelacja z reszta koszyka). Zmierzone na naszych danych sumy wspolczynnikow
-wynosza 0.65-0.86 przy lacznej wadze osemki okolo 0.50 — roznica to wlasnie
-kanal posredni.
+  wrazliwosc s:  o ile indeks poruszal sie HISTORYCZNIE, gdy ten skladnik
+                 poruszal sie o r — lacznie z tym, co w tym samym czasie robila
+                 reszta koszyka. Wielkosc statystyczna, wynika z danych.
 
-Dla karty jest to zmiana na korzysc: rezyduum liczone wzgledem zanizonego
-oczekiwania bylo by systematycznie przesuniete, a przesuniecie w rezyduum jest
-nieodroznialne od sygnalu.
+Zadne z tych dwoch nie jest "poprawniejsze" bezwarunkowo. Dla karty H013
+wlasciwy jest drugi, bo karta pyta, ile indeks POWINIEN sie poruszyc — a gdy
+NVDA rosnie 8% po wynikach, w praktyce rosna takze AMD, AVGO i pol koszyka
+polprzewodnikowego. Kontrfaktyk "reszta stoi w miejscu" nie opisuje tej sytuacji.
+
+Wybor jest jednak takze wymuszony praktycznie: historyczne wagi NDX 2019-2026 nie
+sa dostepne z darmowego zrodla (publikowany jest sklad biezacy, archiwum kwartalne
+to produkt platny), a przyjecie wag dzisiejszych dla calej historii byloby powaznym
+bledem — wrazliwosc NVDA wzrosla u nas 0.053 -> 0.162.
+
+Konsekwencja: **ablacja "wrazliwosci vs wagi" pozostaje OTWARTA i niewykonalna
+bez platnych danych.** Nie wolno jej uznawac za rozstrzygnieta na tej podstawie,
+ze wrazliwosci wypadaja lepiej od modelu naiwnego — to inne porownanie.
+
+CO ZOSTALO ZMIERZONE OUT-OF-SAMPLE (reports/W007_wrazliwosci_walidacja.md,
+1692 dni, predykcja dnia t z okna konczacego sie w t-1):
+
+    wariant                          OOS R²    obciazenie   MAE
+    ridge 1e-3, bez wyrazu wolnego   0.9436     +0.30‱     26.31‱
+    OLS (lambda = 0)                 0.9436     +0.29‱     26.31‱
+    ridge + wyraz wolny              0.9399     -0.67‱     27.38‱
+    rowne wagi ze skala (naiwny)     0.9209     +1.34‱     30.61‱
+
+Trzy wnioski, ktore trafily stad do kodu:
+
+  1. Przewaga nad modelem naiwnym jest SKROMNA (0.921 -> 0.944). Rowne wagi
+     przeskalowane jedna stala tlumacza wiekszosc tego samego.
+  2. Model jest praktycznie NIEOBCIAZONY OOS (1.1% typowego bledu). To bylo
+     wazne pytanie, bo stale przesuniecie w rezyduum jest nieodroznialne od
+     sygnalu, ktorego szuka H013.
+  3. Wyraz wolny nie pomaga i lekko szkodzi — jego brak jest decyzja poparta
+     pomiarem, nie przeoczeniem.
+
+ROK 2026 ODSTAJE: OOS R² 0.72 i obciazenie -8.59‱ wobec +0.30‱ na calej probie.
+Indeks rosl wtedy bardziej, niz implikowaly megacapy. Karta H013 musi raportowac
+wynik per rok, bo w takim okresie rezyduum ma przesuniecie pochodzace z modelu,
+a nie z rynku.
 
 ZAKAZ LOOKAHEADU. Wspolczynniki na dzien D szacowane sa wylacznie z okna
 konczacego sie PRZED dniem D. Funkcja nie przyjmuje calego szeregu i nie ma
 sciezki, ktora pozwolilaby zajrzec w przod.
-
-REGULARYZACJA. Megacapy sa wzajemnie skorelowane na poziomie 0.4-0.7, wiec
-zwykly OLS daje wspolczynniki niestabilne i czesciowo ujemne. Ridge o malym
-parametrze stabilizuje je, nie przesuwajac istotnie sumy.
 """
 
 from __future__ import annotations
@@ -61,17 +85,36 @@ MIN_OKNO = 120          # ponizej tego wspolczynniki sa zbyt niestabilne, by ich
 #: ktorego karta szuka. Backtest pokazalby przewage tam, gdzie jest tylko blad
 #: estymatora.
 #:
-#: Wersja skalowana niezmienniczo daje shrinkage ponizej 1% i nadal stabilizuje
-#: przypadek wspolliniowy.
+#: CZEGO RIDGE TU NIE ROBI. Pierwsza wersja tego komentarza glosila, ze megacapy
+#: sa wzajemnie skorelowane, wiec OLS daje wspolczynniki niestabilne i czesciowo
+#: ujemne, a ridge to naprawia. **To bylo twierdzenie bez pokrycia.** W007 mierzy
+#: oba estymatory OOS i daja wynik identyczny do czterech miejsc po przecinku
+#: (R² 0.9436, MAE 26.31‱); ujemny wspolczynnik pojawia sie w 1 dniu na 1692.
+#: Przy oknie 250 dni i osmiu regresorach macierz jest po prostu dobrze
+#: uwarunkowana.
+#:
+#: Ridge zostaje z jednego, wezszego powodu: jest **tanim zabezpieczeniem na
+#: wypadek okna zdegenerowanego** (halt, swieto, spolka po debiucie), gdzie OLS
+#: rzucilby LinAlgError albo dal wspolczynniki bez sensu. Shrinkage ponizej 1%,
+#: wiec nie kosztuje nic. Nie jest elementem niosacym wartosc predykcyjna.
 RIDGE_LAMBDA = 1e-3     # ulamek sredniej przekatnej X'X
 
 
 @dataclass(frozen=True)
 class Wrazliwosci:
-    """Wspolczynniki na jeden dzien wraz z miara dopasowania."""
+    """Wspolczynniki na jeden dzien wraz z miara dopasowania.
+
+    UWAGA NA POLE `r2`. Jest to R² **in-sample** — liczone na tym samym oknie,
+    na ktorym dopasowano wspolczynniki. Sluzy do wykrywania okna zdegenerowanego
+    (nagly spadek = cos jest nie tak z danymi), a NIE jako miara jakosci modelu.
+    Osiem regresorow zawsze da wysokie R² in-sample, niezaleznie od wartosci
+    predykcyjnej. Publikowanie tego pola jako walidacji bylo bledem, ktory
+    naprawia W007 — miara OOS jest tam i tylko tam.
+    """
 
     symbole: tuple[str, ...]
     beta: np.ndarray
+    #: R² IN-SAMPLE — diagnostyka okna, nie walidacja. Patrz docstring klasy.
     r2: float
     n_obs: int
 
