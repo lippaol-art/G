@@ -223,6 +223,22 @@ decyzje o tym, które hipotezy w ogóle napisać.
 konieczny, nie ostrożnościowy.** Dane historyczne posłużyły już do wyboru
 kierunków badań i nie są dla nowych kart czystym testem OOS.
 
+### Pełna synteza: [`docs/SYNTEZA_GEN1.md`](../docs/SYNTEZA_GEN1.md)
+
+Dokument zamykający pierwszą generację. Zawiera mapę wszystkich szesnastu kart
+z rozróżnieniem sześciu kategorii porażki, cztery klasy odkrytych zmiennych
+(amplituda / kierunek / reżim / zależności bez PnL), **cmentarz sześciu rodzin
+hipotez**, **rejestr ekspozycji na dane** i **protokół drugiej generacji**.
+
+Dwie rzeczy z niego, które obowiązują od zaraz:
+
+1. **Dane 2019–2026 są zbiorem deweloperskim, nie testowym.** Karta, której
+   projekt był informowany wcześniejszymi wynikami z tych danych, wymaga
+   forwardu do potwierdzenia.
+2. **Nie znaleziono ani jednej zmiennej przewidującej KIERUNEK**, która
+   spełnia bramkę. Znaleziono kilka przewidujących amplitudę i reżim — i nie
+   wolno ich zamieniać w sygnał kierunkowy przez zmianę nazwy.
+
 ---
 
 ## Wnioski przekrojowe (W-xx)
