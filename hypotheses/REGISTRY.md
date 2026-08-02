@@ -87,9 +87,20 @@ samoczyszczącą.
 | H011 | Sekwencja Azja→Europa jako predyktor RTH | K1 | ~~najwyższy~~ | **REJECTED (pre-flight)** | **0/6** |
 | H005 | Mikrostruktura kolejnych testów poziomu | K5 | ~~wysoki~~ | **REJECTED (pre-flight)** | **0/6** |
 | H010 | Zmienność zrealizowana wobec oczekiwanej | K3 × K1 | ~~wysoki~~ | **REJECTED w tej roli (pre-flight)** | **0/6** |
-| H013 | Rezydualny repricing po wynikach megacapów | K6 × K4 | **najwyższy — jedyna karta, która przeżyła projektowanie** | [IDEA](H013.md) | 0/8 |
+| H013 | Rezydualny repricing po wynikach megacapów | K6 × K4 | ~~najwyższy~~ | **[REJECTED (pre-flight)](H013.md)** | **0/8** |
 | H014 | Dywergencja NQ–ES wokół szoków stóp | K6 × K4 | — | **[REJECTED (pre-flight)](H014.md)** | **0/6** |
-| H016 | Reżim dyspersji składników NDX | K6 × K3 | warunkowa — wymaga H013 jako nosiciela | [IDEA warunkowa](H016.md) | 0/6 |
+| H016 | Reżim dyspersji składników NDX | K6 × K3 | **straciła nosiciela** — czeka, zgodnie z sekcją 7 karty | [IDEA warunkowa](H016.md) | 0/6 |
+
+### Partia 2 — odrzucona w pre-flight (W006, W009)
+
+| Karta | Powód odrzucenia |
+|-------|------------------|
+| **H014** | Rezyduum NQ−βES kontynuuje zamiast wracać, a warunkowanie na wielkości szoku **pogarsza** wynik (t = −2.28 na wszystkich dniach wobec −0.66 w górnym decylu). Wariant kontynuacyjny miał Sharpe brutto 0.85, ale koszty dwóch nóg zjadały 73% przewagi. |
+| **H013** | Pięć z sześciu przewidywań mechanizmu zawiedzionych (W009). Rozstrzygające: warunkowanie na wielkości rezyduum pogarsza wynik, znak efektu odwraca się między 2022 a 2023, a człon składników nie wnosi nic ponad samą lukę nocną NQ. |
+
+**Klasa K6 wyczerpana w obecnym zakresie danych.** Obie karty niosące własny P&L
+odpadły w pre-flight, H016 nie ma czego filtrować, H015 pozostaje niebadalne bez
+danych `trades`/MBP. **Łączny koszt: $7.82 i zero zużytych prób z budżetu 20.**
 
 ### Partia 1 — odrzucona w pre-flight (W004, 01.08.2026)
 
@@ -124,8 +135,8 @@ badamy" chroni przyszłe iteracje przed przypadkowym wejściem w tę pułapkę.
 |--------|-------|--------------|
 | **0** ✅ | ~~Test dryfu nocnego~~ W001 + ~~benchmarki B01–B04~~ | **WYKONANA 01.08.2026.** W001 rozstrzygnął H004; B01–B04 zmierzone (`reports/B00_benchmarks.md`, liczby maszynowe w `reports/benchmarks.json`). Zero zużytych prób. |
 | **1** ✅ | ~~H011, H005, H010~~ | **ODRZUCONE W PRE-FLIGHT (W004).** Zero zużytych prób z budżetu 18. Żadna z trzech kart nie miała przesłanki mierzalnej w danych. |
-| **2** | ~~H014~~ odrzucona (W006) · **H013** + H016 warunkowo | Klasa K6. H014 zginęła w pre-flight na istniejących danych, 0 prób. Zostaje H013 ($7.81 danych + pipeline wag NDX) i H016 jako filtr zależny od niej. |
-| **3** | H001, H002, H003 | Po przejściu kroków 1–2 testu oryginalności. Część prawdopodobnie odpadnie do benchmarków. |
+| **2** ✅ | ~~H014~~ (W006) · ~~H013~~ (W009) · H016 bez nosiciela | **ODRZUCONA W PRE-FLIGHT.** Zero zużytych prób z budżetu 20. Koszt danych $7.82. Klasa K6 wyczerpana w obecnym zakresie danych. |
+| **3** | H001, H002, H003 | **Następna w kolejce.** Po przejściu kroków 1–2 testu oryginalności. Część prawdopodobnie odpadnie do benchmarków. |
 
 ---
 
@@ -135,6 +146,7 @@ Fakty o rynku i o procesie odkryte przy okazji badań. Zasilają projektowanie k
 
 | ID | Wniosek | Źródło |
 |----|---------|--------|
+| **W009** | **Odwrócenie znaku efektu w środku próbki jest mocniejszym dowodem braku mechanizmu niż koncentracja w jednym roku.** H005 zginęło na tym, że jeden rok dawał 52% wyniku. H013 zginęło na czymś gorszym: lata 2019–2022 dają średnio ujemny wynik, 2023–2026 dodatni — **efekt nie jest skoncentrowany, tylko zmienia kierunek**. Karta z koncentracją może mieć mechanizm działający w jednym reżimie; karta ze zmianą znaku nie ma mechanizmu wcale. Wniosek procesowy: **rozkład wyniku po latach raportujemy zawsze ze znakiem i udziałem, nie samą wartością bezwzględną** — inaczej te dwa różne tryby porażki są nieodróżnialne. Dodatkowo potwierdzone po raz drugi (po H014): **warunkowanie, które pogarsza wynik, obala przesłankę niezależnie od znaku efektu**. | W009 |
 | **W008** | **Etykiety zdarzeń biorą się z rejestru, nigdy z reakcji rynku — i sam pomiar reakcji też trzeba zweryfikować.** Kalendarz z SEC EDGAR (8-K item 2.02, 261 publikacji) definiuje próbę; detektor służy wyłącznie kontroli. Kontrola potwierdziła przesłankę H013: mediana ruchu po zamknięciu w dni publikacji **3.56% wobec 0.11%** w pozostałe (32×), obrót **96× tła**, zero publikacji z pustym oknem danych. Ujawniła też dwie pułapki pomiarowe: (1) pole `acceptanceDateTime` z API bywa czasem ET z sufiksem `Z` — 29 publikacji MSFT trafiłoby w środek sesji; (2) **pojedynczy odczyt o 17:00 ma przeciwny znak niż stan przed otwarciem w 16% zdarzeń**, bo kurs potrafi przejść całą amplitudę reakcji i wrócić. Wniosek procesowy: **definicja okna pomiaru jest częścią mechanizmu, nie detalem implementacyjnym**, i musi być rozstrzygnięta kryterium pomiarowym przed backtestem, nigdy po zobaczeniu P&L. | W008 |
 | **W007** | **R² in-sample nie jest walidacją i nie wolno go publikować jako dowodu.** Model wrażliwości opublikowałem z tabelą R² 0.887–0.982 liczoną na tym samym oknie, na którym dopasowano współczynniki — przy ośmiu regresorach taka tabela wychodzi dobrze zawsze. Pomiar OOS (predykcja dnia t z okna do t−1, 1692 dni) daje R² **0.9436** wobec **0.9209** dla modelu naiwnego: przewaga realna, ale **skromna**. Przy okazji obalone własne twierdzenie, że ridge rozwiązuje współliniowość — OLS daje wynik identyczny do czterech miejsc po przecinku. **Reguła procesowa: żadna liczba nie trafia do karty ani do docstringa, dopóki nie została policzona out-of-sample przez skrypt w `research/`.** | W007 |
 | **W001** | **Poziomy bezwarunkowe są poza zasięgiem tego projektu.** Przy dziennym odchyleniu zwrotu nocnego ~0.75% odróżnienie dryfu 3.7%/rok od zera wymaga ~86 lat danych. Każda karta, której teza brzmi „efekt X o sile kilku procent rocznie istnieje / wygasł", jest z góry nierozstrzygalna — **nie wolno na nią wydawać próby**. Dotyczy to też cudzych twierdzeń tej klasy: nie opieramy na nich decyzji projektowych, niezależnie od źródła. | W001 |
