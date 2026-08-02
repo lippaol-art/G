@@ -1,0 +1,730 @@
+{
+ "dane": {
+  "csv": {
+   "earnings.csv": {
+    "bajtow": 31643,
+    "naglowek": "symbol,cik,accession,okres,data_zlozenia,akceptacja_et,klasa,sesja_reakcji,znacznik_json,json_zgodny",
+    "sha256": "0bd0571255347d1220a7818bd4f740f64687a66e0df1e796163d49aa97582222",
+    "wierszy": 261
+   },
+   "earnings_rodzaj.csv": {
+    "bajtow": 65988,
+    "naglowek": "symbol,cik,accession,okres,data_zlozenia,akceptacja_et,klasa,sesja_reakcji,znacznik_json,json_zgodny,rodzaj,naglowek",
+    "sha256": "08ec786e6332bec9dd947f5a2a5c1fec174e9504c105ae0a9c46cf62e178fee6",
+    "wierszy": 261
+   },
+   "macro_events.csv": {
+    "bajtow": 40653,
+    "naglowek": "event_type,scheduled_timestamp_et,scheduled_timestamp_utc,actual_date,source,session_date,has_second_stage,second_stage_timestamp_et,second_stage_timestamp_utc,bars_pre,bars_impulse,bars_outcome,bars_ok,reference_period,notes",
+    "sha256": "ad419db41e128a30d77e710ef2a2bf9348562dde16a598df7d97fd5560c130e4",
+    "wierszy": 321
+   }
+  },
+  "manifesty": {
+   "manifest.md": "7f99b558efbda7fd2d109132949b193a66a161d92958efe6b32270699b53cdfc",
+   "manifest_macro.md": "37770e1b2ffe44208bf85128bf4e52f9a641e201d103260c504f2707049c1183"
+  },
+  "parquet": {
+   "es_1m_cont.parquet": {
+    "bajtow": 29691913,
+    "do": "2026-07-31",
+    "kolumn": 17,
+    "kontraktow": 30,
+    "od": "2019-04-15",
+    "schemat": {
+     "close": "Float64",
+     "contract": "String",
+     "data_condition": "String",
+     "days_to_roll": "Int64",
+     "dst_transition": "Boolean",
+     "gap_kind": "String",
+     "halt_window": "Boolean",
+     "high": "Float64",
+     "low": "Float64",
+     "open": "Float64",
+     "px_adj": "Float64",
+     "px_raw": "Float64",
+     "segment": "String",
+     "short_day": "Boolean",
+     "trade_date": "Date",
+     "ts_utc": "Datetime(time_unit='ns', time_zone='UTC')",
+     "volume": "UInt64"
+    },
+    "sesji": 1887,
+    "sha256": "52c320b03562797f80c0d110dcf49dca7ccab7170202a33a03f8f5ed8bdef4c2",
+    "wierszy": 2573653
+   },
+   "k6/aapl_1m.parquet": {
+    "bajtow": 18715865,
+    "do": "2026-07-29",
+    "kolumn": 10,
+    "od": "2019-05-06",
+    "schemat": {
+     "close": "Float64",
+     "high": "Float64",
+     "low": "Float64",
+     "open": "Float64",
+     "segment": "String",
+     "split_factor": "Float64",
+     "symbol": "String",
+     "trade_date": "Date",
+     "ts_utc": "Datetime(time_unit='ns', time_zone='UTC')",
+     "volume": "Float64"
+    },
+    "sesji": 1813,
+    "sha256": "2e0288d535731200ba7b93032e8d9696d1a9c86f945484f8b2689d5e36267448",
+    "symboli": 1,
+    "wierszy": 1455217,
+    "wspolczynnikow_splitu": 2
+   },
+   "k6/amzn_1m.parquet": {
+    "bajtow": 18550280,
+    "do": "2026-07-29",
+    "kolumn": 10,
+    "od": "2019-05-06",
+    "schemat": {
+     "close": "Float64",
+     "high": "Float64",
+     "low": "Float64",
+     "open": "Float64",
+     "segment": "String",
+     "split_factor": "Float64",
+     "symbol": "String",
+     "trade_date": "Date",
+     "ts_utc": "Datetime(time_unit='ns', time_zone='UTC')",
+     "volume": "Float64"
+    },
+    "sesji": 1813,
+    "sha256": "4d9196937f9b9d0494d9ee9c63e88d974dacbf33e94d32ba031ee4178d04500b",
+    "symboli": 1,
+    "wierszy": 1334610,
+    "wspolczynnikow_splitu": 2
+   },
+   "k6/avgo_1m.parquet": {
+    "bajtow": 14158317,
+    "do": "2026-07-29",
+    "kolumn": 10,
+    "od": "2019-05-06",
+    "schemat": {
+     "close": "Float64",
+     "high": "Float64",
+     "low": "Float64",
+     "open": "Float64",
+     "segment": "String",
+     "split_factor": "Float64",
+     "symbol": "String",
+     "trade_date": "Date",
+     "ts_utc": "Datetime(time_unit='ns', time_zone='UTC')",
+     "volume": "Float64"
+    },
+    "sesji": 1813,
+    "sha256": "636669c5ce08495befea8710fc4c6afc875267fe7876f9be744ebcc21b037b26",
+    "symboli": 1,
+    "wierszy": 967314,
+    "wspolczynnikow_splitu": 2
+   },
+   "k6/googl_1m.parquet": {
+    "bajtow": 17004942,
+    "do": "2026-07-29",
+    "kolumn": 10,
+    "od": "2019-05-06",
+    "schemat": {
+     "close": "Float64",
+     "high": "Float64",
+     "low": "Float64",
+     "open": "Float64",
+     "segment": "String",
+     "split_factor": "Float64",
+     "symbol": "String",
+     "trade_date": "Date",
+     "ts_utc": "Datetime(time_unit='ns', time_zone='UTC')",
+     "volume": "Float64"
+    },
+    "sesji": 1813,
+    "sha256": "49876dc19e8fcc1b172abbec8dd55cfd057d1163694bf5479be64d558a7ce70d",
+    "symboli": 1,
+    "wierszy": 1233348,
+    "wspolczynnikow_splitu": 2
+   },
+   "k6/meta_1m.parquet": {
+    "bajtow": 17448374,
+    "do": "2026-07-29",
+    "kolumn": 10,
+    "od": "2019-05-06",
+    "schemat": {
+     "close": "Float64",
+     "high": "Float64",
+     "low": "Float64",
+     "open": "Float64",
+     "segment": "String",
+     "split_factor": "Float64",
+     "symbol": "String",
+     "trade_date": "Date",
+     "ts_utc": "Datetime(time_unit='ns', time_zone='UTC')",
+     "volume": "Float64"
+    },
+    "sesji": 1813,
+    "sha256": "92d3088cb0e335579827b999f90d6c8a7260ba4369bcc33c64f74abe28217311",
+    "symboli": 1,
+    "wierszy": 1271204,
+    "wspolczynnikow_splitu": 1
+   },
+   "k6/msft_1m.parquet": {
+    "bajtow": 17357701,
+    "do": "2026-07-29",
+    "kolumn": 10,
+    "od": "2019-05-06",
+    "schemat": {
+     "close": "Float64",
+     "high": "Float64",
+     "low": "Float64",
+     "open": "Float64",
+     "segment": "String",
+     "split_factor": "Float64",
+     "symbol": "String",
+     "trade_date": "Date",
+     "ts_utc": "Datetime(time_unit='ns', time_zone='UTC')",
+     "volume": "Float64"
+    },
+    "sesji": 1813,
+    "sha256": "1602751f5010a876a688c5ff949eaad97ec4111abaf503ebf5e1560fb4951d81",
+    "symboli": 1,
+    "wierszy": 1315916,
+    "wspolczynnikow_splitu": 1
+   },
+   "k6/nvda_1m.parquet": {
+    "bajtow": 20426597,
+    "do": "2026-07-29",
+    "kolumn": 10,
+    "od": "2019-05-06",
+    "schemat": {
+     "close": "Float64",
+     "high": "Float64",
+     "low": "Float64",
+     "open": "Float64",
+     "segment": "String",
+     "split_factor": "Float64",
+     "symbol": "String",
+     "trade_date": "Date",
+     "ts_utc": "Datetime(time_unit='ns', time_zone='UTC')",
+     "volume": "Float64"
+    },
+    "sesji": 1813,
+    "sha256": "76770b345cbafb3cd90537926f0084d329ea775dd736591b55408a9f963a1199",
+    "symboli": 1,
+    "wierszy": 1442896,
+    "wspolczynnikow_splitu": 3
+   },
+   "k6/qqq_1m.parquet": {
+    "bajtow": 19720058,
+    "do": "2026-07-29",
+    "kolumn": 10,
+    "od": "2019-05-06",
+    "schemat": {
+     "close": "Float64",
+     "high": "Float64",
+     "low": "Float64",
+     "open": "Float64",
+     "segment": "String",
+     "split_factor": "Float64",
+     "symbol": "String",
+     "trade_date": "Date",
+     "ts_utc": "Datetime(time_unit='ns', time_zone='UTC')",
+     "volume": "Float64"
+    },
+    "sesji": 1813,
+    "sha256": "6d3c4ea8bdf3b916ae71b3a2d0647e23b8e377e603bd0fc2868e83c7e7f496e3",
+    "symboli": 1,
+    "wierszy": 1484206,
+    "wspolczynnikow_splitu": 1
+   },
+   "k6/soxx_1m.parquet": {
+    "bajtow": 11723323,
+    "do": "2026-07-29",
+    "kolumn": 10,
+    "od": "2019-05-06",
+    "schemat": {
+     "close": "Float64",
+     "high": "Float64",
+     "low": "Float64",
+     "open": "Float64",
+     "segment": "String",
+     "split_factor": "Float64",
+     "symbol": "String",
+     "trade_date": "Date",
+     "ts_utc": "Datetime(time_unit='ns', time_zone='UTC')",
+     "volume": "Float64"
+    },
+    "sesji": 1813,
+    "sha256": "28d8845fb93a8e8932d70687768b7fcf9d58906a2b65883ea98dd7248b4655a5",
+    "symboli": 1,
+    "wierszy": 831295,
+    "wspolczynnikow_splitu": 2
+   },
+   "k6/tsla_1m.parquet": {
+    "bajtow": 23352437,
+    "do": "2026-07-29",
+    "kolumn": 10,
+    "od": "2019-05-06",
+    "schemat": {
+     "close": "Float64",
+     "high": "Float64",
+     "low": "Float64",
+     "open": "Float64",
+     "segment": "String",
+     "split_factor": "Float64",
+     "symbol": "String",
+     "trade_date": "Date",
+     "ts_utc": "Datetime(time_unit='ns', time_zone='UTC')",
+     "volume": "Float64"
+    },
+    "sesji": 1813,
+    "sha256": "7c9041716f964f754a609ceb2615451c12e468d1f230f791797db60c54242597",
+    "symboli": 1,
+    "wierszy": 1591684,
+    "wspolczynnikow_splitu": 3
+   },
+   "mnq_1m_cont.parquet": {
+    "bajtow": 35194431,
+    "do": "2026-07-31",
+    "kolumn": 17,
+    "kontraktow": 30,
+    "od": "2019-05-06",
+    "schemat": {
+     "close": "Float64",
+     "contract": "String",
+     "data_condition": "String",
+     "days_to_roll": "Int64",
+     "dst_transition": "Boolean",
+     "gap_kind": "String",
+     "halt_window": "Boolean",
+     "high": "Float64",
+     "low": "Float64",
+     "open": "Float64",
+     "px_adj": "Float64",
+     "px_raw": "Float64",
+     "segment": "String",
+     "short_day": "Boolean",
+     "trade_date": "Date",
+     "ts_utc": "Datetime(time_unit='ns', time_zone='UTC')",
+     "volume": "UInt64"
+    },
+    "sesji": 1873,
+    "sha256": "7b9be5aa8cccb1e0debfcf8291bfd1c4c6a12138e723c074fdd4ffb31400f4c2",
+    "wierszy": 2551265
+   },
+   "nq_1m_cont.parquet": {
+    "bajtow": 35400341,
+    "do": "2026-07-31",
+    "kolumn": 17,
+    "kontraktow": 30,
+    "od": "2019-04-15",
+    "schemat": {
+     "close": "Float64",
+     "contract": "String",
+     "data_condition": "String",
+     "days_to_roll": "Int64",
+     "dst_transition": "Boolean",
+     "gap_kind": "String",
+     "halt_window": "Boolean",
+     "high": "Float64",
+     "low": "Float64",
+     "open": "Float64",
+     "px_adj": "Float64",
+     "px_raw": "Float64",
+     "segment": "String",
+     "short_day": "Boolean",
+     "trade_date": "Date",
+     "ts_utc": "Datetime(time_unit='ns', time_zone='UTC')",
+     "volume": "UInt64"
+    },
+    "sesji": 1887,
+    "sha256": "fd2d18d5c9acd5f640009ac41b60099a6f25150c2546ec038e86532f38ec0550",
+    "wierszy": 2573758
+   }
+  }
+ },
+ "hash_danych": "cf16e23b8521192448902eaf2bc61498ad8b4f13b375d65de1305e7909d5a2c5",
+ "hash_wynikow": "6a082749e0a5128b996907d630a3c4001f856223e9b9a00ed5ec024c43da11c7",
+ "metryki": {
+  "bramki": {
+   "koncentracja": false,
+   "profit_factor": true,
+   "sharpe": true
+  },
+  "dd_z_equity": [
+   150.0,
+   3
+  ],
+  "expectancy_r": 0.4,
+  "koncentracja_top5": 1.7,
+  "mar": 67.2,
+  "mdd": 150.0,
+  "n": 15,
+  "payoff": 1.6826923077,
+  "profit_factor": 1.9230769231,
+  "sharpe": 4.4364409574,
+  "sharpe_lo": 12.7728034773,
+  "sortino": 9.8370727353,
+  "sqn": 1.0823807635,
+  "win_rate": 0.5333333333
+ },
+ "precyzja": 10,
+ "raporty": {
+  "hashe": {
+   "B00_benchmarks.md": "5f464a9e1aa25b12ce1685c816fe1d8d5f3248e2204a90e84697965ed1a16cac",
+   "W001_overnight_drift.md": "0f956c3e8ffd3f10e857929a3e5db76d4b39a5a4f3b56f28dafa4f68fd095b29",
+   "W004_partia1_preflight.md": "256f0e90562b285e66c8fabb51f9f4543c0dc29de059c2b8bd59f0c7e96b20ac",
+   "W006_H014_preflight.md": "a25462ee80c4b6511e8cd51ea2bfafc55f72fb671acd82b78527de7f5e0e26f9",
+   "W007_wrazliwosci_walidacja.md": "20d8b873dbbb0944be62f6a7740e528b9b6656499a6b0e60731a43de09754853",
+   "W008_detektor_kontrola.md": "293566514ddb2c18166b415a5e5e3feaf36e16fdd77f2a90e9eae78ac8c8ac78",
+   "W009_H013_preflight.md": "de8631f4935052ad8fe3f69e094651a4f268fdeb5f1f41b97dd6e3e4386edcc3",
+   "W010_partia3_preflight.md": "90c58d55e1f43ce219f36c945e7522ac8b5496b90e817e13e9e48e89f8a20782",
+   "W011_model_nocny_oos.md": "12f7e104e9d1692d0155072b5d15d3a28908742c6a140290d47c2922bb4313ff",
+   "W012_H013_przekroje.md": "82a4bf904582c9104274d99193a335781706bc5b94e6f5654910b47d4efdcd5c",
+   "W013_H003_preflight.md": "36d5fe8322f0d643341a5399b0c3e548ee19390e99e5cc11e6afa5edb14de707",
+   "data_quality_es.md": "7699c950167d4bb23a1e00e981c6c272e637cddf82ce9d7386a163c739fbfad9",
+   "data_quality_mnq.md": "377461d8868cff358033cace69297bbf1f12dc24fc42ab26ea7b5e4762b22b3b",
+   "data_quality_nq.md": "7e1ed7dc052bfef0be81392b29f2a94a96495e8ad9b66c166509ead97fb25aea",
+   "earnings_calendar.md": "095b6594842fe8a532b99a19e5033bf40487b8c10604049181615d96a31d7996",
+   "engine_gate.md": "0787ba71202841a802645d03234d985b438fb418c0519e7deb1dca51a65cceac",
+   "k6_data_quality.md": "80ee89338a63017c263f7039c97e30f11e5d39a6698a2ffeb035aaf6667b867b",
+   "macro_calendar.md": "ef6abdfc44a63e051f221e037f5a867d37a355f2d3c83066f95fa4f59608b8c1"
+  },
+  "metryki": {
+   "W009_korelacja_10_30": 0.0808,
+   "W010_h001_beta_wolumen_t": -0.1,
+   "W010_h002_pochodzenie_t": 2.21,
+   "W011_obciazenie_zdarzenia": 3.05,
+   "W011_oos_r2_pelny": 0.9753,
+   "W013_ablacja_iloraz": -3.0,
+   "W013_ablacja_wielkosc": 5.1,
+   "W013_beta_ranga_t": -0.6
+  }
+ },
+ "rejestr": {
+  "kart_odrzuconych": 8,
+  "licznik_prob": 0,
+  "statusy_kart": {
+   "H001": "REJECTED pre-flightH001 → B02",
+   "H002": "REJECTED pre-flightH002",
+   "H003": "REJECTED pre-flightH003",
+   "H004": "IDEA warunkowa",
+   "H005": "REJECTED pre-flight",
+   "H010": "REJECTED w tej roli pre-flight",
+   "H011": "REJECTED pre-flight",
+   "H013": "REJECTED pre-flightH013",
+   "H014": "REJECTED pre-flightH014",
+   "H016": "IDEA warunkowaH016"
+  }
+ },
+ "schema_version": 1,
+ "silnik": {
+  "deterministyczny": true,
+  "przypadki": [
+   {
+    "barow_spornych": 0,
+    "equity_koncowe": 10.0,
+    "nazwa": "long_market_bez_kosztow",
+    "odrzuconych_zlecen": 0,
+    "transakcja": {
+     "cena_wejscia": 100.0,
+     "cena_wyjscia": 105.0,
+     "pnl_punkty": 5.0,
+     "pnl_usd_brutto": 10.0,
+     "pnl_usd_netto": 10.0,
+     "powod_wyjscia": "take_profit",
+     "prowizja_usd": 0.0,
+     "r_multiple": 0.5,
+     "strona": "long",
+     "ts_wejscia": "2024-03-05T15:01:00+00:00",
+     "ts_wyjscia": "2024-03-05T15:02:00+00:00"
+    },
+    "transakcji": 1,
+    "wygaslych_zlecen": 0,
+    "zablokowanych_zerowym_wolumenem": 0
+   },
+   {
+    "barow_spornych": 0,
+    "equity_koncowe": 10.0,
+    "nazwa": "short_market_bez_kosztow",
+    "odrzuconych_zlecen": 0,
+    "transakcja": {
+     "cena_wejscia": 100.0,
+     "cena_wyjscia": 95.0,
+     "pnl_punkty": 5.0,
+     "pnl_usd_brutto": 10.0,
+     "pnl_usd_netto": 10.0,
+     "powod_wyjscia": "take_profit",
+     "prowizja_usd": 0.0,
+     "r_multiple": 0.5,
+     "strona": "short",
+     "ts_wejscia": "2024-03-05T15:01:00+00:00",
+     "ts_wyjscia": "2024-03-05T15:02:00+00:00"
+    },
+    "transakcji": 1,
+    "wygaslych_zlecen": 0,
+    "zablokowanych_zerowym_wolumenem": 0
+   },
+   {
+    "barow_spornych": 1,
+    "equity_koncowe": -10.0,
+    "nazwa": "sporny_bar_sl_wins",
+    "odrzuconych_zlecen": 0,
+    "transakcja": {
+     "cena_wejscia": 100.0,
+     "cena_wyjscia": 95.0,
+     "pnl_punkty": -5.0,
+     "pnl_usd_brutto": -10.0,
+     "pnl_usd_netto": -10.0,
+     "powod_wyjscia": "stop_loss",
+     "prowizja_usd": 0.0,
+     "r_multiple": -1.0,
+     "strona": "long",
+     "ts_wejscia": "2024-03-05T15:01:00+00:00",
+     "ts_wyjscia": "2024-03-05T15:02:00+00:00"
+    },
+    "transakcji": 1,
+    "wygaslych_zlecen": 0,
+    "zablokowanych_zerowym_wolumenem": 0
+   },
+   {
+    "barow_spornych": 1,
+    "equity_koncowe": 10.0,
+    "nazwa": "sporny_bar_tp_wins",
+    "odrzuconych_zlecen": 0,
+    "transakcja": {
+     "cena_wejscia": 100.0,
+     "cena_wyjscia": 105.0,
+     "pnl_punkty": 5.0,
+     "pnl_usd_brutto": 10.0,
+     "pnl_usd_netto": 10.0,
+     "powod_wyjscia": "take_profit",
+     "prowizja_usd": 0.0,
+     "r_multiple": 1.0,
+     "strona": "long",
+     "ts_wejscia": "2024-03-05T15:01:00+00:00",
+     "ts_wyjscia": "2024-03-05T15:02:00+00:00"
+    },
+    "transakcji": 1,
+    "wygaslych_zlecen": 0,
+    "zablokowanych_zerowym_wolumenem": 0
+   },
+   {
+    "barow_spornych": 0,
+    "equity_koncowe": -40.0,
+    "nazwa": "stop_przeskoczony_luka",
+    "odrzuconych_zlecen": 0,
+    "transakcja": {
+     "cena_wejscia": 100.0,
+     "cena_wyjscia": 80.0,
+     "pnl_punkty": -20.0,
+     "pnl_usd_brutto": -40.0,
+     "pnl_usd_netto": -40.0,
+     "powod_wyjscia": "stop_gap",
+     "prowizja_usd": 0.0,
+     "r_multiple": -4.0,
+     "strona": "long",
+     "ts_wejscia": "2024-03-05T15:01:00+00:00",
+     "ts_wyjscia": "2024-03-05T15:02:00+00:00"
+    },
+    "transakcji": 1,
+    "wygaslych_zlecen": 0,
+    "zablokowanych_zerowym_wolumenem": 0
+   },
+   {
+    "barow_spornych": 0,
+    "equity_koncowe": 0.0,
+    "nazwa": "zerowy_wolumen_blokuje_wejscie",
+    "odrzuconych_zlecen": 0,
+    "transakcja": null,
+    "transakcji": 0,
+    "wygaslych_zlecen": 0,
+    "zablokowanych_zerowym_wolumenem": 1
+   },
+   {
+    "barow_spornych": 0,
+    "equity_koncowe": 8.3,
+    "nazwa": "koszty_domyslne",
+    "odrzuconych_zlecen": 0,
+    "transakcja": {
+     "cena_wejscia": 100.25,
+     "cena_wyjscia": 105.0,
+     "pnl_punkty": 4.75,
+     "pnl_usd_brutto": 9.5,
+     "pnl_usd_netto": 8.3,
+     "powod_wyjscia": "take_profit",
+     "prowizja_usd": 1.2,
+     "r_multiple": 0.4634146341,
+     "strona": "long",
+     "ts_wejscia": "2024-03-05T15:01:00+00:00",
+     "ts_wyjscia": "2024-03-05T15:02:00+00:00"
+    },
+    "transakcji": 1,
+    "wygaslych_zlecen": 0,
+    "zablokowanych_zerowym_wolumenem": 0
+   },
+   {
+    "barow_spornych": 0,
+    "equity_koncowe": 0.0,
+    "nazwa": "limit_wymaga_penetracji",
+    "odrzuconych_zlecen": 0,
+    "transakcja": null,
+    "transakcji": 0,
+    "wygaslych_zlecen": 0,
+    "zablokowanych_zerowym_wolumenem": 0
+   }
+  ],
+  "sesje": {
+   "przejscie_na_letni": {
+    "segment": "europe",
+    "trade_date": "2024-03-10"
+   },
+   "przejscie_na_zimowy": {
+    "segment": "asia",
+    "trade_date": "2024-11-03"
+   },
+   "rth_open_lato": {
+    "segment": "rth_open",
+    "trade_date": "2024-07-05"
+   },
+   "rth_open_zima": {
+    "segment": "rth_open",
+    "trade_date": "2024-03-05"
+   },
+   "wigilia": {
+    "segment": "afternoon",
+    "trade_date": "2024-12-24"
+   },
+   "zwykly_wieczor": {
+    "segment": "globex_open",
+    "trade_date": "2024-03-06"
+   }
+  }
+ },
+ "walidacja": {
+  "cpcv": {
+   "granice_blokow": [
+    [
+     0,
+     100
+    ],
+    [
+     100,
+     200
+    ],
+    [
+     200,
+     300
+    ],
+    [
+     300,
+     400
+    ],
+    [
+     400,
+     500
+    ],
+    [
+     500,
+     600
+    ]
+   ],
+   "oczekiwanych": 15,
+   "purge_zawsze_niepusty": true,
+   "sciezek": 15,
+   "test_i_trening_rozlaczne": true
+  },
+  "dsr": {
+   "sr0.8_T1500_neff1": 0.9744066832,
+   "sr0.8_T1500_neff10": 0.6468525932,
+   "sr0.8_T1500_neff30": 0.4516575967,
+   "sr0.8_T1500_neff5": 0.775915651,
+   "sr1.0_T1500_neff1": 0.9925853419,
+   "sr1.0_T1500_neff10": 0.8062079017,
+   "sr1.0_T1500_neff30": 0.6427700574,
+   "sr1.0_T1500_neff5": 0.8935269814,
+   "sr1.2_T1500_neff1": 0.9982641221,
+   "sr1.2_T1500_neff10": 0.911607842,
+   "sr1.2_T1500_neff30": 0.8031164602,
+   "sr1.2_T1500_neff5": 0.9583681285,
+   "sr1.5_T1500_neff1": 0.9998690157,
+   "sr1.5_T1500_neff10": 0.9812232342,
+   "sr1.5_T1500_neff30": 0.9431953494,
+   "sr1.5_T1500_neff5": 0.9930671164
+  },
+  "dsr_dni_do_certyfikacji": {
+   "sr0.8_neff1": 1068,
+   "sr1.0_neff1": 685,
+   "sr1.2_neff1": 476,
+   "sr1.5_neff1": 306
+  },
+  "mde_n400": 0.1680951131,
+  "mnoznik_warunkowy": {
+   "f0.1": 3.1622776602,
+   "f0.25": 2.0,
+   "f0.5": 1.4142135624,
+   "f1.0": 1.0
+  },
+  "moc_testu": {
+   "moc50": 385,
+   "moc80": 785,
+   "moc90": 1051
+  },
+  "montecarlo": {
+   "blokowy_szerszy_niz_iid": true,
+   "bootstrap_blokowy": {
+    "dol": 0.0605453497,
+    "gora": 0.0966429964,
+    "punkt": 0.0776170064,
+    "szerokosc": 0.0360976467
+   },
+   "bootstrap_iid": {
+    "dol": 0.0706935598,
+    "gora": 0.0844216282,
+    "szerokosc": 0.0137280684
+   },
+   "mdd_obserwowany": 0.8879431216,
+   "mdd_p95": 0.3621486935,
+   "p_syntetykow": 0.0709290709
+  },
+  "pbo": {
+   "szum": 0.7285714286,
+   "z_przewaga": 0.0
+  },
+  "spa": {
+   "szum_arch": {
+    "implementacja": "arch",
+    "najlepszy_wariant": 3,
+    "p": 0.898,
+    "sredni_wynik": 0.0855455149
+   },
+   "szum_fallback": {
+    "implementacja": "fallback_stationary_bootstrap",
+    "najlepszy_wariant": 3,
+    "p": 0.3033932136,
+    "sredni_wynik": 0.0855455149
+   },
+   "z_przewaga_arch": {
+    "implementacja": "arch",
+    "najlepszy_wariant": 0,
+    "p": 0.898,
+    "sredni_wynik": 0.2691729328
+   },
+   "z_przewaga_fallback": {
+    "implementacja": "fallback_stationary_bootstrap",
+    "najlepszy_wariant": 0,
+    "p": 0.001996008,
+    "sredni_wynik": 0.2691729328
+   }
+  },
+  "walkforward": {
+   "embargo_intraday_s": 90000,
+   "embargo_swing_s": 864000,
+   "lockbox_od": "2026-01-31",
+   "okien": 23,
+   "oos_dni_lacznie": 2101,
+   "purge_pierwszego_okna_dni": 1
+  }
+ }
+}
