@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import csv
 import gzip
+import hashlib
 import json
 import os
 import re
@@ -40,6 +41,7 @@ from engine.macro import (  # noqa: E402
 
 WYJSCIE = Path("data/clean/macro_events.csv")
 RAPORT = Path("reports/macro_calendar.md")
+MANIFEST = Path("data/manifest_macro.md")
 CACHE = Path("data/raw/macro_strony.json")
 MNQ = Path("data/clean/mnq_1m_cont.parquet")
 
@@ -121,6 +123,41 @@ def sesje_mnq() -> tuple[frozenset[date], frozenset[date]]:
     return wszystkie, krotkie
 
 
+#: Okna wymagane przez karte H003 (sekcja 0.2), w minutach wzgledem publikacji.
+OKNO_ROWNOWAGI, OKNO_IMPULSU, OKNO_OUTCOME = (-60, 0), (0, 5), (5, 25)
+#: Ile procent minut okna musi miec bar, zeby zdarzenie uznac za mierzalne.
+#: Bar powstaje tylko wtedy, gdy byla transakcja, wiec 100% bylo by za ostre;
+#: 80% wyklucza okna, w ktorych zakres rownowagi liczylby sie z kilku wydrukow.
+POKRYCIE_MIN = 0.80
+
+
+def dostepnosc_barow(zdarzenia: list[Zdarzenie]) -> dict[tuple[str, date], tuple[int, int, int]]:
+    """Liczba barow MNQ w trzech oknach kazdego zdarzenia.
+
+    KRYTERIUM UZYTECZNOSCI KARTY, zastepujace warunek istnienia sesji RTH.
+    Karta dla publikacji BLS dziala miedzy 07:30 a 08:55 ET i sesji kasowej
+    nie potrzebuje. Zmierzone: CME otwiera skrocona sesje Globex w Wielki
+    Piatek, gdy wypada NFP — trzy takie publikacje maja komplet barow, a filtr
+    RTH wyrzucal je bez powodu.
+    """
+    d = (pl.scan_parquet(MNQ)
+         .with_columns(pl.col("ts_utc").dt.convert_time_zone("America/New_York")
+                       .alias("et")).collect())
+    znaczniki = d["et"].to_list()
+    import bisect
+    posort = znaczniki  # parquet jest juz posortowany po ts_utc
+    out: dict[tuple[str, date], tuple[int, int, int]] = {}
+    for z in zdarzenia:
+        t = z.planowany_et
+        okna = []
+        for a, b in (OKNO_ROWNOWAGI, OKNO_IMPULSU, OKNO_OUTCOME):
+            lo = bisect.bisect_left(posort, t + timedelta(minutes=a))
+            hi = bisect.bisect_left(posort, t + timedelta(minutes=b))
+            okna.append(hi - lo)
+        out[(z.typ, z.data)] = (okna[0], okna[1], okna[2])
+    return out
+
+
 def zbierz_bls() -> list[Zdarzenie]:
     out: list[Zdarzenie] = []
     for rok in LATA:
@@ -166,7 +203,7 @@ def zbierz_fomc() -> tuple[list[Zdarzenie], list[Zdarzenie]]:
             drugi_etap_et=(znacznik + timedelta(minutes=OPOZNIENIE_KONFERENCJI)
                            if ma_konf else None),
             okres=d.isoformat(),
-            uwagi="" if d in planowe else "dzialanie nadzwyczajne (poza harmonogramem)",
+            uwagi="" if d in planowe else "poza planowym posiedzeniem",
         )
         (zwykle if d in planowe else nadzwyczajne).append(z)
     return zwykle, nadzwyczajne
@@ -195,23 +232,36 @@ def main() -> int:
     ]
     gotowe.sort(key=lambda z: (z.planowany_et, z.typ))
 
-    bez_sesji = [z for z in gotowe if z.sesja_reakcji is None]
-    podstawowe = [z for z in gotowe if z.sesja_reakcji is not None
-                  and "nadzwyczajne" not in z.uwagi]
+    dost = dostepnosc_barow(gotowe)
+    WYM = (int(60 * POKRYCIE_MIN), int(5 * POKRYCIE_MIN), int(20 * POKRYCIE_MIN))
+
+    def mierzalne(z: Zdarzenie) -> bool:
+        n = dost[(z.typ, z.data)]
+        return all(a >= b for a, b in zip(n, WYM, strict=True))
+
+    bez_sesji = [z for z in gotowe if not mierzalne(z)]
+    podstawowe = [z for z in gotowe
+                  if "poza planowym" not in z.uwagi and mierzalne(z)]
     krotkie_zd = [z for z in podstawowe if "skrocony" in z.uwagi]
 
     WYJSCIE.parent.mkdir(parents=True, exist_ok=True)
     with WYJSCIE.open("w", newline="", encoding="utf-8") as f:
         w = csv.writer(f)
-        w.writerow(["event_type", "scheduled_timestamp_et", "actual_date", "source",
-                    "session_date", "has_second_stage", "second_stage_timestamp_et",
+        w.writerow(["event_type", "scheduled_timestamp_et", "scheduled_timestamp_utc",
+                    "actual_date", "source", "session_date", "has_second_stage",
+                    "second_stage_timestamp_et", "second_stage_timestamp_utc",
+                    "bars_pre", "bars_impulse", "bars_outcome", "bars_ok",
                     "reference_period", "notes"])
         for z in gotowe:
             w.writerow([
-                z.typ, z.planowany_et.strftime("%Y-%m-%d %H:%M:%S"), z.data.isoformat(),
-                z.zrodlo, z.sesja_reakcji.isoformat() if z.sesja_reakcji else "",
+                z.typ, z.planowany_et.isoformat(),
+                z.planowany_et.astimezone(UTC).isoformat(),
+                z.data.isoformat(), z.zrodlo,
+                z.sesja_reakcji.isoformat() if z.sesja_reakcji else "",
                 "tak" if z.ma_drugi_etap else "nie",
-                z.drugi_etap_et.strftime("%Y-%m-%d %H:%M:%S") if z.drugi_etap_et else "",
+                z.drugi_etap_et.isoformat() if z.drugi_etap_et else "",
+                z.drugi_etap_et.astimezone(UTC).isoformat() if z.drugi_etap_et else "",
+                *dost[(z.typ, z.data)], "tak" if mierzalne(z) else "nie",
                 z.okres, z.uwagi,
             ])
 
@@ -335,6 +385,33 @@ def main() -> int:
     ]
     RAPORT.parent.mkdir(parents=True, exist_ok=True)
     RAPORT.write_text("\n".join(L) + "\n", encoding="utf-8")
+
+    # Manifest zrodel. Strony BLS i Fedu sa zmienne w czasie, wiec sam CSV nie
+    # wystarcza do odtworzenia — trzeba wiedziec, z jakiego snapshotu powstal.
+    M = [
+        "# Manifest kalendarza makro",
+        "",
+        f"*Pobrane {datetime.now(UTC).strftime('%Y-%m-%d %H:%M UTC')}.*",
+        "",
+        f"Wynik: `{WYJSCIE}`, SHA-256 "
+        f"`{hashlib.sha256(WYJSCIE.read_bytes()).hexdigest()}`",
+        "",
+        "| Zrodlo | Bajtow | SHA-256 |",
+        "|---|---|---|",
+    ]
+    for url in sorted(_cache):
+        tresc = _cache[url].encode("utf-8")
+        M.append(f"| `{url}` | {len(tresc)} | `{hashlib.sha256(tresc).hexdigest()[:32]}…` |")
+    M += [
+        "",
+        "Strony puste (HTTP 404) sa w tabeli celowo — brak strony historycznej dla",
+        "danego roku jest informacja o strukturze zrodla, nie bledem.",
+        "",
+        f"Odtworzenie: `python3 {Path(__file__).name if False else 'scripts/build_macro.py'}`",
+    ]
+    MANIFEST.parent.mkdir(parents=True, exist_ok=True)
+    MANIFEST.write_text("\n".join(M) + "\n", encoding="utf-8")
+    print(f"-> {MANIFEST}")
 
     print(f"-> {WYJSCIE} ({len(gotowe)} zdarzen, {len(podstawowe)} w probie podstawowej)")
     print(f"-> {RAPORT}")

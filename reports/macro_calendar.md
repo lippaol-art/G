@@ -2,7 +2,7 @@
 
 *Wygenerowane przez `scripts/build_macro.py`, 2026-08-02. Zakres 2019-05-06 → 2026-07-30.*
 
-**310 zdarzen w probie podstawowej** (321 w kalendarzu lacznie).
+**312 zdarzen w probie podstawowej** (321 w kalendarzu lacznie).
 
 Zrodla urzedowe i darmowe; **godzina pochodzi z dokumentu, nie z konwencji**.
 Harmonogram BLS podaje ja w osobnej kolumnie, strona komunikatu FOMC we frazie
@@ -13,26 +13,26 @@ Harmonogram BLS podaje ja w osobnej kolumnie, strona komunikatu FOMC we frazie
 | Typ | N | Oczekiwane | Zrodlo |
 |---|---|---|---|
 | CPI | 85 | 87 | BLS |
-| PPI | 86 | 87 | BLS |
-| NFP | 82 | 87 | BLS |
+| PPI | 85 | 87 | BLS |
+| NFP | 85 | 87 | BLS |
 | FOMC (komunikat) | 57 | 58 | Federal Reserve |
 
 | Rok | CPI | PPI | NFP | FOMC |
 |---|---|---|---|---|
 | 2019 | 8 | 8 | 7 | 5 |
-| 2020 | 11 | 12 | 12 | 7 |
-| 2021 | 12 | 12 | 11 | 8 |
+| 2020 | 11 | 11 | 12 | 7 |
+| 2021 | 12 | 12 | 12 | 8 |
 | 2022 | 12 | 12 | 12 | 8 |
-| 2023 | 12 | 12 | 11 | 8 |
+| 2023 | 12 | 12 | 12 | 8 |
 | 2024 | 12 | 12 | 12 | 8 |
 | 2025 | 11 | 10 | 11 | 8 |
-| 2026 | 7 | 8 | 6 | 5 |
+| 2026 | 7 | 8 | 7 | 5 |
 
 ## 2. Godziny publikacji
 
 | Godzina ET | N |
 |---|---|
-| 08:30 | 253 |
+| 08:30 | 255 |
 | 14:00 | 57 |
 
 Stalosc godzin jest **kontrola strefy czasowej**: publikacje maja stala godzine
@@ -75,18 +75,16 @@ Rozroznienie bierzemy z listy posiedzen na kalendarzu Fedu.
 | Kontrola | Wynik |
 |---|---|
 | Duplikaty (typ, data) | 0 |
-| Zdarzenia w dniu bez sesji | 5 |
+| Zdarzenia w dniu bez sesji | 3 |
 | Kolizje: dwie publikacje tego samego dnia i o tej samej godzinie | 0 |
 | Godziny inne niz 08:30 / 14:00 | 0 |
 | Zdarzenia w dniu SKROCONYM (zostaja w probie, oznaczone) | 1 |
 
 Zdarzenia w dniu bez sesji (raportowane, nie usuwane):
 
+- PPI 2020-03-12 08:30 ET
 - FOMC 2020-03-15 17:00 ET
 - CPI 2020-04-10 08:30 ET
-- NFP 2021-04-02 08:30 ET
-- NFP 2023-04-07 08:30 ET
-- NFP 2026-04-03 08:30 ET
 
 ---
 
