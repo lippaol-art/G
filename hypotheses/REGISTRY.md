@@ -46,9 +46,29 @@ obronić, karta schodzi do benchmarków — decyzja zapada na papierze, zanim sp
 
 | ID | Karta | Benchmark | Wymagana różnica mechanizmu | Status | Warianty |
 |----|-------|-----------|----------------------------|--------|----------|
-| H001 | Kompresja nocna: przyczyna, nie fakt | B02 + ORB | Kompresja z braku uczestników vs z równowagi sił (wolumen przy wąskim zakresie) | IDEA | 0/8 |
-| H002 | Powrót do VWAP: kto stoi po drugiej stronie | „lunch VWAP fade" | Struktura wolumenu, która wytworzyła odchylenie — szum egzekucyjny vs informacja | IDEA | 0/6 |
-| H003 | Reakcja na publikację: odwrócenie vs kontynuacja | „fade the news" | Relacja impulsu do struktury płynności sprzed publikacji, nie wielkość impulsu | IDEA | 0/6 |
+| H001 | Kompresja nocna: przyczyna, nie fakt | B02 + ORB | Wolumen przy zadanym zakresie | **[REJECTED (pre-flight)](H001.md)** → B02 | **0/8** |
+| H002 | Powrót do VWAP: gdzie odchylenie powstało | „lunch VWAP fade" | Moment powstania odchylenia, nie jego wielkość | **[REJECTED (pre-flight)](H002.md)** | **0/6** |
+| H003 | Reakcja na publikację: impuls wobec równowagi | „fade the news" | Iloraz impulsu do zakresu przedpublikacyjnego, nie wielkość impulsu | [IDEA — zablokowana](H003.md) brakiem kalendarza makro | 0/6 |
+
+### Partia 3 — pre-flight W010 (02.08.2026)
+
+Pełny raport: [`reports/W010_partia3_preflight.md`](../reports/W010_partia3_preflight.md).
+**Zużyte próby: 0 z budżetu 14.**
+
+| Karta | Powód odrzucenia |
+|-------|------------------|
+| **H001** | Przesłanka fałszywa. Po kontroli dokładnego zakresu wolumen nie wnosi nic o charakterze sesji (β₂, t = **−0.10**); różnica efficiency ratio między dwoma kompresjami t = +0.91. Rozstrzygnęła regresja ciągła, dodana po przeglądzie kodu — podział kubełkowy dałoby się tłumaczyć małą grupą. |
+| **H002** | **Odrzucona własnym falsyfikatorem 2** („działa tylko jeden koniec skali"). Koniec odziedziczony nie kontynuuje (t = −0.16). Przy tym karta przeszła cztery kontrole, w tym ablację, której się bała: pochodzenie odchylenia rozdziela powroty (t = +2.21), a prosty wolumen nie (t = +0.29). Zabił ją brak przełożenia na zwrot: t = +0.69 przy **symetrycznych MFE/MAE** (+0.506% / −0.506%). |
+
+**H002 była najbliżej ze wszystkich dotąd badanych kart** i to jest informacja
+sama w sobie: przeszła więcej kontroli niż jakakolwiek wcześniejsza, a i tak nie
+miała przewagi handlowej. Pochodzenie odchylenia zostaje jako kandydat na wejście
+do **wielkości pozycji** lub warstwę reżimową — tak jak H010 po W004.
+
+**W skrypcie W010 znaleziono sześć usterek przed pierwszym uruchomieniem**, w tym
+błąd czasowy dający cenę wyjścia sprzed sygnału i błędnie liczoną σ_VWAP. Żadna
+nie rzucałaby wyjątku. Lista w docstringu modułu; σ_VWAP objęta testem
+regresyjnym wobec kanonicznej `engine.features.vwap_sigma`.
 | H004 | Dryf nocny — czy jeszcze istnieje | Cooper–Cliff–Gulen 2008 | **Blokada zdjęta przez W001.** Postać bezwarunkowa → B05. Postać warunkowa wymaga deklaracji *f* i progu **przed** testem | IDEA (warunkowa) | 0/4 |
 
 ### H004 — test wstępny WYKONANY (W001, 01.08.2026)
@@ -161,7 +181,7 @@ badamy" chroni przyszłe iteracje przed przypadkowym wejściem w tę pułapkę.
 | **0** ✅ | ~~Test dryfu nocnego~~ W001 + ~~benchmarki B01–B04~~ | **WYKONANA 01.08.2026.** W001 rozstrzygnął H004; B01–B04 zmierzone (`reports/B00_benchmarks.md`, liczby maszynowe w `reports/benchmarks.json`). Zero zużytych prób. |
 | **1** ✅ | ~~H011, H005, H010~~ | **ODRZUCONE W PRE-FLIGHT (W004).** Zero zużytych prób z budżetu 18. Żadna z trzech kart nie miała przesłanki mierzalnej w danych. |
 | **2** ✅ | ~~H014~~ (W006) · ~~H013~~ (W009) · H016 bez nosiciela | **ODRZUCONA W PRE-FLIGHT.** Zero zużytych prób z budżetu 20. Koszt danych $7.82. Klasa K6 wyczerpana w obecnym zakresie danych. |
-| **3** | H001, H002, H003 | **Następna w kolejce.** Po przejściu kroków 1–2 testu oryginalności. Część prawdopodobnie odpadnie do benchmarków. |
+| **3** ◐ | ~~H001~~ ~~H002~~ (W010) · H003 zablokowana | **Dwie z trzech odrzucone w pre-flight**, zero prób z budżetu 14. H003 wymaga kalendarza makro (BLS, Fed — darmowe, wymaga pipeline'u). Decyzja o jego budowie po tej partii. |
 
 ---
 
@@ -171,6 +191,7 @@ Fakty o rynku i o procesie odkryte przy okazji badań. Zasilają projektowanie k
 
 | ID | Wniosek | Źródło |
 |----|---------|--------|
+| **W010** | **Podział kubełkowy nie zastępuje kontroli ciągłej.** H001 dzieliła dolny tercyl zakresu medianą wolumenu i pytała, czy grupy różnią się charakterem sesji. Wewnątrz tercyla nadal są różnice zakresu, więc taki podział nie odpowiada na pytanie karty. Regresja `ER ~ percentyl_zakresu + percentyl_wolumenu` liczona wewnątrz kompresji dała jednoznaczne **t = −0.10** dla wolumenu. **Reguła: gdy karta twierdzi „X niesie informację przy kontrolowanym Y", pre-flight musi zawierać test, który Y kontroluje ciągle, a nie tylko kubełkiem.** Drugi wniosek z tej samej partii: **odsetek zdarzeń nie jest zwrotem** — H002 miała separację odsetka powrotów przeżywającą cztery kontrole i zerowy zwrot przy symetrycznych MFE/MAE. | W010 |
 | **W011** | **Model, którym odrzucamy kartę, musi być zwalidowany tak samo starannie jak model, którym byśmy ją przyjęli.** W007 walidował QQQ na zwrotach dziennych; W009 odrzucił H013 rezyduum z modelu NQ na zwrotach nocnych z ES i SOXX. To dwa różne estymatory, a jedyną podaną liczbą o jakości drugiego była statystyka **in-sample**. Osobna walidacja pokazała, że model nocny jest dobry (OOS R² 0.9753, γ = 1.013) — ale **wykryła obciążenie +3.05‱ w sesje zdarzeń**, przez które jedno z sześciu przewidywań zawiodło z powodu wewnętrznego dla modelu, nie własności rynku. Reguła: **przed zamknięciem karty waliduj dokładnie ten obiekt, który dał werdykt** — importowany, nie odtworzony. | W011 |
 | **W012** | **Zbiór zdarzeń zbudowany z rejestru wymaga jeszcze rozdzielenia RODZAJÓW zdarzeń.** Kalendarz EDGAR dał 261 poprawnych publikacji 8-K item 2.02, ale karta H013 była zaprojektowana na kwartalne wyniki po zamknięciu — a w zbiorze były też 29 komunikatów Tesli o produkcji i dostawach. Rozdzielenie **z treści komunikatów** (nigdy z reakcji ceny) jest tanie i daje kontrolę wewnętrzną: każda spółka wyszła po 28–30 raportów, TSLA rozpadła się na dokładnie 29 i 29. **Przekroje próbki nie są wariantami strategii i nie zużywają prób** — nie zmieniają reguły wejścia, tylko odpowiedź na pytanie, które zdarzenia są zdarzeniami tej karty. | W012 |
 | **W009** | **Odwrócenie znaku efektu w środku próbki jest mocniejszym dowodem braku mechanizmu niż koncentracja w jednym roku.** H005 zginęło na tym, że jeden rok dawał 52% wyniku. H013 zginęło na czymś gorszym: lata 2019–2022 dają średnio ujemny wynik, 2023–2026 dodatni — **efekt nie jest skoncentrowany, tylko zmienia kierunek**. Karta z koncentracją może mieć mechanizm działający w jednym reżimie; karta ze zmianą znaku nie ma mechanizmu wcale. Wniosek procesowy: **rozkład wyniku po latach raportujemy zawsze ze znakiem i udziałem, nie samą wartością bezwzględną** — inaczej te dwa różne tryby porażki są nieodróżnialne. Dodatkowo potwierdzone po raz drugi (po H014): **warunkowanie, które pogarsza wynik, obala przesłankę niezależnie od znaku efektu**. | W009 |
