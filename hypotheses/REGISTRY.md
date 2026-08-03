@@ -410,3 +410,42 @@ musi mieć osobne testy obu ścieżek oraz test ich zgodności co do werdyktu
 - wnioski W001–W013: **bez zmian**
 - punkt odniesienia Gen1: `a1aba1c` (tag `gen1-baseline` tylko lokalnie —
   push odmówiony przez proxy, 403)
+
+---
+
+## Gen2-0 — brief kierunkowy (03.08.2026)
+
+`docs/GEN2_BRIEF.md` — dokument **projektowy**, zero pomiarów. Żadna karta
+nie powstała, żaden kierunek nie zmierzony, **licznik prób nadal 0**.
+
+Pięć kierunków kandydackich, ocenionych przed pomiarem (0–5 w dziewięciu
+kryteriach):
+
+| Kierunek | Suma /45 | Uwaga |
+|---|---|---|
+| **D1** — rebalansowanie funduszy lewarowanych na zamknięciu | **43** | jedyny bez zakupu danych i z ~250 okazjami rocznie; benchmark = B04 |
+| **D5** — mikrostruktura agresora (`trades`/MBP) | 33 | mechanizm najmocniejszy, **warunkowy** — wymaga decyzji zakupowej |
+| D2 — baza i struktura terminowa NQ | 27 | ~4–20 okazji rocznie |
+| D4 — oficjalne reguły indeksu NDX | 27 | efekt w spółkach, nie w indeksie |
+| D3 — ekspozycja gamma dealerów | 24 | przewiduje charakter; zatłoczony publicznie |
+
+### Ustalenie, które zmienia priorytety Gen2
+
+Reguła „historia 2019–2026 = development only" w połączeniu z podłogą
+N = 400 daje twardą konsekwencję arytmetyczną:
+
+| Częstotliwość okazji | Czas do N = 400 na forwardzie |
+|---|---|
+| ~30 rocznie (profil H013) | **ponad 13 lat** |
+| ~250 rocznie (raz na sesję) | ~1,6 roku |
+
+**Częstotliwość okazji przestaje być jednym z kryteriów i staje się warunkiem
+wstępnym.** Karta na zdarzeniach rzadkich jest w tym projekcie
+niecertyfikowalna niezależnie od jakości mechanizmu.
+
+### Rekomendacja (decyzja należy do właściciela)
+
+D1 jako kierunek pierwszy, D5 jako warunkowy po osobnej decyzji zakupowej.
+D2, D3 i D4 odradzane na teraz.
+
+**Nie wybrano kierunku i nie napisano karty.** Kolejny krok wymaga decyzji.
