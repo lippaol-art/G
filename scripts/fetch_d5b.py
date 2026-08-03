@@ -77,6 +77,10 @@ def main() -> int:
             pominiete += 1
             print(f"  {s}  POMINIETA (kompletna, {n:,} rek.)", flush=True)
         else:
+            # `get_range` odmawia nadpisania, wiec niekompletny plik trzeba
+            # najpierw usunac. Bez tego wznowienie wywraca sie na pierwszym
+            # obcietym transferze.
+            out.unlink(missing_ok=True)
             c.timeseries.get_range(**ZAPYTANIE, start=a, end=b, path=str(out))
             pobrane += 1
             print(f"  {s}  pobrano {out.stat().st_size / 1e6:6.1f} MB, {n:,} rek.",
