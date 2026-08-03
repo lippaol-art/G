@@ -310,3 +310,46 @@ bo nie są optymalizowane.
 Dlaczego to jest twarde: przy N_eff = 30 nie przechodzi certyfikacji nawet strategia o Sharpe 1.5
 (tabela wykonalności, PLAN rozdz. 6.5). Im dłużej szukamy, tym wyższy próg musi przeskoczyć
 zwycięzca — to cena uczciwości i płacimy ją świadomie.
+
+---
+
+## Etap 2 — konsolidacja techniczna (03.08.2026)
+
+Pierwsza generacja badawcza domknięta (`docs/SYNTEZA_GEN1.md`). Etap 2 to
+**wyłącznie mapa i zamrożenie stanu** — żadnego usuwania, scalania ani
+refaktoryzacji kodu.
+
+| Artefakt | Zawartość |
+|---|---|
+| `docs/ARCHITEKTURA.md` | mapa 44 modułów (11 817 linii, 430 testów), kierunek zależności, trójstopniowa krytyczność |
+| `golden/baseline.json` | pięć warstw, rozdzielone `hash_danych` i `hash_wynikow` |
+| `golden/README.md` | jak używać, co zamrożone, znane wady |
+| `golden/srodowisko.txt` | dokładne wersje, które wyprodukowały hashe |
+| `docs/AUDYT_KODU.md` | kod martwy i zduplikowany w sześciu kategoriach |
+| `docs/ZALOZENIA.md` | rejestr założeń, których zmiana unieważnia wyniki |
+| `docs/OD_DANYCH_DO_PNL.md` | jedna realna transakcja prześledzona przez 9 etapów |
+| `docs/PODRECZNIK.md` | 12 pytań właściciela |
+| `docs/PLAN_REFAKTORU.md` | **do decyzji, nie wdrożone** |
+
+**Odtwarzalność:** baseline odtworzony trzykrotnie z czystego stanu, bajt
+w bajt (`hash_wynikow = 6a082749…`). Tag `gen1-baseline` oznacza ostatnią
+wersję przed jakimkolwiek refaktorem.
+
+### Ustalenie: błąd w `validation/spa.py`
+
+Golden baseline ujawnił, że ścieżka `arch` dostaje zwroty tam, gdzie
+`arch.bootstrap.SPA` oczekuje strat — znak odwrócony, testowana hipoteza
+przeciwna. p = 0,898 identycznie dla czystego szumu i dla przewagi +0,30σ;
+własny fallback daje odpowiednio 0,303 i 0,002.
+
+**Wpływ na wnioski W001–W013: żaden.** SPA nie było użyte, licznik prób 0.
+Naprawa jest pozycją R1 planu refaktoru i wymaga osobnej zgody.
+
+### Wynik audytu kodu
+
+79 linii kodu martwego i 4 ogniska duplikacji w 11 817 liniach (0,7%).
+Trzy z czterech symboli martwych to **brak wykonania specyfikacji**, nie
+śmieci — właściwą reakcją jest podpięcie, nie usunięcie. Rekomendacja:
+refaktor minimalny, trzy pozycje zamiast dziewięciu.
+
+**Licznik prób nadal 0.**
