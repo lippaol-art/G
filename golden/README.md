@@ -4,6 +4,12 @@ Zamrożone zachowanie systemu **przed** konsolidacyjnym refaktorem. Jedyna rzecz
 która po porządkach pozwoli stwierdzić, że system liczy **to samo**.
 
 Plik: `golden/baseline.json` (schemat v1). Generator: `scripts/golden_baseline.py`.
+Historia zmian hashy: `golden/ZMIANY.md`.
+
+**Kanoniczny punkt odniesienia Gen1: commit `a1aba1c0c47fce2e958374e2614e5744b6882027`**
+(tag `gen1-baseline`; push tagu odmówiony przez proxy git, więc SHA jest
+identyfikatorem obowiązującym). Baseline zapisany w tym commicie:
+`hash_danych = cf16e23b…`, `hash_wynikow = 6a082749…`.
 
 ```bash
 python3 scripts/golden_baseline.py            # zapis baseline'u
@@ -23,7 +29,7 @@ się zmieniła — inaczej raport byłby bezużyteczny przy 20 kB JSON-a.
 | `silnik` | 8 przypadków na ręcznych barach z **pełnym detalem transakcji** (ceny, powód wyjścia, prowizja, R) + 6 punktów granicznych sesji, w tym obie zmiany czasu | tabela rozstrzygnięć 5.4 i kalendarz to najbardziej krytyczna logika w repo |
 | `metryki` | PF, Sharpe (+Lo), Sortino, MDD, MAR, SQN, koncentracja na stałym wektorze R | z tych liczb biorą się progi bramki 1.3 |
 | `walidacja` | DSR, moc testu, CPCV, walk-forward, PBO, SPA (obie ścieżki), Monte Carlo | aparat, który decyduje o odrzuceniu lub certyfikacji karty |
-| `raporty` + `rejestr` | znormalizowany hash 18 raportów, 8 wyciągniętych metryk, licznik prób, statusy kart | wnioski badawcze Gen1 |
+| `raporty` + `rejestr` | znormalizowany hash raportów, 8 wyciągniętych metryk, licznik prób, statusy kart | wnioski badawcze Gen1 |
 
 ## Dwa hashe, nie jeden
 
@@ -91,32 +97,34 @@ Warstwa walidacji odtwarza liczby opublikowane w `docs/PLAN.pdf` rozdz. 6.5 i A.
 Różnice (1068 vs 1070, 385 vs 384) to zaokrąglenia w dokumencie, nie rozbieżność
 rachunku.
 
-## ⚠ Znana wada zamrożona świadomie: ścieżka `arch` w `validation/spa.py`
+## ✅ Wada wykryta przez ten baseline i naprawiona (R1, wersja v2)
 
-Baseline utrwala **błędne** zachowanie, bo taka jest jego rola — zapisuje stan
-faktyczny, a nie pożądany.
+Baseline w wersji v1 utrwalał **błędne** zachowanie ścieżki `arch`
+w `validation/spa.py` — bo taka jest jego rola: zapisuje stan faktyczny,
+a nie pożądany. I to właśnie zestawienie obu ścieżek obok siebie ten błąd
+ujawniło.
 
-`arch.bootstrap.SPA` przyjmuje **straty** (mniej = lepiej). Moduł podaje mu
-**zwroty**, więc znak jest odwrócony i testowana jest hipoteza przeciwna do
-zamierzonej. Widać to wprost w baseline:
+`arch.bootstrap.SPA` przyjmuje **straty** (mniej = lepiej), moduł podawał mu
+**zwroty**. Znak odwrócony, testowana hipoteza przeciwna do zamierzonej:
 
-| Wejście (400 obs, 6 wariantów) | ścieżka `arch` | własny fallback |
-|---|---|---|
-| sam szum | p = 0,898 | p = 0,303 |
-| wariant z przewagą +0,30σ | p = **0,898** | p = **0,002** |
+| Wejście (400 obs, 6 wariantów) | `arch` v1 | `arch` po naprawie | fallback (niezmieniony) |
+|---|---|---|---|
+| sam szum | p = 0,898 | p = 0,248 | p = 0,303 |
+| wariant z przewagą +0,30σ | p = **0,898** | p = **0,000** | p = 0,002 |
 
-Identyczna p-wartość w obu przypadkach jest rozstrzygająca — test nie reaguje na
-sygnał, którego szuka. Sprawdzenie bezpośrednie potwierdza przyczynę: przy tej
-samej macierzy `SPA(zera, M)` daje `consistent = 0,898`, a `SPA(zera, −M)` daje
-`0,000`.
+Identyczna p-wartość dla szumu i dla przewagi była rozstrzygająca. Test
+o znanej odpowiedzi potwierdził to jeszcze dobitniej: pula, w której **każdy**
+wariant traci, dostawała p = 0,0000.
 
-**Wpływ na dotychczasowe wnioski: żaden.** SPA nie było użyte w W001–W013 —
-licznik prób wynosi 0, żadna karta nie doszła do bramki, na której SPA działa.
+**Wpływ na wnioski W001–W013: żaden.** SPA nie było użyte, licznik prób 0.
 
-**Naprawa jest pozycją nr 1 planu refaktoru** i **świadomie zmieni
-`hash_wynikow`.** Dlatego baseline rejestruje też ścieżkę `fallback`, która po
-naprawie ma zostać bez zmian — to ona będzie dowodem, że naprawiono znak, a nie
-przepisano test.
+Ścieżka `fallback` została w baseline **bit w bit bez zmian** — to ona dowodzi,
+że naprawiono znak, a nie przepisano test. Pełny raport regresyjny:
+`reports/R1_regresja_spa.md`, wpis w `golden/ZMIANY.md` (v2).
+
+**Lekcja, która zostaje:** wszystkie testy SPA sprzed R1 wołały funkcję
+z `force_fallback=True`. Ścieżka domyślna — jedyna, która działa produkcyjnie —
+nie była testowana w ogóle. Błąd przeżył 233 testy właśnie dlatego.
 
 ## Środowisko
 
@@ -133,7 +141,7 @@ bez jednej linijki zmiany w tym repo.
 - licznik prób: **0**
 - kart odrzuconych w pre-flightach: **8** (H001, H002, H003, H005, H010, H011, H013, H014)
 - karty warunkowe: H004, H016
-- raportów badawczych: 18
+- raportów badawczych: 18 (v1); 19 od v2
 - zbiory: 13 parquet (MNQ/NQ/ES 1m + 10 instrumentów K6), 3 CSV kalendarzy
 
 ## Kiedy baseline wolno zaktualizować

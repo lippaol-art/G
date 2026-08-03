@@ -140,8 +140,23 @@ def superior_predictive_ability(
         try:
             from arch.bootstrap import SPA
 
+            # ZNAK. `arch.bootstrap.SPA` operuje na STRATACH — mniej znaczy
+            # lepiej — a jego H0 brzmi "benchmark nie jest gorszy od zadnego
+            # modelu". Nasze `returns_matrix` to ZWROTY, wiec trzeba je
+            # odwrocic. Bez tego minusa testowana jest hipoteza PRZECIWNA do
+            # zamierzonej i wynik jest gorszy niz bezuzyteczny, bo wyglada
+            # wiarygodnie: pula z przewaga 1 sigma (t~20) dawala p=0.898,
+            # a pula, w ktorej KAZDY wariant traci — p=0.000.
+            #
+            # Blad przezyl 233 testy, bo kazdy z nich wolal te funkcje
+            # z `force_fallback=True`. Sciezka domyslna nie byla testowana
+            # w ogole. Wykryl to dopiero golden baseline, ktory zapisal obie
+            # sciezki obok siebie i pokazal, ze `arch` zwraca identyczne
+            # p=0.898 dla szumu i dla realnej przewagi.
+            straty = -M
             benchmark = np.zeros(M.shape[0])
-            spa = SPA(benchmark, M, reps=n_bootstrap, block_size=int(block_size), seed=seed)
+            spa = SPA(benchmark, straty, reps=n_bootstrap,
+                      block_size=int(block_size), seed=seed)
             spa.compute()
             means = M.mean(axis=0)
             best = int(np.argmax(means))

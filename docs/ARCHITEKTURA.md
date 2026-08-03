@@ -290,3 +290,12 @@ Trzy rzeczy warte odnotowania, **bez wprowadzania zmian**:
 
 Żadna z tych obserwacji nie jest teraz realizowana. Wchodzą do raportu
 proponowanego refaktoru, który wymaga osobnej decyzji.
+
+---
+
+## 8. Punkt odniesienia
+
+Stan opisany w tej mapie jest zamrożony w golden baseline w commicie
+**`a1aba1c0c47fce2e958374e2614e5744b6882027`** (tag `gen1-baseline`).
+Każda późniejsza zmiana zachowania systemu ma wpis w `golden/ZMIANY.md`
+z poprzednim i nowym hashem oraz listą zmienionych kluczy.

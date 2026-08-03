@@ -223,3 +223,113 @@ class TestSPA:
         rng = np.random.default_rng(15)
         with pytest.raises(ValueError):
             superior_predictive_ability(rng.normal(0, 0.01, (10, 3)))
+
+
+# ==========================================================================
+# SPA — SCIEZKA `arch`
+#
+# DLACZEGO TA KLASA POWSTALA OSOBNO. Wszystkie testy w `TestSPA` wyzej
+# przekazuja `force_fallback=True`. Sciezka `arch` — czyli DOMYSLNA, ta ktora
+# realnie zadziala w kazdym uruchomieniu produkcyjnym — nie byla testowana
+# w ogole. Blad znaku przezyl 233 testy wlasnie dlatego.
+#
+# Ponizsze testy sa testami o ZNANEJ ODPOWIEDZI na sciezce domyslnej.
+# ==========================================================================
+
+def _pula(n_obs: int, n_war: int, przewaga: float, seed: int) -> np.ndarray:
+    """Macierz wariantow o znanej strukturze. Kolumna 0 dostaje przewage."""
+    rng = np.random.default_rng(seed)
+    M = rng.normal(0.0, 1.0, size=(n_obs, n_war))
+    if przewaga:
+        M[:, 0] += przewaga
+    return M
+
+
+class TestSPASciezkaArch:
+    def test_arch_wykrywa_przewage_ktorej_szuka(self):
+        """ZNANA ODPOWIEDZ: wariant z przewaga 1.0 sigma na 400 obserwacjach ma
+        t okolo 20. Test, ktory tego nie odrzuca, testuje hipoteze PRZECIWNA
+        do zamierzonej."""
+        w = superior_predictive_ability(_pula(400, 6, 1.0, 22),
+                                        n_bootstrap=500, seed=7)
+        assert w.implementation == "arch"
+        assert w.pvalue < 0.01, (
+            f"sciezka arch dala p={w.pvalue:.4f} przy przewadze 1 sigma (t~20) — "
+            "test nie reaguje na sygnal, ktorego szuka"
+        )
+
+    def test_arch_nie_odrzuca_na_samym_szumie(self):
+        w = superior_predictive_ability(_pula(400, 6, 0.0, 22),
+                                        n_bootstrap=500, seed=7)
+        assert w.implementation == "arch"
+        assert w.pvalue > 0.10, f"sam szum dal p={w.pvalue:.4f} — test przepuszcza snooping"
+
+    def test_arch_rozroznia_szum_od_przewagi(self):
+        """Najostrzejszy z tych testow. Identyczna p-wartosc dla szumu i dla
+        przewagi jest ROZSTRZYGAJACA: znaczy, ze statystyka nie zalezy od tego,
+        co miala mierzyc. Dokladnie to pokazal golden baseline (0.898 w obu
+        przypadkach)."""
+        p_szum = superior_predictive_ability(_pula(400, 6, 0.0, 22),
+                                             n_bootstrap=500, seed=7).pvalue
+        p_edge = superior_predictive_ability(_pula(400, 6, 0.30, 22),
+                                             n_bootstrap=500, seed=7).pvalue
+        assert p_edge < p_szum, (
+            f"p przy przewadze ({p_edge:.4f}) nie jest mniejsze niz p przy szumie "
+            f"({p_szum:.4f}) — statystyka nie rozroznia tych przypadkow"
+        )
+
+    def test_best_variant_i_best_mean_w_konwencji_zwrotow(self):
+        """Wynik ma byc raportowany w ZWROTACH, nawet jesli implementacja
+        wewnetrznie operuje na stratach. Wariant 0 jest tu najgorszy, wiec
+        `best_variant` MUSI wskazac inny, a `best_mean` musi byc jego srednim
+        ZWROTEM — nie strata i nie liczba ze zmienionym znakiem."""
+        M = _pula(400, 5, 0.0, 31)
+        M[:, 0] -= 1.0          # wariant 0 wyraznie najgorszy
+        M[:, 3] += 0.50         # wariant 3 najlepszy
+
+        w = superior_predictive_ability(M, n_bootstrap=300, seed=3)
+        assert w.best_variant == 3, f"wskazano wariant {w.best_variant}, nie najlepszy"
+        assert w.best_mean == pytest.approx(float(M[:, 3].mean()), abs=1e-12)
+        assert w.best_mean > 0
+
+    def test_sama_strategia_ujemna_nie_daje_istotnosci(self):
+        """Pula, w ktorej KAZDY wariant traci. H0 nie ma prawa zostac odrzucona."""
+        M = _pula(400, 4, 0.0, 41) - 0.50
+        w = superior_predictive_ability(M, n_bootstrap=300, seed=4)
+        assert not w.passes, f"pula samych stratnych wariantow dala p={w.pvalue:.4f}"
+
+    def test_warianty_identyczne_zachowuja_sie_jak_jeden(self):
+        """Zdegenerowany przypadek: piec kopii tego samego szeregu. Nie ma tu
+        zadnego wyboru "najlepszego z wielu", wiec wynik musi byc taki sam jak
+        dla jednego wariantu."""
+        kolumna = _pula(400, 1, 0.60, 51)
+        jeden = superior_predictive_ability(kolumna, n_bootstrap=300, seed=5)
+        piec = superior_predictive_ability(np.hstack([kolumna] * 5),
+                                           n_bootstrap=300, seed=5)
+        assert jeden.passes and piec.passes
+        assert piec.pvalue == pytest.approx(jeden.pvalue, abs=0.05)
+
+    def test_obie_sciezki_zgodne_co_do_werdyktu(self):
+        """Piec przypadkow o znanej odpowiedzi. `arch` i wlasny fallback moga
+        dawac rozne p-wartosci — to dwie implementacje bootstrapu — ale MUSZA
+        sie zgadzac co do odrzucenia H0. Rozbieznosc werdyktu znaczy, ze ktoras
+        testuje cos innego."""
+        przypadki = {
+            "sam_szum": (_pula(400, 6, 0.0, 61), False),
+            "silna_przewaga": (_pula(400, 6, 1.0, 62), True),
+            "silnie_ujemna": (_pula(400, 4, 0.0, 63) - 0.50, False),
+            "jeden_z_wielu_ma_przewage": (_pula(400, 8, 0.60, 64), True),
+            "warianty_identyczne": (np.hstack([_pula(400, 1, 0.60, 65)] * 4), True),
+        }
+        for nazwa, (M, oczekiwane) in przypadki.items():
+            a = superior_predictive_ability(M, n_bootstrap=300, seed=9)
+            f = superior_predictive_ability(M, n_bootstrap=300, seed=9,
+                                            force_fallback=True)
+            assert a.passes is oczekiwane, (
+                f"[{nazwa}] arch: p={a.pvalue:.4f}, oczekiwano "
+                f"{'odrzucenia' if oczekiwane else 'braku odrzucenia'} H0"
+            )
+            assert f.passes is oczekiwane, (
+                f"[{nazwa}] fallback: p={f.pvalue:.4f}, oczekiwano "
+                f"{'odrzucenia' if oczekiwane else 'braku odrzucenia'} H0"
+            )

@@ -345,7 +345,7 @@
   }
  },
  "hash_danych": "cf16e23b8521192448902eaf2bc61498ad8b4f13b375d65de1305e7909d5a2c5",
- "hash_wynikow": "6a082749e0a5128b996907d630a3c4001f856223e9b9a00ed5ec024c43da11c7",
+ "hash_wynikow": "64c8bae33d3d446ebbdac67ccfc419cf536bab0b96729418cdbfbf05c86de4e4",
  "metryki": {
   "bramki": {
    "koncentracja": false,
@@ -373,6 +373,7 @@
  "raporty": {
   "hashe": {
    "B00_benchmarks.md": "5f464a9e1aa25b12ce1685c816fe1d8d5f3248e2204a90e84697965ed1a16cac",
+   "R1_regresja_spa.md": "1e2111e05f9bcd1114fae99b440c41b59a98785728f8343bd6b338cfeb8c8a0d",
    "W001_overnight_drift.md": "0f956c3e8ffd3f10e857929a3e5db76d4b39a5a4f3b56f28dafa4f68fd095b29",
    "W004_partia1_preflight.md": "256f0e90562b285e66c8fabb51f9f4543c0dc29de059c2b8bd59f0c7e96b20ac",
    "W006_H014_preflight.md": "a25462ee80c4b6511e8cd51ea2bfafc55f72fb671acd82b78527de7f5e0e26f9",
@@ -696,7 +697,7 @@
    "szum_arch": {
     "implementacja": "arch",
     "najlepszy_wariant": 3,
-    "p": 0.898,
+    "p": 0.248,
     "sredni_wynik": 0.0855455149
    },
    "szum_fallback": {
@@ -708,7 +709,7 @@
    "z_przewaga_arch": {
     "implementacja": "arch",
     "najlepszy_wariant": 0,
-    "p": 0.898,
+    "p": 0.0,
     "sredni_wynik": 0.2691729328
    },
    "z_przewaga_fallback": {
