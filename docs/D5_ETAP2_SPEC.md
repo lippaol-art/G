@@ -1,5 +1,28 @@
 # D5-B — zamrożona definicja identyfikowalności
 
+> ## ⚠ ZMIANA ZAKRESU — RTH zamiast pełnej doby (przed zakupem)
+>
+> **Zmiana z pełnej doby na RTH nastąpiła po informacji o koszcie i zakresie
+> infrastruktury, ale przed zakupem miesięcznej próbki oraz przed pomiarem VIF,
+> przyszłych zwrotów i P&L. Ogranicza zakres wnioskowania D5 wyłącznie do RTH.**
+>
+> Definicja kanoniczna: **`09:30–16:00 America/New_York`**. Kod wyprowadza UTC
+> ze strefy ET — **nie** wolno zapisywać `13:30–20:00 UTC` jako stałej, bo po
+> zmianie czasu przesunęłoby to sesję o godzinę. Dla lipca 2026 (EDT) odpowiada
+> to 13:30–20:00 UTC.
+>
+> ### Co zostaje bez zmian
+> okno 60 s · wyznaczanie okien po `ts_recv` · główna zmienna `I_count` ·
+> benchmark momentum · VIF pooled i per sesja · próg VIF < 5 · warunek ≥75%
+> sesji · limit koncentracji jednej sesji 20%.
+>
+> ### Ograniczenie wnioskowania
+> D5 odpowiada odtąd **wyłącznie** na pytanie: *czy nierównowaga zdarzeń
+> agresora w RTH wnosi informację odróżnialną od równoczesnego momentum
+> w RTH?* Wyniku **nie wolno** rozszerzać na ETH, sesję nocną, pełny Globex
+> ani metaordery poza RTH. Jeśli D5-B przejdzie, H017 również dotyczy
+> **wyłącznie RTH**; ETH wymagałoby osobnej karty i osobnego forwardu.
+
 **Commitowane PRZED wyceną i zakupem.** Cokolwiek pokażą dane, ta specyfikacja
 się nie zmienia. Poprzednik: `docs/D5_ETAP1_SPEC.md` (`41d3eee`), wynik
 Etapu 1: `reports/D5_etap1_kontrole.md` — werdykt `D5-A GO`.
@@ -29,20 +52,56 @@ Trzy rozłączne przedziały UTC, sumujące się na cały lipiec bez nakładania
 
 | # | Od (UTC) | Do (UTC) | Status |
 |---|---|---|---|
-| A | `2026-06-30T22:00:00` | `2026-07-29T22:00:00` | **do kupienia** |
-| B | `2026-07-29T22:00:00` | `2026-07-30T21:00:00` | **posiadane** |
-| C | `2026-07-30T21:00:00` | `2026-07-31T21:00:00` | **do kupienia** |
+**ZASTĄPIONE przez podział RTH — patrz §1a.**
 
-Granice są **domknięte lewostronnie, otwarte prawostronnie** — konwencja
-Databento — więc przedziały stykają się bez nakładania i bez luki.
+### 1a. Podział zakupu po zmianie na RTH — i trzy ustalenia z danych
 
-A i C to dwa osobne zapytania. Po pobraniu dane są łączone deterministycznie,
-sortowane po `(ts_recv, sequence)` i sprawdzane pod kątem duplikatów **na obu
-granicach**.
+Enumeracja sesji lipca **z naszych własnych danych**, nie z kalendarza:
 
-Przedział A obejmuje `trade_date` od `2026-07-01` do `2026-07-29`, przedział C
-— `2026-07-31`. Razem z posiadanym B daje to pełny lipiec w naszej definicji
-doby handlowej (od 18:00 ET, założenie A1).
+| Grupa | Sesji | Status |
+|---|---|---|
+| 07-01 … 07-29 z pokryciem RTH | **21** | **do kupienia** |
+| 07-30 | 1 | **posiadane** (pełna doba, zawiera RTH) |
+| **Razem RTH w próbce** | **22** | |
+
+Każda sesja to osobne zapytanie o oknie wyprowadzonym z ET 09:30–16:00.
+Żadne nie nakłada się na posiadany plik: 07-30 jest wyłączona z zakupu.
+
+#### Ustalenie 1 — sesji z RTH jest 22, nie 23
+
+`2026-07-31` ma w naszym `ohlcv-1m` **120 barów i ZERO w RTH** (pokrywa tylko
+18:00–19:59 ET, czyli wieczór 07-30). Nie ma odniesienia do **obowiązkowej**
+rekonstrukcji OHLCV, która wg §10 musi poprzedzić VIF.
+
+**Wykluczona z zakupu.** Powód jest **weryfikacyjny, nie budżetowy**: sesji,
+której nie da się skontrolować, nie wolno wpuścić przed pomiarem. Gdyby powodem
+były pieniądze, byłoby to zawężanie pod budżet — tu nim nie jest, bo 26,41 USD
+mieści się w limicie także bez tego wykluczenia.
+
+#### Ustalenie 2 — `2026-07-03` to sesja skrócona
+
+RTH kończy się o **12:59 ET** zamiast 15:59 — 210 barów zamiast 390. To
+obserwowane święto 4 lipca (w 2026 przypada w sobotę, więc rynek zamyka się
+wcześniej w piątek 3 lipca).
+
+**Kupowana i raportowana, ale wyłączona z mianownika „kompletnych sesji".**
+Definicja przyjęta tu i teraz: **kompletna sesja = 390 dostępnych minut RTH.**
+
+| | Liczba |
+|---|---|
+| sesji RTH w próbce | 22 |
+| **kompletnych (390 min)** | **21** |
+| skróconych | 1 (07-03) |
+
+Warunek „≥75% kompletnych sesji z VIF < 5" stosuje się do **21**.
+
+#### Ustalenie 3 — defekt flagi `short_day` w naszym pipeline
+
+`2026-07-03` ma `short_day = False`, mimo że RTH kończy się trzy godziny
+wcześniej. **Flaga nie wykryła skróconej sesji.** To defekt naszego kalendarza,
+nie danych dostawcy. Odnotowany jako otwarta pozycja — nie naprawiam go teraz,
+bo dotknięcie `engine/sessions.py` przed pomiarem zmieniłoby baseline w środku
+Etapu 2.
 
 ---
 
@@ -51,7 +110,13 @@ doby handlowej (od 18:00 ET, założenie A1).
 | | |
 |---|---|
 | **Maksymalny dodatkowy wydatek Etapu 2** | **30,00 USD** |
-| Budżet przed | 60,2960 USD |
+| **Wycena 21 sesji RTH (2026-08-03)** | **26,4060 USD** — mieści się |
+| Rekordów | 21 096 133 |
+| Stawka | 1,2517 USD/mln — **identyczna** jak w Etapie 1 |
+
+Limit jest bezpiecznikiem **tego zapytania**, nie globalnym budżetem projektu.
+Budżet Databento to odnawialny kredyt 125 USD; środki własne wydane na dane:
+**0 USD**.
 
 Wycena `metadata.get_cost` wykonywana **ponownie tuż przed pobraniem**.
 Powyżej 30,00 USD **zatrzymuję się** — nie skracam miesiąca, nie wybieram
@@ -64,13 +129,18 @@ zapytania, koszt per milion rekordów, limit z marginesem i datę wyceny.
 
 ## 3. Jednostka agresora
 
-`aggressor_event` — jedno agresywne zlecenie, mogące wygenerować kilka
-wypełnień.
+**`candidate_aggressor_event`** — *deterministyczna grupa wypełnień o wspólnym
+kluczu technicznym, używana jako empiryczne przybliżenie jednego zdarzenia
+agresora.*
+
+**NIE** „zidentyfikowane pojedyncze zlecenie konkretnego uczestnika". Nazwa jest
+częścią specyfikacji: nie wolno twierdzić, że grupa jest udowodnionym
+pojedynczym zleceniem rynkowym ani metaorderem.
 
 ### Klucz grupowania
 
 ```
-aggressor_event  =  (ts_event, sequence, side)
+candidate_aggressor_event  =  (ts_event, sequence, side)
 ```
 
 Dla każdego zdarzenia zapisujemy: `event_timestamp` (`ts_event`),
@@ -168,6 +238,43 @@ I_volume = (V_buy − V_sell) / (V_buy + V_sell)
 Gdyby `I_count` nie przeszła, a `I_volume` przeszła, werdykt dla D5-B brzmi
 **NO-GO w zadeklarowanej postaci**, a wersja wolumenowa jest **obserwacją
 wygenerowaną przez dane**, wymagającą nowej historii albo forwardu.
+
+### Obsługa grup niejednoznacznych
+
+Klucz zawiera `side`, więc grupa **nie może** zawierać obu stron. Gdyby mimo to
+powstała rozbieżność (np. przy zmianie danych): **nie przypisywać do strony
+dominującej** — oznaczyć jako niejednoznaczną, **wykluczyć z `I_count`**,
+zachować jej wolumen w raporcie jakości i podać udział takich grup.
+
+### Testy niezmienników — przed VIF, nie po
+
+1. suma `size` po agregacji = suma `size` raw,
+2. każde wypełnienie należy do **dokładnie jednej** grupy,
+3. grupa nie zawiera obu stron,
+4. liczba grup ≤ liczba wypełnień,
+5. ceny i znaczniki czasu pozostają uporządkowane,
+6. wynik **nie zależy od kolejności wejściowego pliku**,
+7. ponowne uruchomienie daje **identyczny** wynik,
+8. rekordy niejednoznaczne są **raportowane, nie ukrywane**.
+
+---
+
+## 4a. Kontrole A / B / C
+
+| | Definicja | Rola |
+|---|---|---|
+| **A** | `I_count` po `candidate_aggressor_event` | **główna — jedyne źródło werdyktu** |
+| **B** | nierównowaga po **surowych wypełnieniach** | kontrola fragmentacji |
+| **C** | `I_volume` — signed volume imbalance | kontrola wolumenowa |
+
+**B i C nie mogą zastąpić A po zobaczeniu wyniku.**
+
+| Układ wyników | Interpretacja |
+|---|---|
+| A, B, C zgodne | niepewność grupowania prawdopodobnie niematerialna |
+| A daje GO, B/C nie | **`INCONCLUSIVE`** |
+| GO zależne wyłącznie od niepotwierdzonej agregacji | **brak H017** do czasu wyjaśnienia |
+| A daje NO-GO, C daje GO | D5-B pozostaje **NO-GO** w zamrożonej postaci; C staje się obserwacją wygenerowaną przez dane |
 
 ---
 
