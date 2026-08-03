@@ -32,6 +32,7 @@ from engine.roll import (
     days_to_roll,
     find_roll_dates,
     unadjust_price,
+    verify_continuity,
 )
 
 # ==========================================================================
@@ -321,3 +322,94 @@ class TestMetrykRBezStopa:
         from engine.metrics import top_n_concentration
         d = np.full(100, 1.0)
         assert top_n_concentration(d, 5) == pytest.approx(0.05)
+
+
+# ==========================================================================
+# CIAGLOSC PO ROLOWANIU — PLAN rozdz. 4.6 / 5.6
+#
+# Funkcja `verify_continuity` istniala od poczatku projektu i NIGDY nie byla
+# wywolana ani przetestowana (audyt kodu, poz. R2). Ponizsze testy zamykaja
+# ta luke ORAZ dokumentuja rzeczywiste ograniczenie tej funkcji, zamiast
+# udawac, ze go nie ma.
+# ==========================================================================
+
+class TestCiaglosc:
+    ROLL = date(2025, 3, 13)
+
+    def _zdarzenie(self, spread: float = 100.0) -> list[RollEvent]:
+        return [RollEvent(self.ROLL, "MNQH5", "MNQM5", spread)]
+
+    def test_poprawnie_zrolowany_szereg_nie_zglasza_naruszen(self):
+        """Seria po back-adjuscie rozni sie z dnia na dzien o ruch rynku,
+        nie o spread rolowania."""
+        seria = [
+            (date(2025, 3, 11), 20000.0),
+            (date(2025, 3, 12), 20010.0),
+            (self.ROLL, 20005.0),        # ruch 5 pkt, spread 100 pkt
+            (date(2025, 3, 14), 20020.0),
+        ]
+        assert verify_continuity(seria, self._zdarzenie()) == []
+
+    def test_prawdziwa_nieciaglosc_jest_wykrywana(self):
+        """Seria NIESKORYGOWANA: w dniu rolowania cena skacze o spread.
+        To jest dokladnie ten skok, na ktorym amatorskie backtesty futures
+        'zarabiaja' bez pokrycia."""
+        seria = [
+            (date(2025, 3, 12), 20010.0),
+            (self.ROLL, 20110.0),        # skok = 100 = spread
+            (date(2025, 3, 14), 20115.0),
+        ]
+        naruszenia = verify_continuity(seria, self._zdarzenie())
+        assert len(naruszenia) == 1
+        assert "back-adjust nie zadzialal" in naruszenia[0]
+        assert str(self.ROLL) in naruszenia[0]
+
+    def test_granica_rollu_poza_seria_jest_pomijana(self):
+        """Rolowanie, dla ktorego nie mamy danych, nie moze ani zglaszac
+        naruszenia, ani wywracac funkcji."""
+        seria = [(date(2025, 6, 1), 21000.0), (date(2025, 6, 2), 21010.0)]
+        assert verify_continuity(seria, self._zdarzenie()) == []
+
+    def test_rolowanie_w_pierwszym_dniu_serii_pomijane(self):
+        """Nie ma dnia poprzedniego, wiec nie ma czego porownac."""
+        seria = [(self.ROLL, 20110.0), (date(2025, 3, 14), 20115.0)]
+        assert verify_continuity(seria, self._zdarzenie()) == []
+
+    def test_pusta_seria_i_brak_zdarzen(self):
+        assert verify_continuity([], self._zdarzenie()) == []
+        assert verify_continuity([(self.ROLL, 20000.0)], []) == []
+
+    def test_zerowy_spread_nie_generuje_naruszenia(self):
+        """Rolowanie bez spreadu nie moze wygenerowac skoku, wiec kazdy ruch
+        ceny tego dnia jest ruchem rynku."""
+        seria = [(date(2025, 3, 12), 20010.0), (self.ROLL, 20300.0)]
+        assert verify_continuity(seria, self._zdarzenie(spread=0.0)) == []
+
+    def test_ujemny_spread_traktowany_symetrycznie(self):
+        seria = [(date(2025, 3, 12), 20010.0), (self.ROLL, 19910.0)]
+        assert len(verify_continuity(seria, self._zdarzenie(spread=-100.0))) == 1
+
+    def test_ZNANE_OGRANICZENIE_duzy_ruch_rynku_daje_falszywy_alarm(self):
+        """UDOKUMENTOWANA WADA, nie zyczenie.
+
+        Warunek funkcji brzmi "skok >= |spread|", wiec KAZDY dzien rolowania
+        z ruchem rynku wiekszym od spreadu zostanie zgloszony — nawet gdy
+        back-adjust zadzialal bez zarzutu. Przy MNQ spread rolowania to
+        zwykle kilkadziesiat punktow, a dzienny ruch 100+ punktow nie jest
+        niczym nadzwyczajnym.
+
+        Test jest tu po to, zeby ta wlasciwosc byla JAWNA. Wniosek praktyczny:
+        `verify_continuity` nadaje sie na alarm wstepny, a nie na rozstrzygajacy
+        pomiar ciaglosci — do tego sluzy niezmiennik arytmetyczny sprawdzany
+        w scripts/data_quality.py (rownosc cen skorygowanych obu kontraktow
+        w dniu rolowania), ktory ma odpowiedz DOKLADNIE zerowa.
+        """
+        seria = [
+            (date(2025, 3, 12), 20000.0),
+            (self.ROLL, 20150.0),        # ruch rynku 150 pkt, spread 100 pkt
+        ]
+        naruszenia = verify_continuity(seria, self._zdarzenie(spread=100.0))
+        assert len(naruszenia) == 1, (
+            "jesli ten test zaczal przechodzic inaczej, ktos zmienil semantyke "
+            "verify_continuity — zaktualizuj raport jakosci i golden baseline"
+        )

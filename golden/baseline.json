@@ -345,7 +345,7 @@
   }
  },
  "hash_danych": "cf16e23b8521192448902eaf2bc61498ad8b4f13b375d65de1305e7909d5a2c5",
- "hash_wynikow": "64c8bae33d3d446ebbdac67ccfc419cf536bab0b96729418cdbfbf05c86de4e4",
+ "hash_wynikow": "eea80e16f7eee82397c20a178d5f8cd2dad2c67429249a82687ac2c4c56237ec",
  "metryki": {
   "bramki": {
    "koncentracja": false,
@@ -384,9 +384,9 @@
    "W011_model_nocny_oos.md": "12f7e104e9d1692d0155072b5d15d3a28908742c6a140290d47c2922bb4313ff",
    "W012_H013_przekroje.md": "82a4bf904582c9104274d99193a335781706bc5b94e6f5654910b47d4efdcd5c",
    "W013_H003_preflight.md": "36d5fe8322f0d643341a5399b0c3e548ee19390e99e5cc11e6afa5edb14de707",
-   "data_quality_es.md": "7699c950167d4bb23a1e00e981c6c272e637cddf82ce9d7386a163c739fbfad9",
-   "data_quality_mnq.md": "377461d8868cff358033cace69297bbf1f12dc24fc42ab26ea7b5e4762b22b3b",
-   "data_quality_nq.md": "7e1ed7dc052bfef0be81392b29f2a94a96495e8ad9b66c166509ead97fb25aea",
+   "data_quality_es.md": "ce050d4d511d1397049350c53d3b550325bbc3425448f09f581f47e7457877d6",
+   "data_quality_mnq.md": "6eb325ccad8df15de2e5eac0e7cbda32533c40b75090705629f10294e9b829ed",
+   "data_quality_nq.md": "97d876d67f86599eb86197e3477432340550e2fb018a1a5434525e5bbcf237da",
    "earnings_calendar.md": "095b6594842fe8a532b99a19e5033bf40487b8c10604049181615d96a31d7996",
    "engine_gate.md": "0787ba71202841a802645d03234d985b438fb418c0519e7deb1dca51a65cceac",
    "k6_data_quality.md": "80ee89338a63017c263f7039c97e30f11e5d39a6698a2ffeb035aaf6667b867b",

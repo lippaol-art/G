@@ -83,3 +83,83 @@ werdyktów odrzucenia i wszystkie liczby w raportach pozostają identyczne.
 
 Potwierdzenie maszynowe: warstwa `raporty` (18 znormalizowanych hashy
 i 8 wyciągniętych metryk) oraz warstwa `rejestr` są w baseline bez zmian.
+
+---
+
+## v3 — R2: podpięcie kontroli ciągłości po rolowaniu
+
+```
+hash_danych  = cf16e23b…909d5a2c5   (BEZ ZMIAN)
+hash_wynikow = 64c8bae3…c86de4e4  ->  eea80e16f7eee82397c20a178d5f8cd2dad2c67429249a82687ac2c4c56237ec
+```
+
+### Zmienione klucze — dokładnie trzy
+
+| Klucz | Przyczyna |
+|---|---|
+| `raporty.hashe.data_quality_mnq.md` | nowa sekcja „Ciągłość serii po rolowaniu" |
+| `raporty.hashe.data_quality_nq.md` | jw. |
+| `raporty.hashe.data_quality_es.md` | jw. |
+
+Warstwy `dane`, `silnik`, `metryki`, `walidacja` i `rejestr` — **identyczne**,
+sprawdzone porównaniem struktur, nie tylko hasha. Osiem wyciągniętych metryk
+raportowych bez zmian. Żaden inny raport nie zmienił hasha. `hash_danych`
+bez zmian.
+
+### Powód
+
+`engine.roll.verify_continuity` i `engine.loader.describe` były napisane pod
+PLAN 4.6 i **nigdy niewywołane** (audyt kodu, poz. R2). Podpięte do
+`scripts/data_quality.py`. Dodano 8 testów `verify_continuity`
+(`tests/test_roll_metrics.py::TestCiaglosc`).
+
+### Wynik kontroli na trzech instrumentach
+
+**Kontrola rozstrzygająca — niezmiennik arytmetyczny.** Offset back-adjustu
+musi być stały w obrębie kontraktu; zmienny oznaczałby korektę liczoną per bar,
+czyli że seria ciągła jest fikcją.
+
+| Instrument | Kontraktów | Największy rozrzut offsetu | Kontraktów z niestałym offsetem | Werdykt |
+|---|---|---|---|---|
+| MNQ | 30 | 0,0000000000 | 0 | **PASS** |
+| NQ | 30 | 0,0000000000 | 0 | **PASS** |
+| ES | 30 | 0,0000000000 | 0 | **PASS** |
+
+Odpowiedź jest **dokładnie zerowa** we wszystkich 90 kontraktach. Próg 1e−6 nie
+został nawet napoczęty.
+
+**Skok serii skorygowanej na granicach rolowania** (29 granic na instrument):
+
+| Instrument | Największa nieciągłość | Data | Kontrakty | Skoków dodatnich | Średnia ze znakiem | t |
+|---|---|---|---|---|---|---|
+| MNQ | 354,25 pkt | 2026-06-15 | MNQM6 → MNQU6 | 15/29 | +4,17 pkt | +0,28 |
+| NQ | 349,25 pkt | 2026-06-15 | NQM6 → NQU6 | 17/29 | +5,25 pkt | +0,34 |
+| ES | 70,25 pkt | 2020-03-16 | ESH0 → ESM0 | 17/29 | −2,37 pkt | −0,63 |
+
+Kontrola znaku jest tu kluczowa: rezyduum back-adjustu byłoby **systematyczne** —
+miałoby jeden znak i średnią bliską pominiętemu spreadowi. Rozkład jest
+symetryczny (15/29, 17/29, 17/29), a |t| ≤ 0,63 we wszystkich trzech
+instrumentach. To wyklucza systematyczne rezyduum korekty.
+
+### Ustalenie wymagające odnotowania: `verify_continuity` nie nadaje się na miarę
+
+Funkcja zgłasza **17 z 29** granic dla MNQ, 18/29 dla NQ, 12/29 dla ES. To nie
+jest wynik o danych, tylko o kryterium funkcji: warunek brzmi „skok ≥ |spread|",
+a spread rolowania to kilkanaście–kilkadziesiąt punktów, więc każdy zwykły dzień
+o ruchu 50+ punktów zostaje zgłoszony.
+
+Skrajny przykład z tych danych: **2020-03-13, ruch 659 pkt w szczycie krachu
+covidowego, opisany jako „back-adjust nie zadziałał" przy spreadzie −13,50 pkt.**
+
+**Kryterium nie zostało zmienione**, żeby raport przeszedł — to byłoby
+dostrajanie progu pod wynik. Ograniczenie jest jawne w raporcie, zabezpieczone
+testem regresyjnym
+(`test_ZNANE_OGRANICZENIE_duzy_ruch_rynku_daje_falszywy_alarm`) i pozostaje
+otwartą pozycją do osobnej decyzji.
+
+**Żadnych danych nie poprawiano.**
+
+### Wpływ na wnioski W001–W013
+
+**Żaden.** Kontrola jest kodem raportującym; nie dotyka danych, silnika ani
+aparatu walidacyjnego.

@@ -1,4 +1,9 @@
-# Plan refaktoru — do decyzji, nie do wykonania
+# Plan refaktoru
+
+> **DECYZJA WŁAŚCICIELA (03.08.2026):** R1 — tak, wykonane. R2 — tak, wykonane.
+> R3 — nie migrować kodu Gen1; kanoniczna funkcja powstanie przy pierwszym
+> użyciu w Gen2. N1–N6 — żadna nie wchodzi. Żadnego dużego refaktoru.
+> Szczegóły wykonania: `golden/ZMIANY.md` (v2, v3), `reports/R1_regresja_spa.md`.
 
 Krok 13 Etapu 2, ostatni. **Nic z tego dokumentu nie jest wdrożone i nie
 zostanie wdrożone bez osobnej zgody.**
@@ -111,6 +116,35 @@ trzeba ją obsłużyć świadomie.
 `W010_h001_beta_wolumen_t`, `W010_h002_pochodzenie_t`, `W013_beta_ranga_t`.
 Jeśli którakolwiek się ruszy, trzeba **przeliczyć raport i opisać różnicę**,
 a nie dostroić semantykę do starej liczby.
+
+#### DECYZJA: nie migrować Gen1. Specyfikacja kanonicznej funkcji dla Gen2
+
+Kod W001–W013 **zachowuje swoje lokalne implementacje dokładnie w postaci,
+w której wygenerowały werdykty.** Powód jest rozstrzygający: liczby Gen1 są
+poprawne, skrypty są zamrożonym dowodem, a zmiana semantyki NaN mogłaby ruszyć
+wyniki albo uniemożliwić odtworzenie raportów. Ryzyko dotyczyłoby dowodów
+historycznych, których nie trzeba już rozwijać — a korzyść strukturalna jest
+niewielka.
+
+**Nie dodaję też teraz nieużywanej funkcji, która czekałaby na Gen2.** Kod bez
+użycia i bez testów to kolejna pozycja w audycie kodu martwego, a nie
+przygotowanie. Poniższy zapis wystarczy; implementacja powstanie **przy
+pierwszej karcie Gen2**, razem z jej pierwszym rzeczywistym użyciem i testami.
+
+Wymagania kanonicznej `t_stat` dla Gen2 — **głośna semantyka**:
+
+| Wymóg | Treść |
+|---|---|
+| NaN / inf | jawny błąd **albo** wynik nieważny z raportem liczności. **Nigdy** ciche usunięcie obserwacji. |
+| Liczności | dostępne trzy: wejściowa, poprawnych obserwacji, odrzuconych |
+| Zerowa wariancja | jawne, zadeklarowane zachowanie — nie dzielenie przez zero |
+| Minimalne N | zadeklarowane w sygnaturze, nie ukryte w warunku |
+| Zasięg | **każdy** raport Gen2 używa wyłącznie tej wersji |
+
+Uzasadnienie głośnej semantyki: milczące zmniejszenie próby to dokładnie ta
+klasa błędu, którą pre-flighty mają wychwytywać. Jeśli w danych są NaN-y, ma to
+wyjść w momencie liczenia — nie pół roku później przy pytaniu, czemu tercyl
+policzono z 40 obserwacji zamiast 111.
 
 ---
 

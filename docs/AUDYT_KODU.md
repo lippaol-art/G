@@ -34,8 +34,8 @@ zweryfikowany następnie ręcznie (`grep` po całym repo, łącznie z raportami)
 
 | Symbol | Plik | Linii | Test | Ocena |
 |---|---|---|---|---|
-| `verify_continuity` | `engine/roll.py` | 43 | **brak** | **Luka w wykonaniu specyfikacji, nie śmieć.** PLAN 4.6 wymaga kontroli ciągłości po rolowaniu; funkcja istnieje, ale nigdy nie została podpięta do `scripts/data_quality.py`. Odpowiedź to **wywołać ją**, nie usunąć. |
-| `describe` | `engine/loader.py` | 20 | **brak** | Opis zbioru. Nadaje się na wywołanie w sanity-report zamiast ręcznego liczenia. Ta sama diagnoza. |
+| `verify_continuity` | `engine/roll.py` | 43 | ✅ 8 testów (R2) | **Luka w wykonaniu specyfikacji, nie śmieć.** PLAN 4.6 wymaga kontroli ciągłości po rolowaniu; funkcja istnieje, ale nigdy nie została podpięta do `scripts/data_quality.py`. Odpowiedź to **wywołać ją**, nie usunąć. |
+| `describe` | `engine/loader.py` | 20 | ✅ podpięte (R2) | Opis zbioru. Nadaje się na wywołanie w sanity-report zamiast ręcznego liczenia. Ta sama diagnoza. |
 | `ticks_to_usd` | `engine/costs.py` | 4 | **brak** | Konwersja tick→USD. Jednolinijkowiec, ale należy do publicznego API modelu kosztów. Nieszkodliwy. |
 | `effective_trials_simple` | `validation/dsr.py` | 12 | **brak** | Uproszczony N_eff przez odcięcie 0,7. Audyt 2 **zastąpił** tę metodę algorytmem ONC (poprawka A2-3), więc jest to jedyny w repo przypadek kodu, który został metodologicznie unieważniony. Kandydat do usunięcia z odnotowaniem powodu. |
 
@@ -145,3 +145,29 @@ Czyli: dyscyplina, która najbardziej groziła fałszywym P&L, została utrzyman
    właściwą reakcją jest podpięcie, nie usunięcie.
 4. **Konsolidacja `t_stat` wymaga decyzji semantycznej**, nie mechanicznego
    scalenia — i musi przejść przez `--sprawdz` z zamrożonymi metrykami W010/W013.
+
+---
+
+## 6. Stan wykonania (03.08.2026)
+
+| Poz. | Decyzja | Stan |
+|---|---|---|
+| R1 — znak w SPA | wykonać teraz | ✅ commit `7f681ef`, `golden/ZMIANY.md` v2 |
+| R2 — podpięcie kontroli ciągłości | wykonać teraz | ✅ `golden/ZMIANY.md` v3 |
+| R3 — wspólne `t_stat` | **nie migrować Gen1**, kanoniczna wersja przy pierwszym użyciu w Gen2 | odłożone |
+| N1–N6 | żadna nie wchodzi | odłożone |
+
+**R2 ujawnił rzecz, której audyt statyczny nie mógł zobaczyć:**
+`verify_continuity` po podpięciu zgłasza 17 z 29 granic MNQ — nie dlatego, że
+dane są złe, tylko dlatego, że jego kryterium („skok ≥ |spread|") jest na
+realnych danych futures prawie zawsze spełnione. Ruch 659 pkt z krachu
+covidowego opisywany jako „back-adjust nie zadziałał" jest tego dowodem.
+
+Kryterium **nie zostało zmienione** — to byłoby dostrajanie progu pod wynik.
+Ograniczenie jest jawne w raporcie i zabezpieczone testem regresyjnym.
+Rozstrzygająca jest kontrola niezmiennika arytmetycznego: offset stały
+w 90 z 90 kontraktów, rozrzut dokładnie 0.
+
+To jest ilustracja tezy z sekcji 1: trzy z czterech symboli „martwych" były
+brakiem wykonania specyfikacji. Po wykonaniu jeden z nich okazał się także
+wadliwy — czego nie dało się stwierdzić, dopóki nikt go nie wołał.

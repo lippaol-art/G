@@ -1,6 +1,20 @@
 #!/usr/bin/env python3
 """W009 — pre-flight H013: rezydualny repricing po wynikach megacapow.  PLAN rozdz. 8.4.
 
+MODUL PELNI PODWOJNA ROLE — NIE PRZENOSIC (decyzja wlasciciela, poz. N4).
+
+Po pierwsze jest ZAMROZONYM EKSPERYMENTEM Gen1: to ten plik, dokladnie
+w tej postaci, wyprodukowal werdykt NO-GO dla karty H013. Jego wartoscia
+dowodowa jest nienaruszalnosc.
+
+Po drugie jest de facto BIBLIOTEKA: `research/W011` i `research/W012`
+importuja z niego `zbuduj()`, zeby walidowac i przekrajac DOKLADNIE ten
+sam model, a nie jego kopie. To bylo celowe — W007 sparzylo sie na tym,
+ze walidowalo model o innej konstrukcji niz mierzony.
+
+Wyciagniecie `zbuduj()` do wspolnego modulu rozbiloby dowod na dwa pliki
+dla korzysci czysto estetycznej. Adnotacja zamiast przeniesienia.
+
 TO JEST PUNKT GO/NO-GO KARTY. Zero zuzytych prob — badanie rozkladow, nie backtest.
 Zadnych stopow, zadnych progow, zadnej optymalizacji. Szesc przewidywan mechanizmu
 zadeklarowanych z gory i raportowanych **wszystkie**, takze niekorzystne.

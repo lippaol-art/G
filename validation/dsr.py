@@ -235,9 +235,20 @@ def effective_trials(
 
 
 def effective_trials_simple(trial_returns: np.ndarray, cutoff: float = 0.7) -> int:
-    """Wariant bez zaleznosci od scikit-learn — klastrowanie po progu korelacji.
+    """METODA WYCOFANA METODOLOGICZNIE — ZAKAZANA W NOWYCH BADANIACH.
 
-    Uzywany, gdy sklearn niedostepny. Rownowazny method="cutoff".
+    Wariant bez zaleznosci od scikit-learn: klastrowanie po sztywnym progu
+    korelacji. Rownowazny `method="cutoff"`.
+
+    DLACZEGO WYCOFANA. Sztywne odciecie 0.7 jest arbitralne i audyt 2
+    (poprawka A2-3) zastapil je algorytmem ONC — Lopez de Prado & Lewis 2018 —
+    z odlegloscia d = sqrt(0.5*(1-rho)), average linkage i analiza wrazliwosci
+    w zakresie 0.5-0.9. Roznica nie jest kosmetyczna: N_eff wchodzi wprost do
+    mianownika DSR, wiec zly podzial na klastry przesuwa prog certyfikacji.
+
+    Funkcja NIE ZOSTALA USUNIETA (decyzja wlasciciela, poz. N6) — zostaje jako
+    slad historyczny metody, ktora projekt swiadomie porzucil. Do nowych
+    obliczen uzywaj `effective_trials(..., method="onc")`.
     """
     n_eff, _ = effective_trials(trial_returns, method="cutoff", cutoff=cutoff)
     return n_eff

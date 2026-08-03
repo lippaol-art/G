@@ -1,6 +1,6 @@
 # Sanity-report danych — ES 1m
 
-Wygenerowano: 2026-07-31T22:21:30  
+Wygenerowano: 2026-08-03T00:25:12  
 Plik: `data/clean/es_1m_cont.parquet`  
 SHA-256: `52c320b03562797f80c0d110dcf49dca7ccab7170202a33a03f8f5ed8bdef4c2`  
 Rozmiar: 29.7 MB
@@ -9,6 +9,7 @@ Rozmiar: 29.7 MB
 
 - Barów: **2,573,653**
 - Zakres: **2019-04-14 22:00:00+00:00** → **2026-07-30 23:59:00+00:00**
+- Kolumn w schemacie: **17**
 - Dni sesyjnych: **1,887**
 - Barów o zerowym wolumenie: **0**
 
@@ -120,6 +121,43 @@ Kontraktów w serii ciągłej: **30**
 | ESU6 | 2026-06-15 | 2026-07-31 | 46,560 |
 
 Barów z niezerowym przesunięciem back-adjustu: **2,527,093** (98.2%)
+
+## Ciągłość serii po rolowaniu
+
+Kontraktów: **30** · sprawdzonych granic rolowania: **29**
+
+### 1. Niezmiennik arytmetyczny (kontrola rozstrzygająca)
+
+Offset back-adjustu (`px_adj − close`) musi być **stały w obrębie kontraktu**. Zmienny offset oznacza, że korekta była liczona per bar, a nie per kontrakt — czyli że seria ciągła jest fikcją.
+
+- Największy rozrzut offsetu wewnątrz kontraktu: **0.0000000000**
+- Próg akceptacji: **1e-06** (margines na reprezentację zmiennoprzecinkową, nie tolerancja pomiarowa)
+- Kontraktów z niestałym offsetem: **0** z 30
+
+**PASS**
+
+### 2. Skok serii skorygowanej na granicach rolowania
+
+- Największa pozostała nieciągłość: **70.25 pkt**
+- Data: **2020-03-16**, kontrakty: **ESH0 → ESM0**
+- Mediana skoku na granicach: **2.75 pkt**
+
+**Kontrola znaku** — rezyduum back-adjustu byłoby systematyczne, czyli miałoby jeden znak i średnią bliską pominiętemu spreadowi:
+
+- Skoków dodatnich: **17 z 29**
+- Średni skok ze znakiem: **-2.37 pkt**, t = **-0.63**
+
+Brak przewagi znaku wyklucza systematyczne rezyduum korekty. Podniesiona **wielkość** skoków przy zerowym **kierunku** to podpis zmienności repozycjonowania, nie błędu adjustmentu.
+
+### 3. `engine.roll.verify_continuity` — alarm wstępny
+
+Zgłoszonych granic: **12** z 29.
+
+⚠️ **Ta liczba nie jest miarą jakości danych.** Kryterium funkcji brzmi „skok ≥ |spread|”, a spread rolowania MNQ to kilkanaście–kilkadziesiąt punktów, więc każdy zwykły dzień o ruchu 50+ punktów zostaje zgłoszony. Skrajny przykład z tych danych: 2020-03-13, ruch 659 pkt w szczycie krachu covidowego, opisany jako „back-adjust nie zadziałał” przy spreadzie −13,50 pkt.
+
+Kryterium **nie zostało zmienione**, żeby raport przeszedł — to byłoby dostrajanie progu pod wynik. Rozstrzygająca jest kontrola 1; ta sekcja istnieje, bo PLAN 4.6 wymaga wywołania tej funkcji, a jej ograniczenie ma być jawne, nie ukryte (test regresyjny: `test_ZNANE_OGRANICZENIE_duzy_ruch_rynku_daje_falszywy_alarm`).
+
+### Werdykt ciągłości: **PASS**
 
 ## Outliery zakresu
 
