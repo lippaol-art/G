@@ -166,8 +166,11 @@ def main() -> int:
             print(f"     {rok}: R²={v:.4f}  VIF={vif:6.1f}  SE x{np.sqrt(vif):.1f}")
         v = _r2(Y, kontrola)
         print(f"     cala proba: R²={v:.4f}  VIF={1 / (1 - v):.1f}")
-        print(f"     sredni VIF wewnatrz roku: {np.mean(vify):.1f} -> "
-              f"efektywne N przy celu 400: {400 / np.mean(vify):.0f}\n")
+        v_sr = float(np.mean(vify))
+        # UWAGA: N/VIF to UPROSZCZONA ANALOGIA INFORMACYJNA, nie liczebnosc proby.
+        # VIF mowi wprost o wariancji estymatora: SE rosnie sqrt(VIF) razy.
+        print(f"     sredni VIF wewnatrz roku: {v_sr:.1f}  -> SE x{np.sqrt(v_sr):.1f}")
+        print(f"     (analogia informacyjna, NIE liczebnosc proby: N=400 ~ {400 / v_sr:.0f})\n")
     return 0
 
 

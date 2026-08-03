@@ -235,7 +235,8 @@ wynikająca z niego inflacja wariancji `VIF = 1/(1−R²)`.
 | 2025 | 0,9823 | 56,7 | ×7,5 |
 | 2026 | 0,9867 | 75,3 | ×8,7 |
 
-Średni VIF wewnątrz roku: **197**. Efektywne N przy celu 400: **2**.
+Średni VIF wewnątrz roku: **197** — wariancja estymatora większa ok. 197 razy,
+błąd standardowy ok. 14 razy.
 
 ### Wynik po normalizacji płynnością — najlepszy dostępny wariant
 
@@ -250,7 +251,13 @@ wynikająca z niego inflacja wariancji `VIF = 1/(1−R²)`.
 | 2025 | 0,9456 | 18,4 | ×4,3 |
 | 2026 | 0,9639 | 27,7 | ×5,3 |
 
-Średni VIF wewnątrz roku: **23,0**. Efektywne N przy celu 400: **17**.
+Średni VIF wewnątrz roku: **23,0**.
+
+**Jak to czytać.** VIF = 23 oznacza wariancję estymatora współczynnika większą
+ok. 23 razy i błąd standardowy większy ok. **4,8 razy**. W uproszczonej analogii
+informacyjnej odpowiadałoby to spadkowi N = 400 do około **17**, ale **nie jest
+to dosłowna liczebność próby** — to przybliżenie przy uproszczonych założeniach
+OLS, podane jako intuicja skali, nie jako liczba niezależnych obserwacji.
 
 ### Dlaczego pełna próba nie ratuje sprawy
 
@@ -309,8 +316,10 @@ Dwa ostatnie wiersze trafiają dokładnie w cmentarz Gen1:
 **Dokładny blocker:** proponowana zmienna mechanizmu `ΔE = L(L−1)·A·r` jest
 w praktyce przeskalowanym `r`. Wewnątrz każdego roku badanej historii
 współliniowość z pełnym zestawem kontrolnym B04 wynosi **R² = 0,86–0,97 nawet
-po najlepszej dostępnej normalizacji płynnością**, co daje średni VIF **23**
-i efektywne N rzędu **17** przy celu 400. Jedyna zmienność identyfikująca
+po najlepszej dostępnej normalizacji płynnością**, co daje średni VIF **23** —
+błąd standardowy współczynnika przyrostowego większy ok. 4,8 razy (w uproszczonej
+analogii informacyjnej: jakby z N = 400 zostało ~17, choć nie jest to dosłowna
+liczebność próby). Jedyna zmienność identyfikująca
 pochodzi z **wolnego wzrostu aktywów kompleksu**, nieodróżnialnego od zmiany
 siły samego efektu B04 w czasie.
 

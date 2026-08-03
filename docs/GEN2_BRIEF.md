@@ -506,12 +506,25 @@ Dwie rzeczy warte przeniesienia na kolejne kierunki:
    dostępna od inception funduszy. Ta droga zostaje otwarta dla innych
    mechanizmów opartych na funduszach.
 
-2. **Nowe kryterium selekcji, sprawdzalne na kartce przed pobraniem danych:**
-   mechanizm, którego zmienna ma postać **„wolno zmienny czynnik × zwrot dnia"**,
-   jest z góry skazany na współliniowość z momentum dziennym. D1 upadł dokładnie
-   na tym — `ΔE = K·r` przy `K` zmieniającym się o rzędy wielkości wolniej niż
-   `r`. Wewnątrzroczne `R²` z zestawem kontrolnym B04 wyniosło 0,86–0,97.
+2. **Nowe kryterium selekcji, sprawdzalne na kartce przed pobraniem danych.**
 
-   To kryterium należy dodać do listy pytań o każdy kolejny kierunek, obok
-   pytania o częstotliwość okazji. Oba dają się rozstrzygnąć **przed** wydaniem
-   złotówki i przed dotknięciem danych.
+> **Reguła algebraiczna.** Przed pobraniem danych sprawdź algebraicznie, czy
+> zmienna mechanizmu nie jest tylko transformacją istniejącego benchmarku.
+> W szczególności konstrukcja **`(wolno zmienny czynnik) × bieżący zwrot`**
+> zwykle nie dostarcza nowego predyktora kierunku względem momentum. Zmienność
+> czynnika musi być **wystarczająco szybka, point-in-time i niezależna od
+> benchmarku**, żeby efekt dało się zidentyfikować.
+
+   **To nie jest zakaz, tylko wymóg dowodu.** Nie twierdzę, że każda taka
+   zmienna jest matematycznie bezużyteczna — może istnieć wolny czynnik
+   z egzogenicznymi skokami albo wyraźnymi zmianami strukturalnymi, i wtedy
+   identyfikacja jest możliwa. Reguła brzmi „**wymaga dowodu niezależnej
+   zmienności**", a nie „automatycznie odrzucone".
+
+   D1 upadł dokładnie na tym: `ΔE = K·r`, przy `K` zmieniającym się o rzędy
+   wielkości wolniej niż `r`, bez żadnych skoków egzogenicznych. Wewnątrzroczne
+   `R²` z zestawem kontrolnym B04 wyniosło 0,86–0,97.
+
+   Kryterium należy dodać do listy pytań o każdy kolejny kierunek, obok pytania
+   o częstotliwość okazji. Oba dają się rozstrzygnąć **przed** wydaniem złotówki
+   i przed dotknięciem danych.

@@ -466,7 +466,10 @@ mierzy P&L i nie zawiera reguły wejścia.
 **Blocker:** zmienna `ΔE = L(L−1)·A·r` jest w praktyce przeskalowanym `r`.
 Wewnątrz każdego roku współliniowość z pełnym zestawem kontrolnym B04
 (`r, |r|, r², sign(r)`) wynosi **R² = 0,86–0,97** nawet po najlepszej dostępnej
-normalizacji płynnością → średni VIF **23**, efektywne N ≈ **17** przy celu 400.
+normalizacji płynnością → średni VIF **23**, czyli błąd standardowy
+współczynnika przyrostowego większy ok. 4,8 razy (w uproszczonej analogii
+informacyjnej odpowiada to spadkowi N = 400 do ~17 — nie jest to jednak
+dosłowna liczebność próby).
 
 Jedyna zmienność identyfikująca pochodzi z **wolnego wzrostu aktywów kompleksu**
 (K: 42,7 → 242,7 mld USD, 5,7× w siedem lat). Dodanie członu `r × trend`
@@ -508,3 +511,81 @@ w 98% trendem, nieodróżnialnym od hipotezy „efekt B04 zmieniał siłę w cza
 
 Kierunek rezerwowy D5 pozostaje rezerwą — wraca wyłącznie po zawężeniu do
 jednej zamrożonej zależności, wskazaniu pól danych, wycenie i osobnej zgodzie.
+
+---
+
+## Gen2 — audyt kierunku D5 (03.08.2026): WYKONALNY warunkowo
+
+`docs/D5_AUDYT_WYKONALNOSCI.md`. **Zero zużytych prób, zero zakupionych
+danych** — wycena wyłącznie przez `metadata.get_cost` (read-only).
+
+### Werdykt: `D5 WYKONALNY — można rozważyć kartę i zakup minimalnej próbki`
+
+Wszystkie siedem warunków obowiązkowych spełnione.
+
+**Mechanizm wybrany przed danymi: kontynuacja metaorderu, znak dodatni.**
+Podstawa: długa pamięć znaku zleceń (Lillo–Mike–Farmer 2005, replikacja
+*Phys. Rev. Lett.* 131, 197401 z 2023; Hurst ≈ 0,7).
+
+**Historia absorpcji ODRZUCONA**, nie odłożona — wymaga stwierdzenia, że
+konkretny duży pasywny uczestnik zostanie wyczerpany, czego dane anonimowe nie
+zawierają. Dałaby znak zależny od nieobserwowalnego stanu, czyli w praktyce
+swobodę wyboru znaku po zobaczeniu wyniku.
+
+### Konsekwencja wyboru: MBP niepotrzebny
+
+| Schemat | 1 dzień | 1 miesiąc | Rozmiar/mies. | Potrzebny? |
+|---|---|---|---|---|
+| **`trades`** | **1,75** | **29,83** | 1,14 GB | **TAK, wystarczy** |
+| `tbbo` | 2,92 | 49,71 | 1,91 GB | pomocniczy |
+| `mbp-1` | 3,68 | 59,07 | 35,2 GB | nie |
+| `mbo` | 4,67 | 75,27 | 44,9 GB | nie |
+| `mbp-10` | 7,18 | 115,14 | **247,3 GB** | nie |
+
+**Twarde ograniczenie infrastrukturalne:** dostępne 28 GB dysku. MBP-1, MBO
+i MBP-10 **nie mieszczą się** niezależnie od budżetu.
+
+Zawężenie okna obniża koszt proporcjonalnie: doba 1,75 → RTH 1,34 → ostatnia
+godzina **0,23**. Rok `trades` w oknie jednogodzinnym ≈ **25 USD** (średnia
+z pięciu dni z różnych kwartałów, po zakotwiczeniu okna w ET) wobec 271,66 USD
+za pełny rok.
+
+### Plan etapowy — 32 USD do GO/NO-GO
+
+1. **Etap 1, 1,75 USD, 1 dzień** — kompletność pola `side` (enum dopuszcza
+   `NONE`, odsetek nieznany). Kryterium: >95% wypełnienia.
+2. **Etap 2, ~30 USD, 1 miesiąc** — **lekcja z D1 zastosowana wcześnie**: czy
+   nierównowaga przepływu daje się odróżnić od momentum ceny. Kryterium:
+   **VIF < 5**. Powyżej — D5 dzieli los D1 za 32 USD zamiast za kilkaset.
+3. **Etap 3** — dopiero po zielonych 1 i 2, osobna zgoda.
+
+Próbki wybierane **mechanicznie** (ostatni zamknięty miesiąc kalendarzowy),
+nie dlatego, że były zmienne albo ciekawe.
+
+### Inwentaryzacja
+
+**Nie posiadamy żadnych danych `trades`, MBP ani MBO.** Miesiąc `trades` z planu
+Etapu 1 (23,77 USD) **nigdy nie został kupiony**. Korzystna konsekwencja: żadna
+próbka nie została obejrzana, więc pierwsza kupiona może zostać przeznaczona
+świadomie, bez długu ekspozycji.
+
+### Korekta własnej oceny z briefu
+
+D5 dostał w briefie **5/5 za liczbę okazji**. Przy poprawnej jednostce
+niezależności — **sesja, nie sygnał** — zasługuje na tyle samo, co D1: sto
+sygnałów z jednej sesji dzieli reżim, zmienność, makro i **często ten sam
+metaorder**. Efektywna częstotliwość to ~250 sesji rocznie.
+
+### Dwa zastrzeżenia zapisane jawnie
+
+1. **Pytanie o przyrost ponad momentum to blocker D1 w innym przebraniu.**
+   Różnica strukturalna: w D1 współliniowość była **algebraiczna i nieusuwalna**,
+   w D5 jest **empiryczna** — przypadki rozjazdu (duża agresja, mały ruch ceny)
+   są właśnie przypadkami interesującymi. Dlatego D1 dało się zamknąć na
+   kartce, a D5 nie.
+2. **To najbardziej zatłoczony sygnał w mikrostrukturze.** W horyzoncie, gdzie
+   jest najsilniejszy (poniżej sekundy), nie konkurujemy. Zakład dotyczy
+   horyzontu dziesiątek sekund do minut po kosztach. Literatura z lat 2010+
+   jest raczej sceptyczna. **Uczciwie otwarte pytanie, nie przewidywana wygrana.**
+
+**Nie napisano H017. Nie kupiono danych. Licznik prób: 0.**
