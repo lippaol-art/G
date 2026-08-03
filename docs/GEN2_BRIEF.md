@@ -50,7 +50,20 @@ bo inaczej Gen2 zaprojektuje się sama w ślepy zaułek.
 
 Jeśli historia jest wyłącznie deweloperska, **jedynym uczciwym źródłem dowodu
 jest forward**. A podłoga próby to 400 transakcji (cel 800+, `validation/power`).
-Stąd:
+
+**Czym N = 400 jest, a czym nie jest.** To **reguła governance tego projektu
+i konserwatywna podłoga certyfikacji**, a nie uniwersalne prawo statystyczne.
+Bardzo duży efekt bywa wykrywalny znacznie wcześniej. Świadomie nie
+certyfikujemy jednak strategii na małej próbie, bo:
+
+- efekty finansowe są niestabilne w czasie,
+- obserwacje są zależne (klastrowanie zmienności),
+- jedna faza rynku potrafi zdominować wynik,
+- forward musi objąć więcej niż jeden reżim,
+- potrzebujemy oszacowania **lewego ogona**, nie tylko średniej.
+
+Nie należy więc pisać, że przy N < 400 zależność jest matematycznie
+niewykrywalna. Należy pisać, że **my jej nie certyfikujemy**. Stąd:
 
 | Częstotliwość okazji | Czas do N = 400 na forwardzie |
 |---|---|
@@ -115,11 +128,29 @@ wymagana transakcja  ΔE = L·(L−1)·A·r
 3× długie, 2× długie, −1×, −2×, −3×. Mandat funduszu wymaga odtworzenia dźwigni
 **każdego dnia**; to nie jest decyzja zarządzającego.
 
-**Dlaczego znak jest jednoznaczny.** Współczynnik `L·(L−1)` jest **dodatni dla
-obu stron**: dla L = 3 wynosi 6, dla L = −3 wynosi 12. Fundusz lewarowany
-i fundusz odwrotny **kupują tak samo**, gdy indeks rośnie. Nie ma strony, która
-kompensuje. Wymuszony przepływ zawsze **wzmacnia** ruch dnia i zawsze ma znak
-zgodny z tym ruchem.
+**Znak przepływu — i dlaczego to NIE jest nowy predyktor kierunku.**
+Współczynnik `L·(L−1)` jest **dodatni dla obu stron**: dla L = 3 wynosi 6, dla
+L = −3 wynosi 12. Fundusz lewarowany i odwrotny **kupują tak samo**, gdy indeks
+rośnie. Nie ma strony kompensującej, więc wymuszony przepływ zawsze **wzmacnia**
+ruch dnia.
+
+⚠ **KOREKTA WOBEC PIERWSZEJ WERSJI TEGO DOKUMENTU.** Napisałem wcześniej, że
+„znak jest jednoznaczny", i to było twierdzenie **za mocne**. Znak ΔE pochodzi
+w całości ze znaku `r` — aktywa `A` i dźwignia zmieniają **wielkość**
+przewidywanego przepływu, nie jego stronę. Kierunek nadal pochodzi z B04.
+
+Uczciwe sformułowanie kierunku brzmi więc:
+
+> Czy zewnętrznie oszacowana **wielkość** wymuszonego rebalansowania przewiduje
+> **dodatkową** kontynuację na zamknięciu ponad tę, którą przewiduje sam
+> dotychczasowy zwrot dnia?
+
+A nie: „czy fundusze lewarowane przewidują kierunek zamknięcia?".
+
+Nową informacją może być wyłącznie **wielkość** wymuszonego przepływu, jego
+**relacja do płynności** i **koncentracja czasowa**. Jeśli po kontroli na samo
+`r` estymowany przepływ nic nie wnosi, D1 jest bardziej skomplikowaną wersją
+B04 i musi zostać odrzucona.
 
 **Kiedy działa.** W ostatnich kilkunastu minutach sesji, gdy fundusze domykają
 ekspozycję. Siła rośnie z |r| i z aktywami kompleksu.
@@ -134,6 +165,10 @@ do momentu wejścia.
 
 **Potrzebne dane.** Aktywa i liczba jednostek funduszy lewarowanych na NDX —
 publikowane codziennie przez emitentów, **za darmo**. Ceny mamy.
+
+> ✅ **Zweryfikowane w audycie** (`docs/D1_AUDYT_MECHANIZMU.md`): dane istnieją,
+> są darmowe i point-in-time, pełna historia od inception. To założenie
+> okazało się trafne.
 
 **Częstotliwość okazji.** Każda sesja → **~250 rocznie**. Jedyny kierunek na
 liście, który mieści się w rozsądnym czasie forwardu.
@@ -306,19 +341,27 @@ ograniczenie wykonalności, przez które upadło H015.
 
 ### D5 — Mikrostruktura agresora (WARUNKOWY — wymaga danych `trades`/MBP)
 
-**Mechanizm.** Kto był stroną inicjującą transakcję. Przewaga agresji kupna nad
-sprzedażą przy jednoczesnym braku ruchu ceny oznacza absorpcję przez dużego
-sprzedającego — i odwrotnie. To informacja o **tożsamości przepływu**, nie
-o jego rozmiarze.
+**Mechanizm.** **Strona inicjująca i odpowiedź płynności na przepływ.**
+Przewaga agresji kupna nad sprzedażą przy jednoczesnym braku ruchu ceny oznacza,
+że ktoś tę agresję absorbuje — i odwrotnie.
 
-**Kto jest zmuszony.** Podmiot realizujący duże zlecenie w oknie czasowym
-(execution algo), który musi dokończyć wolumen.
+⚠ **KOREKTA WOBEC PIERWSZEJ WERSJI.** Napisałem wcześniej o „tożsamości
+przepływu" i to przecenia zawartość tych danych. `trades` i MBP **pokazują**:
+stronę inicjującą, nierównowagę agresji, reakcję ceny na agresję, absorpcję,
+głębokość i zmiany księgi. **Nie pokazują**: czy uczestnikiem jest fundusz, czy
+działa execution algo, czy zlecenie jest częścią większego zlecenia macierzystego,
+ani czy ktokolwiek „musi" kontynuować.
 
-**Dlaczego znak.** Niedokończona realizacja dużego zlecenia trwa dalej —
-przepływ ma bezwładność, bo mandat wykonania nie znika z końcem minuty.
+**Kto jest zmuszony.** ⚠ Tego te dane **nie rozstrzygają**. Hipoteza
+o niedokończonym dużym zleceniu, które musi być dokończone, wymagałaby
+**osobnego argumentu** i nie może być traktowana jako obserwowany fakt.
 
-**Zmienna obserwowalna.** Nierównowaga agresji, absorpcja, ślad zleceń
-podzielonych na porcje.
+**Dlaczego znak.** Kandydat na argument: przepływ ma bezwładność, bo mandat
+wykonania nie znika z końcem minuty. To jest **hipoteza do uzasadnienia**, nie
+przesłanka.
+
+**Zmienna obserwowalna.** Nierównowaga agresji, absorpcja, zmiany głębokości
+księgi w odpowiedzi na agresję.
 
 **Potrzebne dane.** `trades` albo MBP. **Z OHLCV M1 to jest niebadalne** — nie
 ma tam informacji o stronie inicjującej.
@@ -344,7 +387,7 @@ danych taka ocena byłaby zgadywaniem udającym analizę.
 | Kryterium | D1 lewar ETF | D2 baza | D3 gamma | D4 reguły NDX | D5 agresor |
 |---|---|---|---|---|---|
 | siła mechanizmu | **5** | 3 | 3 | 4 | **5** |
-| jednoznaczność znaku | **5** | 3 | 2 | 1 | 4 |
+| jednoznaczność znaku *(patrz korekta przy D1)* | 2 | 3 | 2 | 1 | 4 |
 | falsyfikowalność | **5** | 4 | 3 | 4 | 4 |
 | dostępność danych | **5** | 2 | 2 | 4 | 1 |
 | koszt | **5** | 3 | 2 | 5 | 2 |
@@ -352,7 +395,7 @@ danych taka ocena byłaby zgadywaniem udającym analizę.
 | realizm wykonania | **5** | 3 | 4 | 1 | 4 |
 | niezależność od cmentarza | 3 | 4 | 2 | 4 | **5** |
 | zgodność z limitami konta funded | **5** | 4 | 3 | 3 | 3 |
-| **suma (max 45)** | **43** | 27 | 24 | 27 | 33 |
+| **suma (max 45)** | **40** | 27 | 24 | 27 | 33 |
 
 ### Jak czytać tę tabelę
 
@@ -443,3 +486,32 @@ w wielkość, która w Gen1 już raz okazała się niepredykowalna.
 Następny krok po decyzji: karta wybranego kierunku wraz z benchmarkiem, różnicą
 mechanizmu, planem ablacji i zadeklarowanym warunkiem negatywnym — **przed**
 jakimkolwiek pomiarem.
+
+---
+
+# Status kierunków po decyzji właściciela (03.08.2026)
+
+| Kierunek | Status |
+|---|---|
+| **D1** | wybrany jako aktywny → **audyt: `NIEWYKONALNY`** (`docs/D1_AUDYT_MECHANIZMU.md`) |
+| **D5** | rezerwowy, bez zakupu danych |
+| D2, D3, D4 | odłożone bez pisania kart |
+
+## Czego nauczył audyt D1
+
+Dwie rzeczy warte przeniesienia na kolejne kierunki:
+
+1. **Założenie o darmowych danych point-in-time było trafne** — i to nie jest
+   oczywiste. Pełna historia aktywów i liczby jednostek jest publicznie
+   dostępna od inception funduszy. Ta droga zostaje otwarta dla innych
+   mechanizmów opartych na funduszach.
+
+2. **Nowe kryterium selekcji, sprawdzalne na kartce przed pobraniem danych:**
+   mechanizm, którego zmienna ma postać **„wolno zmienny czynnik × zwrot dnia"**,
+   jest z góry skazany na współliniowość z momentum dziennym. D1 upadł dokładnie
+   na tym — `ΔE = K·r` przy `K` zmieniającym się o rzędy wielkości wolniej niż
+   `r`. Wewnątrzroczne `R²` z zestawem kontrolnym B04 wyniosło 0,86–0,97.
+
+   To kryterium należy dodać do listy pytań o każdy kolejny kierunek, obok
+   pytania o częstotliwość okazji. Oba dają się rozstrzygnąć **przed** wydaniem
+   złotówki i przed dotknięciem danych.

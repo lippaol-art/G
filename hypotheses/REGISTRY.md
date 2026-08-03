@@ -449,3 +449,62 @@ D1 jako kierunek pierwszy, D5 jako warunkowy po osobnej decyzji zakupowej.
 D2, D3 i D4 odradzane na teraz.
 
 **Nie wybrano kierunku i nie napisano karty.** Kolejny krok wymaga decyzji.
+
+---
+
+## Gen2 — audyt kierunku D1 (03.08.2026): NIEWYKONALNY
+
+Kierunek aktywny wybrany przez właściciela: **D1** (rebalansowanie funduszy
+lewarowanych). Audyt mechanizmu i danych **przed** napisaniem karty.
+`docs/D1_AUDYT_MECHANIZMU.md`, odtworzenie: `scripts/audit_d1.py`.
+
+**Zero zużytych prób** — audyt nie liczy żadnego zwrotu okna wynikowego, nie
+mierzy P&L i nie zawiera reguły wejścia.
+
+### Werdykt: `D1 NIEWYKONALNY`
+
+**Blocker:** zmienna `ΔE = L(L−1)·A·r` jest w praktyce przeskalowanym `r`.
+Wewnątrz każdego roku współliniowość z pełnym zestawem kontrolnym B04
+(`r, |r|, r², sign(r)`) wynosi **R² = 0,86–0,97** nawet po najlepszej dostępnej
+normalizacji płynnością → średni VIF **23**, efektywne N ≈ **17** przy celu 400.
+
+Jedyna zmienność identyfikująca pochodzi z **wolnego wzrostu aktywów kompleksu**
+(K: 42,7 → 242,7 mld USD, 5,7× w siedem lat). Dodanie członu `r × trend`
+podnosi `R²(ΔE ~ r)` z 0,826 do **0,981** — czyli informacja poza `r` jest
+w 98% trendem, nieodróżnialnym od hipotezy „efekt B04 zmieniał siłę w czasie".
+
+### Falsyfikatory
+
+| # | Warunek | Wynik |
+|---|---|---|
+| 1 | point-in-time historia aktywów | ✅ darmowa, pełna od inception |
+| 2 | universe bez survivorship bias | ⚠ częściowo |
+| 3 | dźwignia i benchmark znane historycznie | ✅ |
+| 4 | brak lookaheadu w publikacji | ✅ reguła t−1 ustalona z danych |
+| 5 | ścieżka transmisji do NDX | ⚠ nierozstrzygnięte (trasa swapowa) |
+| 6 | okno zamrażalne przed wynikiem | ✅ |
+| 7 | przepływ odróżnialny od `r` | ❌ |
+| 8 | brak współliniowości z B04 | ❌ |
+
+### Ustalenia poboczne warte zapamiętania
+
+- **Dane są darmowe i point-in-time** — `accounts.profunds.com/etfdata/ByFund/
+  {TICKER}-historical_nav.csv`, pełna historia, kolumny NAV / jednostki / AUM.
+  To korekta wobec GEN2_BRIEF, który zakładał to bez sprawdzenia.
+- **`AUM_t = NAV_t × jednostki_t` co do centa** — dowodzi, że wiersz z dnia `t`
+  jest wielkością **po zamknięciu**, więc dostępny jest wyłącznie wiersz `t−1`.
+- **Ivanov & Lenkey (2018) potwierdzeni na naszej próbie 2019–2026:**
+  corr(Δjednostek, r) = **−0,343** dla TQQQ i **+0,356** dla SQQQ — w obu
+  przypadkach przepływ inwestorów działa **przeciw** rebalansowi.
+- **Kolizja tickerów:** `QQQU`/`QQQD` to dziś dwa różne produkty u dwóch
+  emitentów, o różnych indeksach bazowych. Automatyczne zaciągnięcie
+  „lewarowanych QQQ" skleiłoby dwa różne szeregi.
+- **Kryterium ogólne do przyszłych kierunków:** mechanizm, którego zmienna ma
+  postać „wolno zmienny czynnik × zwrot dnia", jest z góry skazany na
+  współliniowość z momentum dziennym. Da się to sprawdzić na kartce, **przed**
+  pobraniem jakichkolwiek danych.
+
+**Nie napisano karty H017. Nie kupiono żadnych danych. Licznik prób: 0.**
+
+Kierunek rezerwowy D5 pozostaje rezerwą — wraca wyłącznie po zawężeniu do
+jednej zamrożonej zależności, wskazaniu pól danych, wycenie i osobnej zgodzie.
