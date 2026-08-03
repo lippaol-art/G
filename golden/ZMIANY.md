@@ -337,3 +337,44 @@ i nigdy niewykonana.
 
 **Żaden.** Kontrola techniczna, zero policzonych zwrotów, zero P&L.
 **Licznik prób: 0.**
+
+---
+
+## v7 — D5-B: wynik testu identyfikowalności (werdykt `GO`)
+
+```
+hash_wynikow  75b6d617de2db3862da58753b9bc8b2c59fb2f4560451bd85b3c3e9ca469e461
+           -> 2735b8f76023ebc8645b0d7afdb8c70776507eed67d81edff13910ae60cb65c2
+hash_danych   BEZ ZMIANY
+```
+
+**Zmienione klucze — dokładnie jeden:**
+
+| Klucz | Zmiana |
+|---|---|
+| `raporty.hashe.D5_etap2_wyniki.md` | NOWY |
+
+`hash_danych` bez zmiany: próbka `trades` leży w `data/raw/` (poza
+`.gitignore`), a baseline haszuje `data/clean/`. Żaden plik `clean/` nie
+został dotknięty.
+
+**Powód:** zakończenie Etapu 2 kierunku D5 — test identyfikowalności
+nierównowagi zdarzeń agresora względem równoczesnego momentum ceny.
+Werdykt `D5-B GO`, wszystkie sześć warunków z zamrożonej specyfikacji
+spełnione. Szczegóły: `reports/D5_etap2_wyniki.md`.
+
+**Dwa błędy własne wykryte i naprawione przed wydaniem werdyktu:**
+
+1. **Przepełnienie typu bez znaku** w różnicach `n_buy − n_sell`,
+   `f_buy − f_sell`, `v_buy − v_sell`. Pierwszy przebieg dał `NO-GO`
+   z koncentracją 58,50% zmienności na jednej sesji — wartość niewiarygodna,
+   która doprowadziła do diagnozy. `I_count` jest z konstrukcji w [−1, +1],
+   a przyjmował wartości rzędu 1,5 mln. **Fałszywy `NO-GO` nie został nigdzie
+   zaraportowany jako wynik.** Naprawa: rzutowanie na `Int64` w miejscu
+   agregacji + strażnik zakresu przerywający obliczenia.
+2. **Dwie zaległości wobec zamrożonej specyfikacji**: nieliczone warunki 4 i 5
+   z §8 oraz brak wykluczania grup niejednoznacznych z §3. Oba uzupełnione;
+   oba mogą werdykt wyłącznie zaostrzyć.
+
+**Wpływ na wnioski W001–W013: żaden.** Zero policzonych zwrotów przyszłych,
+zero P&L, zero backtestu. **Licznik prób: 0.** H017 nie powstaje.

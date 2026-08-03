@@ -227,5 +227,8 @@
    "koszt_usd": 1.556,
    "sha256": "0dc6e2ba38f7438a680fba4017969755323f553506491efa700629ee168da505"
   }
- ]
+ ],
+ "limit_usd_zamrozony": 30.0,
+ "koszt_gorna_granica_usd": 27.916,
+ "uwaga_koszt": "Wycena 26.406 USD obejmuje wszystkie 21 sesji. Pierwsze podejscie urwalo transfer sesji 2026-07-07 (koszt tej sesji 1.5098 USD) i ponowne pobranie moglo zostac naliczone drugi raz. Databento nie udostepnia w API endpointu rozliczeniowego, wiec podajemy GORNA GRANICE 27.916 USD zamiast liczby, ktorej nie zmierzylismy. Obie wartosci mieszcza sie w limicie 30.00 USD."
 }

@@ -75,11 +75,30 @@ def zdarzenia(d: pl.DataFrame) -> tuple[pl.DataFrame, dict]:
             pl.col("price").max().alias("p_max"),
         ])
     )
+    # GRUPY NIEJEDNOZNACZNE (§3 specyfikacji, "Obsluga grup niejednoznacznych").
+    # Klucz zawiera `side`, wiec pojedyncza grupa z definicji nie moze miec obu
+    # stron — ale gdy ta sama para (ts_event, sequence) wystepuje po OBU
+    # stronach, klucz nie izoluje jednego zlecenia agresora. Takich grup
+    # NIE przypisujemy do strony dominujacej i NIE liczymy do `I_count`;
+    # raportujemy je jawnie. Zostaja natomiast w kontroli sumy `size`, zeby
+    # niezmiennik 1 dalej sprawdzal komplet danych.
+    dwustronne = (
+        g.group_by(["ts_event", "sequence"]).agg(pl.len().alias("_stron"))
+        .filter(pl.col("_stron") > 1).drop("_stron")
+    )
+    g = g.join(dwustronne.with_columns(pl.lit(True).alias("niejednoznaczna")),
+               on=["ts_event", "sequence"], how="left").with_columns(
+        pl.col("niejednoznaczna").fill_null(False))
+    nj = g.filter(pl.col("niejednoznaczna"))
     kontrola = {
         "wypelnien_raw": d.height,
         "wypelnien_ze_strona": znane.height,
         "wypelnien_NONE": d.height - znane.height,
         "zdarzen": g.height,
+        "zdarzen_niejednoznacznych": nj.height,
+        "size_niejednoznacznych": int(nj["size"].sum()),
+        "udzial_size_niejednoznacznych": (float(nj["size"].sum())
+                                          / float(znane["size"].sum())),
         "suma_size_raw": int(znane["size"].sum()),
         "suma_size_zdarzen": int(g["size"].sum()),
     }
@@ -117,20 +136,28 @@ def okna_sesji(d: pl.DataFrame, g: pl.DataFrame, a: dt.datetime,
             pl.len().alias("wypelnien"),
         ])
     )
+    # RZUTOWANIE NA Int64 JEST OBOWIAZKOWE, NIE KOSMETYCZNE.
+    # `(warunek).sum()` daje UInt32, a `size.sum()` UInt32/64. Roznica dwoch
+    # takich kolumn NIE jest ujemna — przepelnia sie do ~1.8e19. Ten sam blad
+    # wystapil juz w Etapie 1 na roznicy wolumenow. Rzutujemy przy agregacji,
+    # zeby zadne pozniejsze wyrazenie nie moglo go odtworzyc.
+    _i64 = pl.Int64
+
     # kontrola B: nierownowaga po SUROWYCH WYPELNIENIACH
     fill = (
         d.filter(pl.col("side") != "N").with_columns(w.alias("okno"))
         .group_by("okno")
-        .agg([(pl.col("side") == "B").sum().alias("f_buy"),
-              (pl.col("side") == "A").sum().alias("f_sell"),
-              pl.col("size").filter(pl.col("side") == "B").sum().alias("v_buy"),
-              pl.col("size").filter(pl.col("side") == "A").sum().alias("v_sell")])
+        .agg([(pl.col("side") == "B").sum().cast(_i64).alias("f_buy"),
+              (pl.col("side") == "A").sum().cast(_i64).alias("f_sell"),
+              pl.col("size").filter(pl.col("side") == "B").sum().cast(_i64).alias("v_buy"),
+              pl.col("size").filter(pl.col("side") == "A").sum().cast(_i64).alias("v_sell")])
     )
-    # glowna A: nierownowaga po ZDARZENIACH
+    # glowna A: nierownowaga po ZDARZENIACH, z WYKLUCZENIEM niejednoznacznych
     ev = (
-        g.with_columns(w.alias("okno")).group_by("okno")
-        .agg([(pl.col("side") == "B").sum().alias("n_buy"),
-              (pl.col("side") == "A").sum().alias("n_sell")])
+        g.filter(~pl.col("niejednoznaczna"))
+        .with_columns(w.alias("okno")).group_by("okno")
+        .agg([(pl.col("side") == "B").sum().cast(_i64).alias("n_buy"),
+              (pl.col("side") == "A").sum().cast(_i64).alias("n_sell")])
     )
     o = ceny.join(fill, on="okno", how="inner").join(ev, on="okno", how="inner")
     return o.filter((pl.col("okno") >= a) & (pl.col("okno") < b)).sort("okno")
@@ -185,7 +212,8 @@ def main() -> int:
         o = okna_sesji(d, g, a, b).with_columns(pl.lit(s).alias("sesja"))
         czesci.append(o)
         print(f"  {s}  wypelnien {k['wypelnien_raw']:>9,}  zdarzen {k['zdarzen']:>9,}  "
-              f"okien {o.height:>4}", flush=True)
+              f"okien {o.height:>4}  niejedn. {k['zdarzen_niejednoznacznych']:>3} "
+              f"({100 * k['udzial_size_niejednoznacznych']:.4f}% size)", flush=True)
 
     o = pl.concat(czesci)
     # zmienne
@@ -198,6 +226,14 @@ def main() -> int:
         ((pl.col("v_buy") - pl.col("v_sell")) /
          (pl.col("v_buy") + pl.col("v_sell"))).alias("C_volume"),
     ]).drop_nulls(["m", "A_count", "B_fill", "C_volume"])
+
+    # STRAZNIK. Kazda z trzech nierownowag jest z konstrukcji w [-1, +1]
+    # (roznica podzielona przez sume tych samych nieujemnych skladnikow).
+    # Wartosc poza tym przedzialem oznacza blad obliczenia, nie wlasnosc rynku.
+    for kol in ("A_count", "B_fill", "C_volume"):
+        lo, hi = o[kol].min(), o[kol].max()
+        if not (lo >= -1.0 - 1e-12 and hi <= 1.0 + 1e-12):
+            sys.exit(f"BLAD: {kol} poza [-1,+1]: min={lo!r} max={hi!r}")
     # kubelek pory dnia liczony od poczatku RTH danej sesji
     o = o.with_columns(
         ((pl.col("okno").dt.hour().cast(pl.Int32) * 60
@@ -245,12 +281,44 @@ def main() -> int:
         print(f"    max udzial jednej sesji w zmiennosci: {100*konc:.2f}%")
 
     a = wyniki["A_count"]
+
+    # WARUNKI 4 i 5 z §8 SPECYFIKACJI. Pierwsza wersja skryptu ich nie liczyla —
+    # to byl brak implementacji zamrozonej specyfikacji, nie zmiana progu.
+    # Oba moga werdykt tylko ZAOSTRZYC, nigdy zluzowac.
+    #
+    # 4. "wynik nie zalezy wylacznie od jednego segmentu dnia" — ten sam prog
+    #    20%, ktory specyfikacja ustalila dla sesji, zastosowany przez analogie
+    #    do kubelkow 30-minutowych (13 kubelkow w RTH, rownomiernie ~7.7%).
+    y = o["A_count"].to_numpy()
+    ssk = o.group_by("kubelek").agg(
+        ((pl.col("A_count") - y.mean()) ** 2).sum().alias("ss"))["ss"].to_numpy()
+    konc_pory = float(ssk.max() / ssk.sum())
+
+    # 5. "probka zawiera wystarczajaca zmiennosc OBU stron agresji" — nie
+    #    wystarczy, ze obie strony wystepuja lacznie; sprawdzamy najgorsza sesje.
+    znak = o.group_by("sesja").agg([
+        (pl.col("A_count") > 0).mean().alias("dod"),
+        (pl.col("A_count") < 0).mean().alias("uje"),
+    ])
+    min_strona = float(np.minimum(znak["dod"].to_numpy(),
+                                  znak["uje"].to_numpy()).min())
+    glob_dod = float((y > 0).mean())
+    print(f"\n  strony agresji: okien z I>0 {100*glob_dod:.1f}%, I<0 "
+          f"{100*(y < 0).mean():.1f}%, I=0 {100*(y == 0).mean():.1f}%")
+    print(f"  najslabsza sesja — mniejsza strona: {100*min_strona:.1f}% okien")
+    print(f"  max udzial jednego kubelka 30-min w zmiennosci: {100*konc_pory:.2f}%")
+
     war = {
         "pooled VIF < 5": a["pooled_vif"] < PROG_VIF,
         "mediana dziennego VIF < 5": a["mediana_dzienna"] < PROG_VIF,
         ">=75% sesji z VIF < 5": a["udzial_ponizej"] >= UDZIAL_SESJI,
+        "zadna pora dnia > 20% zmiennosci": konc_pory <= MAX_KONC,
+        "obie strony agresji w kazdej sesji >= 20% okien": min_strona >= 0.20,
         "zadna sesja > 20% zmiennosci": a["max_koncentracja"] <= MAX_KONC,
     }
+    a["koncentracja_pory_dnia"] = konc_pory
+    a["min_strona_sesji"] = min_strona
+    a["udzial_dodatnich"] = glob_dod
     print("\n" + "=" * 64)
     for n, v in war.items():
         print(f"  {'OK ' if v else 'NIE'}  {n}")

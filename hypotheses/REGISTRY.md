@@ -652,3 +652,94 @@ zamrożenia: definicji nierównowagi (po zdarzeniach agresora), okna obserwacji,
 benchmarku momentum i sposobu liczenia VIF.
 
 **H017 nie powstaje. P&L nie mierzony. Licznik prób: 0.**
+
+---
+
+## D5 Etap 2 — wykonany (03.08.2026): `D5-B GO`
+
+Specyfikacja zamrożona **przed zakupem** (`docs/D5_ETAP2_SPEC.md`, commity
+`91d2649` i `00fdcad`), zakup po zamrożeniu, wynik w
+`reports/D5_etap2_wyniki.md`.
+
+### Werdykt: `D5-B GO`
+
+`I_count` — nierównowaga `candidate_aggressor_event` w oknie 60 s — **nie jest
+odtwarzalna** z równoczesnego momentum ceny, jego przekształceń, wolumenu ani
+efektów pory dnia.
+
+| Warunek §8 | Wymóg | Zmierzone |
+|---|---|---|
+| pooled VIF | < 5 | **1,548** (R² = 0,354) |
+| mediana dziennego VIF | < 5 | **1,787** |
+| sesji z VIF < 5 | ≥ 75% | **100%** (21/21) |
+| udział jednej pory dnia | ≤ 20% | **9,99%** |
+| obie strony agresji, najsłabsza sesja | ≥ 20% okien | **39,2%** |
+| udział jednej sesji | ≤ 20% | **10,21%** |
+
+Kontrole B (po wypełnieniach, VIF 1,971) i C (`I_volume`, VIF 2,291) zgodne
+z A co do werdyktu. **Werdykt pochodzi wyłącznie z A** — B i C nie były użyte
+do jego zmiany po zobaczeniu liczb.
+
+### Dlaczego to nie jest powtórka D1
+
+W D1 identyfikacja siedziała w wolnym trendzie i dlatego nie znaczyła nic.
+Tutaj pooled VIF prawie nie zmienia się po usunięciu efektów pory dnia
+(1,548 → 1,532), a dzienne VIF-y — liczone **wewnątrz** pojedynczych sesji —
+też są niskie. Identyfikacja nie pochodzi więc ani z pory dnia, ani z różnic
+między sesjami. To jest ta różnica, dla której D5 dostał kartę wstępu, a D1 nie.
+
+### Próbka
+
+22 sesje RTH lipca 2026, `MNQU6`, **22 080 246 wypełnień**, 19 837 327 zdarzeń,
+**8 400 okien** 60 s. Koszt: wycena **26,406 USD**, górna granica **27,916 USD**
+(urwany transfer jednej sesji mógł zostać naliczony dwa razy; API Databento
+nie ma endpointu rozliczeniowego, więc podana jest granica, nie zmierzona
+kwota). Limit zamrożony: 30,00 USD — dotrzymany.
+
+### Bramka §10 przed VIF
+
+Rekonstrukcja `ohlcv-1m` dla całego miesiąca: **8 400 z 8 400 minut zgodnych
+co do ticka i co do sztuki**, zero minut bez pary po którejkolwiek stronie,
+zero przecięć zakresów między plikami. Nie było niezgodności do wyjaśnienia.
+Potwierdza na 22× większej próbce ustalenie z Etapu 1: bary Databento powstają
+na **`ts_recv`**.
+
+### Trzy błędy własne — wykryte przed wydaniem werdyktu
+
+1. **Przepełnienie typu bez znaku.** Pierwszy przebieg dał `D5-B NO-GO`.
+   Wynik był fałszywy: `I_count` jest z konstrukcji w [−1, +1], a przyjmował
+   wartości rzędu 1,5 mln, bo `n_buy − n_sell` na typach bez znaku przepełnia
+   się do ~1,8·10¹⁹ zamiast dać liczbę ujemną. **Fałszywy `NO-GO` nie został
+   nigdzie zaraportowany jako wynik.** To druga wystąpienie tej samej klasy
+   błędu w tym projekcie (pierwsze: różnica wolumenów w Etapie 1).
+2. **Warunki 4 i 5 z §8 nie były liczone** — skrypt sprawdzał cztery z sześciu.
+3. **Grupy niejednoznaczne nie były wykluczane** wbrew §3 (732 pary
+   `(ts_event, sequence)` po obu stronach — 0,0037% grup; po wykluczeniu wyniki
+   bez zmian do czwartego miejsca).
+
+### Nowa reguła trwała projektu
+
+**Każda zmienna o znanym z konstrukcji zakresie dostaje jawną asercję tego
+zakresu w miejscu obliczenia.** Błąd przepełnienia nie rzuca wyjątku i nie psuje
+wykresu — zmienia werdykt. Uzupełnia to regułę o rzutowaniu na `Int64` przy
+odejmowaniu kolumn bez znaku, zapisaną po Etapie 1: samo rzutowanie okazało się
+niewystarczające, bo trzeba jeszcze pamiętać, żeby je zastosować.
+
+### Warunkowość reguły grupowania pozostaje w mocy
+
+`candidate_aggressor_event = (ts_event, sequence, side)` jest nadal
+**empirycznym przybliżeniem**, nie potwierdzonym identyfikatorem zlecenia
+agresora. Pytanie do Databento przygotowane w `docs/D5_PYTANIE_DATABENTO.md`
+(semantyka `sequence`, `F_LAST`, `flags == 0` w 22 mln rekordów, 732 pary
+dwustronne). **Odpowiedź musi być dołączona do dokumentacji przed powstaniem
+H017.**
+
+### Status i co dalej
+
+**Cały lipiec 2026 jest development setem** — nie jest OOS i nie stanie się nim
+po zamrożeniu H017. Zgodnie z §11 `GO` uprawnia do napisania karty H017
+z zamrożonym mechanizmem, znakiem, oknem i wykonaniem (**wyłącznie RTH**),
+następnie pre-flightu trwałości znaku, i dopiero potem pierwszego backtestu.
+
+**H017 nie powstaje w tym wpisie. P&L nie został zmierzony.
+Licznik prób: 0.**
