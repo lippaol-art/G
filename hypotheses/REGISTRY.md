@@ -589,3 +589,66 @@ metaorder**. Efektywna częstotliwość to ~250 sesji rocznie.
    jest raczej sceptyczna. **Uczciwie otwarte pytanie, nie przewidywana wygrana.**
 
 **Nie napisano H017. Nie kupiono danych. Licznik prób: 0.**
+
+---
+
+## D5 Etap 1 — wykonany (03.08.2026): `D5-A GO`
+
+**Pierwszy zakup danych od Etapu 1 projektu.** Specyfikacja zamrożona commitem
+**przed** zakupem (`41d3eee`), korekta budżetu (`953b5ec`), dopiero potem
+pobranie i kontrole. `docs/D5_ETAP1_SPEC.md`, `reports/D5_etap1_kontrole.md`,
+`data/manifest_trades.md`.
+
+| | |
+|---|---|
+| Sesja | `2026-07-30`, `MNQU6`, 1 696 891 transakcji |
+| Koszt | **2,1240 USD** (limit 2,15) |
+| Wydatek projektu łącznie | 7,82 + 2,1240 = **9,9440 USD** |
+| Budżet pozostały | **60,2960 USD** |
+
+### Werdykt: `D5-A GO`
+
+`side != NONE` = **99,9999%** przy progu 95%. Kompletność ≥ 99,998%
+w **każdym** z dziewięciu segmentów sesji. Największe ryzyko audytu D5 — że
+pole agresora będzie rzadko wypełnione — **nie zmaterializowało się**.
+
+Semantyka ustalona **z danych**, nie z pamięci: przy rosnącej cenie dominuje
+`B` (87,7%), przy spadającej `A` (88,1%), więc **`B` = agresor kupujący**,
+`A` = sprzedający. Tick posłużył wyłącznie do odczytania znaczenia etykiety,
+nie do jej odtworzenia — zakaz rekonstrukcji strony z ruchu ceny nienaruszony.
+
+### Dwa ustalenia projektowe dla Etapu 2
+
+1. **Jednostką mechanizmu jest ZDARZENIE AGRESORA, nie wypełnienie.** CME
+   drukuje osobny rekord na każde wypełnienie jednego zlecenia agresora:
+   1 696 891 wypełnień → **1 479 365 zdarzeń** (1,15 na zdarzenie). Liczenie
+   nierównowagi po wypełnieniach mierzyłoby fragmentację płynności zamiast
+   agresji.
+2. **Granica okna musi być liczona na `ts_recv`, nie `ts_event`.**
+
+### Ustalenie uboczne o znaczeniu dla całego projektu
+
+Rekonstrukcja `ohlcv-1m` z surowych transakcji: **0 niezgodności na 1 380
+barach** w open, high, low, close **i** wolumenie — przy agregacji po `ts_recv`.
+Na `ts_event` wychodzi 8 / 6 / 20 niezgodności przez przesunięcia na granicy
+minuty (suma różnic wolumenu dokładnie zero — sygnał, że to granica, nie brak
+danych).
+
+**To domyka zaległość z audytu 4 (poprawka A4-10)** — niezależną kontrolę
+jakości barów przez rekonstrukcję z transakcji, zaplanowaną w Etapie 1 projektu
+i nigdy niewykonaną. Nasze bary odtwarzają się z surowych transakcji co do
+ticka i co do sztuki.
+
+### Ekspozycja na dane
+
+Sesja `2026-07-30` została **obejrzana**, więc gdyby weszła do próby badawczej,
+jest **development only**. Jedna sesja z ~250 rocznie — wpływ pomijalny,
+odnotowany.
+
+### Zatrzymanie
+
+Miesiąc `trades` (~29,83 USD) wymaga **osobnej decyzji** oraz wcześniejszego
+zamrożenia: definicji nierównowagi (po zdarzeniach agresora), okna obserwacji,
+benchmarku momentum i sposobu liczenia VIF.
+
+**H017 nie powstaje. P&L nie mierzony. Licznik prób: 0.**

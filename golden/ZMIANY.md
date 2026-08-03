@@ -268,3 +268,72 @@ Granica zabezpieczona testem
 ### Wpływ na wnioski W001–W013
 
 **Żaden.** Kontrola danych, nie badanie P&L. Zero zużytych prób.
+
+---
+
+## v6 — D5 Etap 1: pierwszy zakup danych `trades`
+
+```
+hash_danych  = cf16e23b…909d5a2c5  ->  e86a2ace5ec1c3a2b253b38a7763fd3ad73126be846051feba3886db24308519
+hash_wynikow = e599c0b7…12e16930  ->  75b6d617de2db3862da58753b9bc8b2c59fb2f4560451bd85b3c3e9ca469e461
+```
+
+**Pierwsza zmiana `hash_danych` w historii projektu** — i dokładnie po to
+istnieje osobny hash danych. Nabyliśmy nowe dane; nic istniejącego się nie
+zmieniło.
+
+### Zmienione klucze — dwa, oba NOWE
+
+| Klucz | Rodzaj |
+|---|---|
+| `dane.manifesty.manifest_trades.md` | **nowy wpis** |
+| `raporty.hashe.D5_etap1_kontrole.md` | **nowy wpis** |
+
+**Zero kluczy istniejących uległo zmianie** — sprawdzone porównaniem struktur,
+nie tylko hasha:
+
+| Warstwa / grupa | Zmienione | Nowe |
+|---|---|---|
+| `dane.parquet` (13 zbiorów) | brak | brak |
+| `dane.csv` (3 kalendarze) | brak | brak |
+| `dane.manifesty` | brak | `manifest_trades.md` |
+| `raporty.hashe` (20 raportów) | brak | `D5_etap1_kontrole.md` |
+| `raporty.metryki` (8 metryk) | identyczne | — |
+| `silnik`, `metryki`, `walidacja`, `rejestr` | identyczne | — |
+
+### Powód
+
+Zakup jednego dnia `trades` MNQ (D5 Etap 1) i wykonanie dziewięciu zamrożonych
+kontroli. Specyfikacja zamrożona **przed** zakupem (`41d3eee`), korekta budżetu
+(`953b5ec`), zakup i kontrole po niej.
+
+| | |
+|---|---|
+| Sesja | `2026-07-30`, kontrakt `MNQU6` |
+| Rekordów | 1 696 891 |
+| Koszt | **2,1240 USD** (limit 2,15) |
+| SHA-256 pliku | `dfee7684c7bdce99272d91567752d7220291896bd8ebf694c281b6efab4df172` |
+
+Plik `.dbn.zst` nie jest commitowany — `data/raw/` jest w `.gitignore`.
+Manifest z parametrami odtworzenia: `data/manifest_trades.md`.
+
+### Werdykt kontroli: `D5-A GO`
+
+`side != NONE` = **99,9999%** przy progu 95%; kompletność ≥ 99,998% w każdym
+segmencie sesji.
+
+### Ustalenie uboczne o znaczeniu dla całego projektu
+
+Rekonstrukcja `ohlcv-1m` z surowych transakcji dała **zgodność doskonałą:
+0 niezgodności na 1 380 barach** w open, high, low, close i wolumenie —
+pod warunkiem agregacji po **`ts_recv`**, nie `ts_event` (ten drugi daje
+8 / 6 / 20 niezgodności przez przesunięcia na granicy minuty).
+
+To domyka zaległość z audytu 4 (poprawka A4-10): niezależna kontrola jakości
+barów przez rekonstrukcję z transakcji, zaplanowana w Etapie 1 projektu
+i nigdy niewykonana.
+
+### Wpływ na wnioski W001–W013
+
+**Żaden.** Kontrola techniczna, zero policzonych zwrotów, zero P&L.
+**Licznik prób: 0.**
