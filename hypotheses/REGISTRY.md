@@ -335,15 +335,18 @@ refaktoryzacji kodu.
 w bajt (`hash_wynikow = 6a082749…`). Tag `gen1-baseline` oznacza ostatnią
 wersję przed jakimkolwiek refaktorem.
 
-### Ustalenie: błąd w `validation/spa.py`
+### Ustalenie: błąd w `validation/spa.py` — ✅ NAPRAWIONE (R1)
 
-Golden baseline ujawnił, że ścieżka `arch` dostaje zwroty tam, gdzie
+Golden baseline ujawnił, że ścieżka `arch` dostawała zwroty tam, gdzie
 `arch.bootstrap.SPA` oczekuje strat — znak odwrócony, testowana hipoteza
 przeciwna. p = 0,898 identycznie dla czystego szumu i dla przewagi +0,30σ;
-własny fallback daje odpowiednio 0,303 i 0,002.
+własny fallback dawał odpowiednio 0,303 i 0,002.
+
+Naprawione w commicie `7f681ef` po dowodzie czerwieni testu przed poprawką
+(`reports/R1_regresja_spa.md`). Po naprawie: szum 0,248, przewaga 0,000; oba
+klucze fallbacku w baseline bit w bit bez zmian.
 
 **Wpływ na wnioski W001–W013: żaden.** SPA nie było użyte, licznik prób 0.
-Naprawa jest pozycją R1 planu refaktoru i wymaga osobnej zgody.
 
 ### Wynik audytu kodu
 
@@ -353,3 +356,57 @@ Trzy z czterech symboli martwych to **brak wykonania specyfikacji**, nie
 refaktor minimalny, trzy pozycje zamiast dziewięciu.
 
 **Licznik prób nadal 0.**
+
+---
+
+## Etap 2.5 — domknięcie techniczne (03.08.2026)
+
+Minimalny refaktor wykonany i zamknięty. **Stabilny SHA: `b8572a5`** (R1+R2),
+po Etapie 2.5 patrz koniec sekcji.
+
+| Poz. | Zakres | Stan |
+|---|---|---|
+| **R1** | znak w ścieżce `arch` `validation/spa.py` | ✅ `7f681ef` — test czerwony przed poprawką, `golden/ZMIANY.md` v2 |
+| **R2** | podpięcie `verify_continuity` i `describe` do `data_quality.py` | ✅ `b8572a5` — 8 testów, `golden/ZMIANY.md` v3 |
+| **R3** | wspólne `t_stat` | ⏸ **nie migrowane** — kanoniczna wersja przy pierwszym użyciu w Gen2 |
+| **N1–N6** | duży refaktor | ⏸ żadna pozycja nie weszła; N4 i N6 wyłącznie adnotacje |
+| **2.5a** | `verify_continuity` z bramki na diagnostykę | ✅ `golden/ZMIANY.md` v4 |
+| **2.5b** | empiryczna weryfikacja założenia A3 | ✅ `reports/A3_halt_weryfikacja.md` |
+
+### Kontrola ciągłości — wynik
+
+Niezmiennik arytmetyczny (offset back-adjustu stały w obrębie kontraktu):
+**rozrzut 0,0000000000 w 90 z 90 kontraktów** na MNQ, NQ i ES. **PASS.**
+
+Heurystyka „skok ≥ |spread|" **nie jest bramką** — jest nieidentyfikowalna,
+nie odróżnia ruchu rynku od błędu korekty. Zgłasza 17/29 granic MNQ, 18/29 NQ,
+12/29 ES przy zerowym rozrzucie offsetu; skrajny przypadek to ruch 659 pkt
+z krachu covidowego przy spreadzie −13,50 pkt. Progu **nie zmieniano** —
+problem leży w konstrukcji kryterium. Status: **INCONCLUSIVE**, nigdy
+automatyczny FAIL.
+
+### Założenie A3 — zamknięte empirycznie
+
+Gęstość okna 16:15–16:30 ET: **0,05%** przed 27.06.2021 wobec **96,21%** po,
+przy sąsiedztwie 16:00–16:15 na poziomie 96,2% po obu stronach. Kryterium to
+kontrast, nie sama pustka — bary M1 nie odróżniają zamknięcia od braku obrotu,
+więc rozstrzyga dopiero zestawienie z sąsiedztwem. Wszystkie wyjątki przed
+granicą leżą na krawędzi okna (16:15 albo 16:29).
+
+**Nie ma już w rejestrze założenia kalendarzowego bez własnego sprawdzenia.**
+
+### Reguła trwała wyprowadzona z R1
+
+Wszystkie testy SPA sprzed R1 wołały funkcję z `force_fallback=True` —
+ścieżka domyślna nie była testowana w ogóle, więc 233 testy dawały **fałszywe
+poczucie pokrycia**. Odtąd każdy moduł z implementacją podstawową i awaryjną
+musi mieć osobne testy obu ścieżek oraz test ich zgodności co do werdyktu
+(`docs/ZALOZENIA.md` G1a).
+
+### Stan
+
+- testów: **447**, ruff czysty, mypy bez uwag, golden `--sprawdz` zgodny
+- **licznik prób: 0**
+- wnioski W001–W013: **bez zmian**
+- punkt odniesienia Gen1: `a1aba1c` (tag `gen1-baseline` tylko lokalnie —
+  push odmówiony przez proxy, 403)

@@ -7,11 +7,13 @@ awaria, tylko jako cicho zafalszowany wynik dwa razy w roku.
 from __future__ import annotations
 
 from datetime import UTC, date, datetime, timedelta
+from pathlib import Path
 
 import pytest
 
 from engine.sessions import (
     ET,
+    HALT_ABOLISHED,
     SessionCalendar,
     in_historical_halt,
     in_maintenance,
@@ -115,6 +117,61 @@ def test_historyczny_halt_zniesiony_po_2021_06_27():
 
 def test_halt_tylko_w_swoim_oknie():
     assert not in_historical_halt(datetime(2020, 5, 12, 19, 0, tzinfo=UTC))
+
+
+@pytest.mark.needs_data
+def test_granica_A3_zgodna_z_danymi():
+    """ZALOZENIE A3 ZWERYFIKOWANE EMPIRYCZNIE (Etap 2.5).
+
+    A3 bylo jedynym zalozeniem kalendarzowym przyjetym z dokumentacji CME bez
+    sprawdzenia na wlasnych danych. Ten test pilnuje, ze `HALT_ABOLISHED`
+    zgadza sie z tym, co realnie widac w barach.
+
+    KRYTERIUM TO KONTRAST, NIE SAMA PUSTKA. Bary M1 nie odrozniaja formalnego
+    zamkniecia od braku transakcji (zalozenie B4), wiec puste okno samo w sobie
+    niczego by nie dowodzilo. Dowodzi dopiero zestawienie z SASIEDZTWEM: te same
+    dni, okno 16:00-16:15 ET.
+
+    Zmierzone: gestosc okna haltu 0.05% przed granica wobec 96.2% po niej,
+    przy sasiedztwie 96.2% po obu stronach. Pelny raport w
+    reports/A3_halt_weryfikacja.md (scripts/verify_a3_halt.py).
+    """
+    import polars as pl
+
+    sciezka = Path("data/clean/mnq_1m_cont.parquet")
+    if not sciezka.exists():
+        pytest.skip("brak data/clean/mnq_1m_cont.parquet")
+
+    d = pl.read_parquet(sciezka).select("ts_utc", "trade_date")
+    e = pl.col("ts_utc").dt.convert_time_zone("America/New_York")
+    d = d.with_columns(
+        (e.dt.hour().cast(pl.Int32) * 60 + e.dt.minute().cast(pl.Int32)).alias("hm")
+    )
+
+    def gestosc(war, lo, hi):
+        okres = d.filter(war)
+        dni = okres["trade_date"].n_unique()
+        n = okres.filter((pl.col("hm") >= lo) & (pl.col("hm") < hi)).height
+        return n / max(dni * (hi - lo), 1)
+
+    przed = pl.col("trade_date") < HALT_ABOLISHED
+    po = pl.col("trade_date") >= HALT_ABOLISHED
+    halt_przed = gestosc(przed, 975, 990)      # 16:15-16:30 ET
+    halt_po = gestosc(po, 975, 990)
+    sasiad_przed = gestosc(przed, 960, 975)    # 16:00-16:15 ET
+
+    assert halt_przed < 0.01, (
+        f"okno haltu przed {HALT_ABOLISHED} ma gestosc {halt_przed:.3%} — "
+        "granica A3 nie zgadza sie z danymi"
+    )
+    assert sasiad_przed > 0.90, (
+        f"sasiedztwo przed granica ma gestosc {sasiad_przed:.3%} — bez gestego "
+        "sasiedztwa pusty halt nie dowodzi niczego (mogl to byc brak transakcji)"
+    )
+    assert halt_po > 0.90, (
+        f"okno haltu po {HALT_ABOLISHED} ma gestosc {halt_po:.3%} — "
+        "halt mial zostac zniesiony"
+    )
 
 
 # --------------------------------------------------------------------------

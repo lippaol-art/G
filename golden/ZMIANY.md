@@ -216,3 +216,55 @@ wyłącznie nazewnictwo.
 ### Wpływ na wnioski W001–W013
 
 **Żaden.** Zmiana dotyczy etykiety w kodzie raportującym.
+
+---
+
+## v5 — Etap 2.5: empiryczna weryfikacja założenia A3
+
+```
+hash_danych  = cf16e23b…909d5a2c5   (BEZ ZMIAN)
+hash_wynikow = ae7b5c50…bb4f59f6  ->  e599c0b70d289b009a97bf36dfdae219f2baa0c659c1a4cf3f0be58712e16930
+```
+
+### Zmienione klucze — jeden, i jest to NOWY plik
+
+`raporty.hashe.A3_halt_weryfikacja.md` — nowy wpis. **Żaden z 19
+wcześniejszych hashy raportów się nie zmienił**, żadna z 8 metryk również.
+Warstwy `dane`, `silnik`, `metryki`, `walidacja` i `rejestr` — identyczne,
+sprawdzone porównaniem struktur.
+
+### Powód
+
+A3 (halt CME 15:15–15:30 CT do 27.06.2021) było jedynym założeniem
+kalendarzowym przyjętym z dokumentacji bez sprawdzenia na własnych danych.
+Zweryfikowane na MNQ, NQ i ES przez `scripts/verify_a3_halt.py`.
+
+### Wynik
+
+Gęstość okna 16:15–16:30 ET (udział wypełnionych minut z 15 możliwych na dzień):
+
+| Instrument | Przed 27.06.2021 | Po 27.06.2021 | Sąsiedztwo 16:00–16:15 przed |
+|---|---|---|---|
+| MNQ | **0,05%** | 96,21% | 96,2% |
+| NQ | **0,05%** | 96,21% | 96,3% |
+| ES | **0,07%** | 96,21% | 96,3% |
+
+Kryterium to **kontrast, nie sama pustka**. Bary M1 nie odróżniają formalnego
+zamknięcia od braku transakcji (założenie B4), więc puste okno samo w sobie
+niczego by nie dowodziło. Rozstrzyga zestawienie z sąsiedztwem tych samych dni.
+
+Wszystkie wyjątki przed granicą (4 dni MNQ i NQ, 6 dni ES) leżą na **krawędzi
+okna** — minuta 16:15 albo 16:29, nigdy w środku. 50 dni po granicy bez barów
+to święta amerykańskie.
+
+**Ograniczenie dowodowe zachowane w raporcie:** to nie dowód formalnego
+zamknięcia, tylko braku obrotu nieodróżnialnego od niego przy rozdzielczości
+minutowej. Dla projektu bez różnicy — silnik i tak nie wykona zlecenia bez
+wolumenu.
+
+Granica zabezpieczona testem
+`tests/test_sessions.py::test_granica_A3_zgodna_z_danymi`.
+
+### Wpływ na wnioski W001–W013
+
+**Żaden.** Kontrola danych, nie badanie P&L. Zero zużytych prób.

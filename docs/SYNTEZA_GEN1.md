@@ -334,3 +334,70 @@ Ustalona po syntezie, przed jakąkolwiek nową kartą.
 **Refaktor przed zapisaniem golden outputs jest zabroniony.** Przy systemie tej
 wielkości porządki potrafią stworzyć błąd trudniejszy do zauważenia niż
 duplikacja, którą usuwają.
+
+---
+
+# Epilog techniczny — 03.08.2026
+
+**Wnioski badawcze powyżej pozostają bez zmian.** Ta sekcja odnotowuje wyłącznie
+domknięcie etapu technicznego, który miał je zabezpieczyć.
+
+## Status kolejności prac z sekcji 7
+
+| # | Etap | Status |
+|---|---|---|
+| 1 | Synteza badawcza W001–W013 | ✅ |
+| 2 | Mapa architektury i zależności | ✅ `docs/ARCHITEKTURA.md` |
+| 3 | Golden outputs + hashe | ✅ `golden/baseline.json`, odtworzony trzykrotnie bajt w bajt |
+| 4 | Klasyfikacja krytyczności modułów | ✅ trójstopniowa, w mapie architektury |
+| 5 | Ostrożny refaktor | ✅ **minimalny** — R1 i R2, reszta świadomie odrzucona |
+| 6 | Pełna regresja wobec golden outputs | ✅ `--sprawdz` po każdej zmianie, `golden/ZMIANY.md` v1–v4 |
+| 7 | Dokumentacja właściciela | ✅ `docs/PODRECZNIK.md`, `docs/OD_DANYCH_DO_PNL.md`, `docs/ZALOZENIA.md` |
+| 8 | Tag stabilnej wersji | ⚠ **nie utworzony zdalnie** — patrz niżej |
+| 9 | Nowe karty | ⏸ **nie rozpoczęte** |
+
+## Refaktor okazał się mniejszy, niż zakładała sekcja 7
+
+Audyt kodu znalazł **79 linii martwych i cztery ogniska duplikacji w 11 817
+liniach — 0,7%**. Trzy z czterech symboli „martwych" były brakiem wykonania
+specyfikacji, nie śmieciami. Duży refaktor byłby więc sztuką dla sztuki przy
+niezerowym ryzyku w kodzie krytycznym finansowo, i został odrzucony.
+
+Wykonano wyłącznie: **R1** (naprawa znaku w SPA), **R2** (podpięcie kontroli
+ciągłości), przeetykietowanie `verify_continuity` na diagnostykę oraz
+empiryczne domknięcie założenia A3.
+
+## Najważniejsze ustalenie techniczne
+
+Golden baseline wykrył błąd, którego nie znalazło 233 testów: ścieżka `arch`
+w `validation/spa.py` dostawała zwroty tam, gdzie biblioteka oczekuje strat.
+Testowana była hipoteza przeciwna do zamierzonej.
+
+**Powód, dla którego przeżył:** wszystkie testy tego modułu wołały funkcję
+z `force_fallback=True`. Ścieżka domyślna — jedyna działająca produkcyjnie —
+nie była testowana w ogóle. To dopisuje do listy pułapek z sekcji o traps
+kategorię, której tam nie było: **pokrycie testami może być pozorne, jeśli testy
+systematycznie omijają ścieżkę produkcyjną.**
+
+Wpływ na wnioski W001–W013: **żaden.** SPA nie było użyte, licznik prób 0.
+
+## Punkty odniesienia
+
+Zdalnego tagu nie udało się utworzyć — proxy git odmawia pushu tagów (403).
+Kanonicznymi identyfikatorami są SHA commitów:
+
+| Punkt | SHA | Zawartość |
+|---|---|---|
+| **Baseline Gen1** | `a1aba1c0c47fce2e958374e2614e5744b6882027` | ostatnia wersja przed jakimkolwiek refaktorem; `hash_wynikow = 6a082749…` |
+| **Stabilna po R1/R2** | `b8572a5ac7c482ab1a243a34b019f11c9694a4eb` | minimalny refaktor zamknięty |
+
+SHA commitu jest jednoznaczny niezależnie od tego, czy tag `gen1-baseline`
+istnieje zdalnie.
+
+## Co pozostaje ważne
+
+Licznik prób **0**. Osiem werdyktów odrzucenia bez zmian. Cmentarz rodzin
+z sekcji 3 obowiązuje. Protokół drugiej generacji z sekcji 5 obowiązuje.
+
+Kolejny krok to **`docs/GEN2_BRIEF.md`** — dokument projektowy, nie pomiar.
+Żadnych nowych kart przed wyborem mechanizmu.

@@ -46,9 +46,32 @@ poprzedniego. Nie o północy UTC, nie o 09:30 ET.
   ona **jest**.
 - **Co unieważnia:** analizy segmentu popołudniowego obejmujące lata 2019–2021,
   jeśli nie wykluczą tego okna.
-- **Pewność:** wysoka (data z dokumentacji CME), ale **nikt tego nie sprawdził
-  na naszych danych** — to jedyne założenie kalendarzowe przyjęte z dokumentacji
-  bez własnej weryfikacji. Warte 20 minut przy okazji.
+- **Pewność: ZWERYFIKOWANE EMPIRYCZNIE** (Etap 2.5, 03.08.2026) na MNQ, NQ i ES.
+
+  Gęstość okna 16:15–16:30 ET (udział wypełnionych minut):
+
+  | Instrument | Przed 27.06.2021 | Po 27.06.2021 | Sąsiedztwo 16:00–16:15 przed |
+  |---|---|---|---|
+  | MNQ | **0,05%** | 96,21% | 96,2% |
+  | NQ | **0,05%** | 96,21% | 96,3% |
+  | ES | **0,07%** | 96,21% | 96,3% |
+
+  Kryterium jest **kontrast, nie sama pustka**. Bary M1 nie odróżniają
+  formalnego zamknięcia od braku transakcji (założenie B4), więc puste okno
+  samo w sobie niczego by nie dowodziło. Dowodzi zestawienie z sąsiedztwem:
+  te same dni, okno 15 minut wcześniej, wypełnione niemal w komplecie.
+
+  Wszystkie wyjątki przed granicą (4 dni MNQ i NQ, 6 dni ES) leżą na **krawędzi
+  okna** — minuta 16:15 albo 16:29, nigdy w środku. Dni po granicy bez barów
+  (50) to święta amerykańskie.
+
+  **Ograniczenie dowodowe zachowane:** to nie jest dowód formalnego zamknięcia,
+  tylko braku obrotu nieodróżnialnego od niego przy rozdzielczości minutowej.
+  Dla projektu różnica nie ma znaczenia — silnik i tak nie wykona zlecenia bez
+  wolumenu (`bar.tradeable`).
+
+  Raport: `reports/A3_halt_weryfikacja.md`. Test:
+  `tests/test_sessions.py::test_granica_A3_zgodna_z_danymi`.
 
 ---
 
@@ -230,23 +253,69 @@ arch 8.0.0 (`golden/srodowisko.txt`).
 
 ---
 
-## G. Znane wady zamrożone świadomie
+## G. Wady wykryte i naprawione — wpisy historyczne
 
-### G1 — Ścieżka `arch` w `validation/spa.py` ma odwrócony znak
+### G1 — ✅ NAPRAWIONE: odwrócony znak w ścieżce `arch` w `validation/spa.py`
 
-`arch.bootstrap.SPA` oczekuje **strat** (mniej = lepiej), moduł podaje mu
-**zwroty**. Testowana jest hipoteza przeciwna do zamierzonej: p = 0,898
-identycznie dla czystego szumu i dla wariantu z przewagą +0,30σ.
+**Wykryte** przez golden baseline, **naprawione** w commicie `7f681ef`
+(R1, 03.08.2026).
 
-- **Wpływ na dotychczasowe wnioski:** **żaden.** SPA nie było użyte w W001–W013,
-  licznik prób wynosi 0, żadna karta nie doszła do bramki, na której SPA działa.
-- **Status:** pozycja nr 1 planu refaktoru. Naprawa **świadomie zmieni**
-  `hash_wynikow`; własny fallback (poprawny) jest w baseline jako punkt
-  odniesienia dowodzący, że naprawiono znak, a nie przepisano test.
+`arch.bootstrap.SPA` oczekuje **strat** (mniej = lepiej), moduł podawał mu
+**zwroty**. Testowana była hipoteza przeciwna do zamierzonej.
 
-### G2 — Halt CME 2019–2021 przyjęty z dokumentacji bez weryfikacji na danych
+Fixture 400 obs × 6 wariantów, 500 replikacji, ziarno 7:
 
-Patrz A3. Jedyne założenie kalendarzowe bez własnego sprawdzenia.
+| Wejście | `arch` przed | `arch` po | fallback (niezmieniony) |
+|---|---|---|---|
+| sam szum | 0,898 | 0,248 | 0,303 |
+| wariant z przewagą +0,30σ | **0,898** | **0,000** | 0,002 |
+
+Identyczna p-wartość dla szumu i dla przewagi była rozstrzygająca — statystyka
+nie zależała od tego, co miała mierzyć.
+
+Odwrócenie widać też w drugą stronę. Osobny fixture (400 × 4, wszystkie warianty
+przesunięte o −0,50σ, 300 replikacji, ziarno 4): przed poprawką ścieżka `arch`
+dawała **p = 0,0000** dla puli, w której **każdy** wariant traci; po poprawce
+0,5467, przy fallbacku 0,5681.
+
+- **Wpływ na wnioski W001–W013: żaden.** SPA nie było użyte, licznik prób 0,
+  żadna karta nie doszła do bramki, na której SPA działa.
+- **Baseline:** `golden/ZMIANY.md` v2 — zmieniły się wyłącznie dwa klucze
+  `walidacja.spa.*_arch.p`; oba klucze fallbacku bit w bit bez zmian.
+- **Raport regresyjny:** `reports/R1_regresja_spa.md` z dowodem czerwieni testu
+  przed poprawką.
+
+### G1a — REGUŁA TRWAŁA: implementacja podstawowa i awaryjna testowane osobno
+
+Najważniejszy wniosek z G1 jest szerszy niż sam znak. **Wszystkie** testy SPA
+sprzed R1 wołały funkcję z `force_fallback=True`. Ścieżka domyślna — jedyna,
+która działa produkcyjnie — nie była testowana w ogóle, więc 233 testy dawały
+**fałszywe poczucie pokrycia**.
+
+Odtąd każdy moduł z implementacją podstawową i awaryjną musi mieć:
+
+1. testy **ścieżki domyślnej** na przypadkach o znanej odpowiedzi,
+2. testy **ścieżki awaryjnej** na tych samych przypadkach,
+3. test **zgodności obu** co do werdyktu.
+
+Zgodność co do werdyktu, nie co do wartości — dwie implementacje bootstrapu mogą
+dawać różne p-wartości, ale rozbieżny werdykt znaczy, że któraś testuje co innego.
+
+### G2 — ✅ ZAMKNIĘTE: halt CME 2019–2021 zweryfikowany na danych
+
+Patrz A3. Zweryfikowane empirycznie na MNQ, NQ i ES (Etap 2.5). Nie ma już
+w rejestrze założenia kalendarzowego bez własnego sprawdzenia.
+
+### G3 — ✅ PRZEETYKIETOWANE: `verify_continuity` nie jest bramką
+
+Kryterium „skok ≥ |spread|" jest **nieidentyfikowalne** — nie odróżnia ruchu
+rynku od błędu korekty. Zgłasza 17/29 granic MNQ przy dokładnie zerowym
+rozrzucie offsetu. Rola zmieniona z PASS/FAIL na diagnostykę
+(`golden/ZMIANY.md` v4); progu **nie zmieniano**, bo problem leży w konstrukcji
+kryterium, nie w wartości progu.
+
+O poprawności back-adjustu orzeka wyłącznie **niezmiennik stałości offsetu**
+(zero rozrzutu w 90 z 90 kontraktów).
 
 ---
 

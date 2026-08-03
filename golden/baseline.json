@@ -345,7 +345,7 @@
   }
  },
  "hash_danych": "cf16e23b8521192448902eaf2bc61498ad8b4f13b375d65de1305e7909d5a2c5",
- "hash_wynikow": "ae7b5c50bc9c2fc8733261127445ffe87912d51a378b1960a2f7c6e8bb4f59f6",
+ "hash_wynikow": "e599c0b70d289b009a97bf36dfdae219f2baa0c659c1a4cf3f0be58712e16930",
  "metryki": {
   "bramki": {
    "koncentracja": false,
@@ -372,6 +372,7 @@
  "precyzja": 10,
  "raporty": {
   "hashe": {
+   "A3_halt_weryfikacja.md": "721ccd1b8baacc0fc864b92fbaab170c517ba1581dd43bcf0b8180e209a5c60b",
    "B00_benchmarks.md": "5f464a9e1aa25b12ce1685c816fe1d8d5f3248e2204a90e84697965ed1a16cac",
    "R1_regresja_spa.md": "1e2111e05f9bcd1114fae99b440c41b59a98785728f8343bd6b338cfeb8c8a0d",
    "W001_overnight_drift.md": "0f956c3e8ffd3f10e857929a3e5db76d4b39a5a4f3b56f28dafa4f68fd095b29",
