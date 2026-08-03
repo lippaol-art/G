@@ -15,7 +15,7 @@ Commit zamrażający poprzedza zakup, tak samo jak przy H003 (`ae0f9f8`,
 | **Symbol** | `MNQU6` (`stype_in="raw_symbol"`) |
 | **Sesja** | **`trade_date = 2026-07-30`** |
 | **Okno UTC** | `2026-07-29T22:00` → `2026-07-30T21:00` |
-| **Koszt maksymalny** | **1,75 USD** — powyżej tej kwoty **nie kupuję** |
+| **Koszt maksymalny** | **2,15 USD** — powyżej tej kwoty **nie kupuję** (korekta, patrz §5a) |
 | **Próg werdyktu** | `side != NONE` w **> 95%** transakcji |
 
 ### Zasada wyboru daty i dlaczego wypadła na 2026-07-30
@@ -107,8 +107,51 @@ sukces będący tautologią.
 | Pozycja | Kwota |
 |---|---|
 | Stan przed | 62,42 USD |
-| Etap 1 (maks.) | −1,75 USD |
-| **Stan po** | **60,67 USD** |
+| Etap 1 (wycena `metadata`) | −2,1240 USD |
+| **Stan po** | **60,2960 USD** ≈ 60,30 |
+
+## 5a. Korekta limitu — poprawka błędnej wyceny, nie zmiana planu
+
+| | |
+|---|---|
+| Stary limit | 1,75 USD |
+| Wycena `metadata` dla dokładnie tego zapytania | **2,1240 USD** |
+| Nowy limit | **2,15 USD** |
+
+**Przyczyna.** Poprzednia wycena pochodziła z **innej, mniej aktywnej sesji**
+(2025-03-03: 1 398 221 rekordów, 1,7501 USD) i została błędnie potraktowana
+jak stała cena dnia. Zamrożona sesja 2026-07-30 ma **1 696 891 rekordów** —
+o 21% więcej, i dokładnie o tyle jest droższa.
+
+Typ symbolu zweryfikowany jako nieistotny: `MNQU6` (raw) i `MNQ.v.0`
+(continuous) dają **identyczny** koszt i liczbę rekordów.
+
+**Potwierdzenie, że specyfikacja merytoryczna i próbka NIE zmieniły się:**
+
+| Element | Stan |
+|---|---|
+| data `2026-07-30` | bez zmian |
+| pełna doba handlowa `22:00Z → 21:00Z` | bez zmian |
+| instrument `MNQU6` | bez zmian |
+| dziewięć kontroli | bez zmian |
+| próg `side != NONE > 95%` | bez zmian |
+| zakaz rekonstrukcji strony z ruchu ceny | bez zmian |
+
+Zmieniony został **wyłącznie pułap budżetowy**, i to dlatego, że był źle
+wyprowadzony. Dzień nie jest wybierany według aktywności, okno nie jest
+zawężane pod budżet.
+
+### Reguła na przyszłość — wycena danych zależnych od liczby rekordów
+
+Odtąd zapisuję cztery rzeczy, nie jedną:
+
+1. **konkretną wycenę dla dokładnego zapytania**,
+2. **koszt per milion rekordów** (tu: 2,1240 / 1,697 mln = **1,2517 USD/mln**),
+3. **twardy limit z małym marginesem**,
+4. **datę wykonania wyceny**.
+
+**Nie wolno przenosić ceny jednego dnia na inną sesję bez ponownego
+`metadata.get_cost`.**
 
 ---
 
