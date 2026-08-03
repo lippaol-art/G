@@ -236,29 +236,53 @@ def _sekcja_ciaglosc(df: pl.DataFrame) -> str:
         RollEvent(r["trade_date"], r["cp"], r["c"], mapa[r["cp"]] - mapa[r["c"]])
         for r in zmiany.iter_rows(named=True)
     ]
-    naruszenia = verify_continuity(
+    zgloszenia = verify_continuity(
         list(zip(dz["trade_date"].to_list(), dz["k"].to_list(), strict=True)), zdarzenia
     )
 
+    # STATUS DIAGNOSTYCZNY — NIGDY automatyczny FAIL dla back-adjustu.
+    # Heurystyka nie jest identyfikowalna, wiec sama nie moze niczego orzec.
+    # Jej wartosc informacyjna zalezy od tego, co powiedzial niezmiennik.
+    if not zgloszenia:
+        status = "DIAGNOSTIC"
+        komentarz = "Brak granic wymagających obejrzenia."
+    elif niezmiennik_ok:
+        status = "INCONCLUSIVE"
+        komentarz = (
+            "Niezmiennik offsetu jest czysty, więc te zgłoszenia to skoki, "
+            "których heurystyka **nie umie** przypisać ani ruchowi rynku, ani "
+            "błędowi korekty. Nierozstrzygające."
+        )
+    else:
+        status = "WARNING"
+        komentarz = (
+            "Niezmiennik offsetu **nie przeszedł**, a heurystyka też zgłasza "
+            "granice — te zgłoszenia należy obejrzeć w pierwszej kolejności."
+        )
+
     linie += [
-        "### 3. `engine.roll.verify_continuity` — alarm wstępny",
+        f"### 3. `engine.roll.verify_continuity` — diagnostyka · **{status}**",
         "",
-        f"Zgłoszonych granic: **{len(naruszenia)}** z {len(zdarzenia)}.",
+        f"Zgłoszonych granic: **{len(zgloszenia)}** z {len(zdarzenia)}. {komentarz}",
         "",
-        '⚠️ **Ta liczba nie jest miarą jakości danych.** Kryterium funkcji '
-        'brzmi „skok ≥ |spread|”, a spread rolowania MNQ to kilkanaście–'
-        'kilkadziesiąt punktów, więc każdy zwykły dzień o ruchu 50+ punktów '
-        'zostaje zgłoszony. Skrajny przykład z tych danych: 2020-03-13, ruch '
-        '659 pkt w szczycie krachu covidowego, opisany jako „back-adjust nie '
-        'zadziałał” przy spreadzie −13,50 pkt.',
+        "⚠️ **Ta liczba nie jest miarą jakości danych i nie wydaje werdyktu "
+        "o back-adjuście.** Kryterium brzmi „skok ≥ |spread|”, a zwykły ruch "
+        "rynku między sąsiednimi sesjami bywa wielokrotnie większy od spreadu "
+        "kontraktowego. Skrajny przypadek z tych danych: 2020-03-13, ruch "
+        "659 pkt w szczycie krachu covidowego, przy spreadzie −13,50 pkt. "
+        "Kryterium jest **nieidentyfikowalne** — nie rozróżnia ruchu rynku od "
+        "błędu korekty.",
         "",
-        "Kryterium **nie zostało zmienione**, żeby raport przeszedł — to byłoby "
-        "dostrajanie progu pod wynik. Rozstrzygająca jest kontrola 1; ta sekcja "
-        "istnieje, bo PLAN 4.6 wymaga wywołania tej funkcji, a jej ograniczenie "
-        "ma być jawne, nie ukryte (test regresyjny: "
-        "`test_ZNANE_OGRANICZENIE_duzy_ruch_rynku_daje_falszywy_alarm`).",
+        "Problem leży w konstrukcji kryterium, nie w wartości progu, więc "
+        "**progu nie zmieniono**, żeby zmniejszyć liczbę alarmów — to byłoby "
+        "dostrajanie pod wynik i nic by nie naprawiło. Zmieniono **rolę**: "
+        "PASS/FAIL wydaje wyłącznie kontrola 1, ta sekcja dostarcza materiału "
+        "do obejrzenia (testy regresyjne: "
+        "`test_ZNANE_OGRANICZENIE_duzy_ruch_rynku_daje_falszywy_alarm`, "
+        "`test_wartosci_diagnostyczne_nie_zmienily_sie_po_przeetykietowaniu`).",
         "",
-        f"### Werdykt ciągłości: **{'PASS' if niezmiennik_ok else 'FAIL'}**",
+        f"### Werdykt back-adjustu: **{'PASS' if niezmiennik_ok else 'FAIL'}** "
+        f"(z kontroli 1) · diagnostyka: **{status}**",
     ]
     return "\n".join(linie)
 

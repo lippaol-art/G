@@ -163,3 +163,56 @@ otwartą pozycją do osobnej decyzji.
 
 **Żaden.** Kontrola jest kodem raportującym; nie dotyka danych, silnika ani
 aparatu walidacyjnego.
+
+---
+
+## v4 — Etap 2.5: `verify_continuity` z bramki na diagnostykę
+
+```
+hash_danych  = cf16e23b…909d5a2c5   (BEZ ZMIAN)
+hash_wynikow = eea80e16…c4c56237ec  ->  ae7b5c50bc9c2fc8733261127445ffe87912d51a378b1960a2f7c6e8bb4f59f6
+```
+
+### Zmienione klucze — dokładnie trzy
+
+`raporty.hashe.data_quality_{mnq,nq,es}.md`.
+
+Warstwy `dane`, `silnik`, `metryki`, `walidacja` i `rejestr` — **identyczne**,
+sprawdzone porównaniem struktur. Osiem metryk raportowych bez zmian. Żaden inny
+raport nie zmienił hasha. `hash_danych` bez zmian.
+
+### Powód
+
+Kryterium „skok ≥ |spread|" nie może pełnić funkcji bramki PASS/FAIL dla
+poprawności back-adjustu, bo jest **nieidentyfikowalne**: zwykły ruch rynku
+między sąsiednimi sesjami bywa wielokrotnie większy od spreadu kontraktowego.
+Rozstrzygnięte empirycznie — heurystyka zgłasza 17/29 granic MNQ, 18/29 NQ,
+12/29 ES przy **dokładnie zerowym** rozrzucie offsetu we wszystkich
+90 kontraktach.
+
+Problem leży w konstrukcji kryterium, nie w wartości progu, więc **progu nie
+zmieniono**. Zmieniono wyłącznie **etykietę i rolę wyniku**:
+
+| | Rola | Status |
+|---|---|---|
+| niezmiennik stałości offsetu | **autorytatywna** | PASS / FAIL |
+| heurystyka skoków na granicach | **diagnostyczna** | DIAGNOSTIC / WARNING / INCONCLUSIVE — nigdy automatyczny FAIL |
+
+Komunikat funkcji nie twierdzi już, że „back-adjust nie zadziałał"; mówi
+o dużym skoku i wprost zaznacza, że heurystyka nie rozróżnia ruchu rynku od
+błędu korekty.
+
+Bieżący odczyt: **PASS** (z niezmiennika) · diagnostyka **INCONCLUSIVE** na
+wszystkich trzech instrumentach.
+
+### Zabezpieczenie przed zmianą kryterium przy okazji zmiany etykiety
+
+Nowy test `test_wartosci_diagnostyczne_nie_zmienily_sie_po_przeetykietowaniu`
+sprawdza na czterech rolowaniach o znanym z góry werdykcie (ruch 10 / 50 / 150 /
+0 przy spreadzie 50), że zgłaszany jest **dokładnie ten sam zbiór granic** co
+przed przeetykietowaniem. Wartości diagnostyczne zachowane, zmieniło się
+wyłącznie nazewnictwo.
+
+### Wpływ na wnioski W001–W013
+
+**Żaden.** Zmiana dotyczy etykiety w kodzie raportującym.

@@ -359,10 +359,13 @@ class TestCiaglosc:
             (self.ROLL, 20110.0),        # skok = 100 = spread
             (date(2025, 3, 14), 20115.0),
         ]
-        naruszenia = verify_continuity(seria, self._zdarzenie())
-        assert len(naruszenia) == 1
-        assert "back-adjust nie zadzialal" in naruszenia[0]
-        assert str(self.ROLL) in naruszenia[0]
+        zgloszenia = verify_continuity(seria, self._zdarzenie())
+        assert len(zgloszenia) == 1
+        assert str(self.ROLL) in zgloszenia[0]
+        # ETYKIETA: heurystyka NIE MOZE twierdzic, ze back-adjust zawiodl —
+        # nie umie odroznic ruchu rynku od bledu korekty (patrz test ponizej).
+        assert "back-adjust nie zadzialal" not in zgloszenia[0]
+        assert "Heurystyka nie rozroznia" in zgloszenia[0]
 
     def test_granica_rollu_poza_seria_jest_pomijana(self):
         """Rolowanie, dla ktorego nie mamy danych, nie moze ani zglaszac
@@ -408,8 +411,41 @@ class TestCiaglosc:
             (date(2025, 3, 12), 20000.0),
             (self.ROLL, 20150.0),        # ruch rynku 150 pkt, spread 100 pkt
         ]
-        naruszenia = verify_continuity(seria, self._zdarzenie(spread=100.0))
-        assert len(naruszenia) == 1, (
+        zgloszenia = verify_continuity(seria, self._zdarzenie(spread=100.0))
+        assert len(zgloszenia) == 1, (
             "jesli ten test zaczal przechodzic inaczej, ktos zmienil semantyke "
             "verify_continuity — zaktualizuj raport jakosci i golden baseline"
+        )
+
+    def test_wartosci_diagnostyczne_nie_zmienily_sie_po_przeetykietowaniu(self):
+        """BLOKADA NA ZMIANE KRYTERIUM PRZY OKAZJI ZMIANY ETYKIETY.
+
+        Etap 2.5 zmienil ROLE tej funkcji z bramki PASS/FAIL na diagnostyke
+        i przepisal tresc komunikatu. Ten test pilnuje, ze przy okazji NIE
+        zmienil sie sam warunek: dokladnie te same granice maja byc zgloszone,
+        co przed przeetykietowaniem.
+
+        Cztery rolowania o znanym z gory werdykcie, wszystkie ze spreadem 50:
+          A: ruch  10 < 50  -> cisza
+          B: ruch  50 = 50  -> zgloszenie (prawdziwa nieciaglosc)
+          C: ruch 150 > 50  -> zgloszenie (FALSZYWY ALARM, ruch rynku)
+          D: ruch   0       -> cisza
+        """
+        daty = [date(2025, 3, 13), date(2025, 6, 12),
+                date(2025, 9, 11), date(2025, 12, 11)]
+        ruchy = [10.0, 50.0, 150.0, 0.0]
+        seria: list[tuple[date, float]] = []
+        zdarzenia: list[RollEvent] = []
+        for i, (d, ruch) in enumerate(zip(daty, ruchy, strict=True)):
+            seria.append((d.replace(day=d.day - 1), 20000.0))
+            seria.append((d, 20000.0 + ruch))
+            zdarzenia.append(RollEvent(d, f"K{i}", f"K{i + 1}", 50.0))
+
+        zgloszone = {
+            str(d) for d in daty
+            if any(str(d) in z for z in verify_continuity(seria, zdarzenia))
+        }
+        assert zgloszone == {str(daty[1]), str(daty[2])}, (
+            f"zgloszono {sorted(zgloszone)}, oczekiwano granic B i C — "
+            "kryterium sie zmienilo, a mialo zmienic sie tylko nazewnictwo"
         )

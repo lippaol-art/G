@@ -1,6 +1,6 @@
 # Sanity-report danych — MNQ 1m
 
-Wygenerowano: 2026-08-03T00:25:10  
+Wygenerowano: 2026-08-03T09:50:43  
 Plik: `data/clean/mnq_1m_cont.parquet`  
 SHA-256: `7b9be5aa8cccb1e0debfcf8291bfd1c4c6a12138e723c074fdd4ffb31400f4c2`  
 Rozmiar: 35.2 MB
@@ -149,15 +149,15 @@ Offset back-adjustu (`px_adj − close`) musi być **stały w obrębie kontraktu
 
 Brak przewagi znaku wyklucza systematyczne rezyduum korekty. Podniesiona **wielkość** skoków przy zerowym **kierunku** to podpis zmienności repozycjonowania, nie błędu adjustmentu.
 
-### 3. `engine.roll.verify_continuity` — alarm wstępny
+### 3. `engine.roll.verify_continuity` — diagnostyka · **INCONCLUSIVE**
 
-Zgłoszonych granic: **17** z 29.
+Zgłoszonych granic: **17** z 29. Niezmiennik offsetu jest czysty, więc te zgłoszenia to skoki, których heurystyka **nie umie** przypisać ani ruchowi rynku, ani błędowi korekty. Nierozstrzygające.
 
-⚠️ **Ta liczba nie jest miarą jakości danych.** Kryterium funkcji brzmi „skok ≥ |spread|”, a spread rolowania MNQ to kilkanaście–kilkadziesiąt punktów, więc każdy zwykły dzień o ruchu 50+ punktów zostaje zgłoszony. Skrajny przykład z tych danych: 2020-03-13, ruch 659 pkt w szczycie krachu covidowego, opisany jako „back-adjust nie zadziałał” przy spreadzie −13,50 pkt.
+⚠️ **Ta liczba nie jest miarą jakości danych i nie wydaje werdyktu o back-adjuście.** Kryterium brzmi „skok ≥ |spread|”, a zwykły ruch rynku między sąsiednimi sesjami bywa wielokrotnie większy od spreadu kontraktowego. Skrajny przypadek z tych danych: 2020-03-13, ruch 659 pkt w szczycie krachu covidowego, przy spreadzie −13,50 pkt. Kryterium jest **nieidentyfikowalne** — nie rozróżnia ruchu rynku od błędu korekty.
 
-Kryterium **nie zostało zmienione**, żeby raport przeszedł — to byłoby dostrajanie progu pod wynik. Rozstrzygająca jest kontrola 1; ta sekcja istnieje, bo PLAN 4.6 wymaga wywołania tej funkcji, a jej ograniczenie ma być jawne, nie ukryte (test regresyjny: `test_ZNANE_OGRANICZENIE_duzy_ruch_rynku_daje_falszywy_alarm`).
+Problem leży w konstrukcji kryterium, nie w wartości progu, więc **progu nie zmieniono**, żeby zmniejszyć liczbę alarmów — to byłoby dostrajanie pod wynik i nic by nie naprawiło. Zmieniono **rolę**: PASS/FAIL wydaje wyłącznie kontrola 1, ta sekcja dostarcza materiału do obejrzenia (testy regresyjne: `test_ZNANE_OGRANICZENIE_duzy_ruch_rynku_daje_falszywy_alarm`, `test_wartosci_diagnostyczne_nie_zmienily_sie_po_przeetykietowaniu`).
 
-### Werdykt ciągłości: **PASS**
+### Werdykt back-adjustu: **PASS** (z kontroli 1) · diagnostyka: **INCONCLUSIVE**
 
 ## Outliery zakresu
 

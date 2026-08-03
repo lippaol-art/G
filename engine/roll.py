@@ -206,17 +206,36 @@ def verify_continuity(
     *,
     tolerance: float = 1e-6,
 ) -> list[str]:
-    """Sprawdza, czy po adjustmencie zniknely sztuczne skoki w dniach rolowan.
+    """DIAGNOSTYKA granic rolowania. **NIE JEST BRAMKA PASS/FAIL** (Etap 2.5).
 
-    To jest test z rozdz. 5.6: w serii ciaglej nie moze istniec bar, ktorego
+    Idea z rozdz. 5.6 byla taka: w serii ciaglej nie moze istniec bar, ktorego
     open odbiega od poprzedniego close o spread rolowania. Nieskorygowane
     sklejenie zostawia takie skoki, a strategia "kupuj spadki" "zarabia" na
     lukach, ktore nigdy nie byly handlowalne — jeden z najczestszych sposobow,
     w jaki amatorskie backtesty futures produkuja fikcyjne zyski.
 
-    Zwraca liste opisow naruszen (pusta = OK).
+    DLACZEGO TO NIE MOZE ROZSTRZYGAC O POPRAWNOSCI BACK-ADJUSTU.
+    Kryterium brzmi "skok >= |spread|", a zwykly ruch rynku miedzy sasiednimi
+    sesjami bywa wielokrotnie wiekszy od spreadu kontraktowego. Zmierzone na
+    naszych danych: funkcja zglasza 17 z 29 granic MNQ, 18/29 NQ i 12/29 ES
+    przy DOKLADNIE ZEROWYM rozrzucie offsetu we wszystkich 90 kontraktach.
+    Skrajny przypadek: 2020-03-13, ruch 659 pkt w szczycie krachu covidowego,
+    przy spreadzie -13.50 pkt. Kryterium jest NIEIDENTYFIKOWALNE — nie odroznia
+    ruchu rynku od bledu korekty, a problem lezy w jego konstrukcji, nie
+    w wartosci progu, wiec zmiana progu niczego nie naprawia.
+
+    CO ROZSTRZYGA ZAMIAST TEGO. Niezmiennik arytmetyczny: offset back-adjustu
+    (`px_adj - close`) musi byc STALY w obrebie kontraktu. Odpowiedz jest
+    dokladnie zerowa albo back-adjust jest zepsuty. To on wydaje PASS/FAIL
+    w `scripts/data_quality.py`; ta funkcja dostarcza wylacznie materialu
+    do obejrzenia.
+
+    Funkcja NIE ZOSTALA USUNIETA — duzy skok przy granicy rolowania jest wart
+    obejrzenia, nawet jesli sam w sobie niczego nie dowodzi.
+
+    Zwraca liste zgloszen diagnostycznych (pusta = brak czego ogladac).
     """
-    naruszenia: list[str] = []
+    zgloszenia: list[str] = []
     by_date = dict(adjusted_closes)
 
     for ev in events:
@@ -230,11 +249,13 @@ def verify_continuity(
         this_close = by_date[ev.roll_date]
         skok = abs(this_close - prev_close)
         if skok > abs(ev.spread) - tolerance and abs(ev.spread) > tolerance:
-            naruszenia.append(
-                f"{ev.roll_date}: skok {skok:.2f} bliski spreadowi rolowania "
-                f"{ev.spread:.2f} — back-adjust nie zadzialal"
+            zgloszenia.append(
+                f"{ev.roll_date}: duzy skok {skok:.2f} przy granicy rolowania "
+                f"{ev.from_contract}->{ev.to_contract} (spread {ev.spread:.2f}). "
+                "Heurystyka nie rozroznia ruchu rynku od bledu korekty — "
+                "weryfikuj razem z niezmiennikiem stalosci offsetu."
             )
-    return naruszenia
+    return zgloszenia
 
 
 def days_to_roll(current: date, events: list[RollEvent]) -> int | None:
