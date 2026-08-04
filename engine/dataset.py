@@ -184,7 +184,7 @@ def build_continuous(
     """
     if calendar is None:
         lata = df_raw["ts_utc"].dt.year()
-        cal = cme_calendar(int(lata.min()), int(lata.max()))
+        cal = cme_calendar(cast(int, lata.min()), cast(int, lata.max()))
     else:
         cal = calendar
     rep = report or BuildReport()

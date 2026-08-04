@@ -378,3 +378,36 @@ spełnione. Szczegóły: `reports/D5_etap2_wyniki.md`.
 
 **Wpływ na wnioski W001–W013: żaden.** Zero policzonych zwrotów przyszłych,
 zero P&L, zero backtestu. **Licznik prób: 0.** H017 nie powstaje.
+
+---
+
+## v8 — raport zamknięcia dwóch defektów technicznych
+
+```
+hash_wynikow  2735b8f76023ebc8645b0d7afdb8c70776507eed67d81edff13910ae60cb65c2
+           -> 6fed5171c876bbc5ef1753afda9677ae77405e2dbd18aeb06fdbac24ecd6d3d2
+hash_danych   BEZ ZMIANY
+```
+
+**Zmienione klucze — dokładnie jeden:**
+
+| Klucz | Zmiana |
+|---|---|
+| `raporty.hashe.audyt_typy_i_kalendarz.md` | NOWY |
+
+**Powód:** zamknięcie dwóch usterek wskazanych przed H017 — martwej flagi
+`short_day` i powtarzającego się przepełnienia przy odejmowaniu kolumn bez
+znaku. Szczegóły: `reports/audyt_typy_i_kalendarz.md`.
+
+**`hash_danych` celowo bez zmiany.** Naprawa kalendarza zmienia zawartość
+`data/clean/` (`short_day`: 72 206 barów `False→True`; `gap_kind`: 192 bary
+`anomaly→expected` na MNQ, analogicznie NQ i ES), ale **przebudowa nie została
+wykonana**. Wpływ jest zmierzony na kopii i przedstawiony właścicielowi
+projektu do decyzji, bo zmienia próbkę i raport `data_quality.md`. Kod jest
+naprawiony, dane pozostają w poprzednim stanie — stan pośredni świadomy
+i odnotowany.
+
+**Wpływ na wnioski W001–W013: żaden.** Żaden moduł badawczy nie czyta
+`short_day`; audyt typów nie znalazł ani jednego niezabezpieczonego
+odejmowania, więc żaden opublikowany wynik nie był nim dotknięty.
+**Licznik prób: 0.**

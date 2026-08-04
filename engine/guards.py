@@ -160,20 +160,21 @@ class RangeError(ValueError):
 def _skrajne(wartosci) -> tuple[float, float]:
     """(min, max) dla numpy, polars Series i zwyklych sekwencji."""
     import math
-    from numbers import Real
 
-    if isinstance(wartosci, Real):           # pojedyncza liczba tez jest zakresem
-        lo = hi = wartosci
+    surowy_lo: object
+    surowy_hi: object
+    if isinstance(wartosci, (int, float)):   # pojedyncza liczba tez jest zakresem
+        surowy_lo = surowy_hi = wartosci
     elif hasattr(wartosci, "min") and hasattr(wartosci, "max"):
-        lo, hi = wartosci.min(), wartosci.max()
+        surowy_lo, surowy_hi = wartosci.min(), wartosci.max()
     else:
         seq = list(wartosci)
         if not seq:
             return 0.0, 0.0
-        lo, hi = min(seq), max(seq)
-    if lo is None or hi is None:            # pusta seria — nie ma czego badac
+        surowy_lo, surowy_hi = min(seq), max(seq)
+    if surowy_lo is None or surowy_hi is None:   # pusta seria — nie ma czego badac
         return 0.0, 0.0
-    lo, hi = float(lo), float(hi)
+    lo, hi = float(surowy_lo), float(surowy_hi)  # type: ignore[arg-type]
     if math.isnan(lo) or math.isnan(hi):
         raise RangeError("wartosci zawieraja NaN — zakres nierozstrzygalny")
     return lo, hi
