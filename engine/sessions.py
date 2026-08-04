@@ -68,11 +68,20 @@ class SessionCalendar:
     """Jawny kalendarz CME. Zrodlo prawdy dla klasyfikacji luk (rozdz. 4.2).
 
     holidays      — dni bez sesji
-    short_days    — dni skrocone (zamkniecie 13:00 ET zamiast 16:00)
+    short_days    — dni skrocone (zamkniecie wczesniejsze niz 16:00 ET)
+    early_closes  — rzeczywisty czas zamkniecia dnia skroconego
+
+    DWA ROZNE ZAMKNIECIA. Wczesniejsza wersja zwracala stale 13:00 dla kazdego
+    dnia skroconego. CME zamyka o 13:00 ET w sam dzien swiateczny, ale o 13:15
+    w dzien przylegajacy do swieta (3 lipca, piatek po Swiecie Dziekczynienia,
+    24 grudnia). Roznica to 15 minut sesji. `early_closes` pozwala podac
+    faktyczny czas; `short_days` bez wpisu zachowuje domyslne 13:00, zeby stare
+    wywolania nie zmienily znaczenia.
     """
 
     holidays: frozenset[date] = frozenset()
     short_days: frozenset[date] = frozenset()
+    early_closes: frozenset[tuple[date, time]] = frozenset()
 
     def is_trading_day(self, d: date) -> bool:
         # Sobota nie ma sesji; niedziela ma tylko wieczorny start Globexu,
@@ -80,6 +89,11 @@ class SessionCalendar:
         return d.weekday() < 5 and d not in self.holidays
 
     def close_time(self, d: date) -> time:
+        if not self.short_days:
+            return RTH_CLOSE
+        wpis = dict(self.early_closes).get(d)
+        if wpis is not None:
+            return wpis
         return time(13, 0) if d in self.short_days else RTH_CLOSE
 
 
@@ -192,7 +206,8 @@ def is_expected_gap(ts_from: datetime, ts_to: datetime,
             or (et.weekday() == 4 and et.time() >= MAINT_START)   # piatek po zamknieciu
             or (et.weekday() == 5)                                 # sobota
             or (et.weekday() == 6 and et.time() < SESSION_START)   # niedziela do 18:00
-            or (et.date() in cal.short_days and et.time() >= time(13, 0))
+            or (et.date() in cal.short_days
+                and et.time() >= cal.close_time(et.date()))
         )
         if not covered:
             return False

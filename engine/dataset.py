@@ -24,6 +24,7 @@ from typing import cast
 
 import polars as pl
 
+from engine.cme_calendar import cme_calendar
 from engine.loader import REQUIRED_COLUMNS
 from engine.roll import (
     ContractDay,
@@ -175,8 +176,17 @@ def build_continuous(
 
     Wejscie: DataFrame z kolumnami ts_utc, open, high, low, close, volume, contract.
     Wyjscie: DataFrame o schemacie `engine.loader.REQUIRED_COLUMNS`.
+
+    KALENDARZ. Domyslnym kalendarzem jest `cme_calendar` dla lat obecnych
+    w danych — NIE pusty `SessionCalendar()`. Wczesniej bylo odwrotnie i to
+    byla przyczyna martwej flagi `short_day`: schemat mial kolumne, kolumna
+    miala zawsze False, a nikt tego nie zauwazyl, bo nic jej nie czytalo.
     """
-    cal = calendar or SessionCalendar()
+    if calendar is None:
+        lata = df_raw["ts_utc"].dt.year()
+        cal = cme_calendar(int(lata.min()), int(lata.max()))
+    else:
+        cal = calendar
     rep = report or BuildReport()
     degraded = degraded_days if degraded_days is not None else load_degraded_days()
     rep.n_raw = df_raw.height
