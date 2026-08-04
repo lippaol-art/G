@@ -164,6 +164,100 @@ def przebieg(limit: int | None) -> Stan:
     return st
 
 
+
+# ---------------------------------------------------------------------------
+# PELNY PODZIAL ZDARZEN Z TRANSAKCJA — mianownik musi sie zgadzac co do sztuki
+# ---------------------------------------------------------------------------
+#
+# PO CO. Niezmiennik Q6 badal tylko zdarzenia z DOKLADNIE JEDNYM rekordem
+# `Trade` (767 588), podczas gdy zdarzen z transakcja jest 842 757. Roznica
+# 75 169 zostala w pierwszej wersji raportu bez wyjasnienia — a metryka
+# z niezapisanym mianownikiem jest dokladnie tym rodzajem pulapki, przed ktorym
+# ostrzega wniosek W003.
+#
+# Kategorie ponizej sa ROZLACZNE i WYCZERPUJACE: ich suma musi rownac sie
+# liczbie zdarzen z transakcja. Adnotacje (Fill agresora, wplyw braku
+# snapshotu) sa ortogonalne i liczone osobno, bo moga wystapic w kazdej
+# kategorii.
+#
+# Wymaga DWOCH przebiegow: pierwszy zbiera identyfikatory zlecen zlozonych
+# w oknie, drugi klasyfikuje zdarzenia. Kazdy ~45 s.
+
+KATEGORIE = (
+    "1T_pasywne_zgodne",
+    "1T_pasywne_niezgodne",
+    "1T_bez_pasywnych",
+    "wieleT_zgodne",
+    "wieleT_niezgodne",
+    "wieleT_bez_pasywnych",
+    "inne",
+)
+
+
+def _dodane_order_id() -> np.ndarray:
+    """Przebieg 1: identyfikatory zlecen ZLOZONYCH w oknie obserwacji."""
+    ids = array("q")
+    for r in db.DBNStore.from_file(PLIK_MBO):
+        a = r.action if isinstance(r.action, str) else r.action.value
+        if a == "A":
+            ids.append(int(r.order_id))
+    return np.unique(np.array(ids, dtype="int64"))
+
+
+def pelny_podzial() -> dict:
+    """Przebieg 2: rozlaczna klasyfikacja wszystkich zdarzen z transakcja."""
+    dodane = _dodane_order_id()
+    kat: Counter = Counter()
+    adn = Counter()
+    agresorow_w_zdarzeniu: Counter = Counter()
+    zdarzen_z_T = 0
+
+    bufor: list[tuple] = []
+
+    def domknij(buf: list[tuple]) -> None:
+        nonlocal zdarzen_z_T
+        trade = [x for x in buf if x[0] == "T"]
+        if not trade:
+            return
+        zdarzen_z_T += 1
+        oid_agr = {x[2] for x in trade}
+        agresorow_w_zdarzeniu[min(len(oid_agr), 5)] += 1
+
+        fill = [x for x in buf if x[0] == "F"]
+        wlasne = [x for x in fill if x[2] in oid_agr]
+        pasywne = [x for x in fill if x[2] not in oid_agr]
+        if wlasne:
+            adn["z_fill_agresora"] += 1
+        if pasywne and not np.isin([x[2] for x in pasywne], dodane).all():
+            adn["dotkniete_brakiem_snapshotu"] += 1
+
+        suma_t = sum(x[3] for x in trade)
+        suma_p = sum(x[3] for x in pasywne)
+        jeden = len(trade) == 1
+        if not pasywne:
+            kat["1T_bez_pasywnych" if jeden else "wieleT_bez_pasywnych"] += 1
+        elif suma_p == suma_t:
+            kat["1T_pasywne_zgodne" if jeden else "wieleT_zgodne"] += 1
+        else:
+            kat["1T_pasywne_niezgodne" if jeden else "wieleT_niezgodne"] += 1
+
+    for r in db.DBNStore.from_file(PLIK_MBO):
+        a = r.action if isinstance(r.action, str) else r.action.value
+        bufor.append((a, int(r.ts_recv), int(r.order_id), int(r.size)))
+        if int(r.flags) & F_LAST:
+            domknij(bufor)
+            bufor = []
+    if bufor:
+        domknij(bufor)
+
+    suma_kat = sum(kat.values())
+    return dict(zdarzen_z_T=zdarzen_z_T, kategorie=dict(kat),
+                suma_kategorii=suma_kat,
+                niewyjasnione=zdarzen_z_T - suma_kat,
+                adnotacje=dict(adn),
+                agresorow_w_zdarzeniu=dict(agresorow_w_zdarzeniu))
+
+
 def sekcja(tytul: str) -> None:
     print(f"\n{'=' * 68}\n  {tytul}\n{'=' * 68}")
 
@@ -238,6 +332,24 @@ def main() -> int:
                    niezgodne=st.niezgodne_sumy,
                    z_fill_agresora=st.zdarzen_z_fill_agresora,
                    przyklady=st.przyklady_niezgodne)
+
+    sekcja("Q6b  PELNY PODZIAL zdarzen z transakcja — mianownik")
+    if args.limit:
+        print("  POMINIETE — przebieg czesciowy (--limit)")
+        w["Q6b"] = {"pominiete": "przebieg czesciowy"}
+    else:
+        pod = pelny_podzial()
+        print(f"  zdarzen z transakcja      : {pod['zdarzen_z_T']:,}")
+        for k in KATEGORIE:
+            v = pod["kategorie"].get(k, 0)
+            print(f"    {k:<24} : {v:>9,}")
+        print(f"  suma kategorii            : {pod['suma_kategorii']:,}")
+        print(f"  NIEWYJASNIONE             : {pod['niewyjasnione']:,}")
+        print("  adnotacje (ortogonalne, moga sie nakladac):")
+        for k, v in sorted(pod["adnotacje"].items()):
+            print(f"    {k:<24} : {v:>9,}")
+        print(f"  agresorow w zdarzeniu     : {pod['agresorow_w_zdarzeniu']}")
+        w["Q6b"] = pod
 
     sekcja("Q7  Czy z MBO da sie odtworzyc posiadany schemat `trades`")
     if args.limit:
