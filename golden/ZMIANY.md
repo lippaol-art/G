@@ -638,3 +638,35 @@ hash_danych   BEZ ZMIANY
 
 **Zakup miesiąca NIEWYKONANY.** **Wpływ na wnioski W001–W015: żaden.**
 **Licznik prób: 0.** H017 nie powstaje.
+
+---
+
+## v14 — D5-B2: dry run rekonstrukcji na jednym dniu
+
+```
+hash_wynikow  0d36881edc8acce5a288e8bf46148bc39cf11daf6550883c5f457e1064297fba
+           -> 2395e566bab13fd67767c191b512d2c3bdf7019e423619f9e192dbe99f06651f
+hash_danych   BEZ ZMIANY
+```
+
+**Zmienione klucze — dokładnie jeden:**
+
+| Klucz | Zmiana |
+|---|---|
+| `raporty.hashe.D5_b2_dry_run.md` | NOWY |
+
+**Powód:** Test 2 z listy warunków przed zakupem miesiąca — strukturalna
+weryfikacja implementacji zamrożonej jednostki na posiadanej sesji 2026-07-30.
+
+Wszystkie osiem niezmienników spełnione: `Trade` rozliczone **984 113 ==
+984 113**, każda z **903 116** akcji w dokładnie jednym oknie, suma pasywnych
+równa rozmiarowi akcji bez wyjątku, **390 okien**, wynik deterministyczny.
+
+**Zapisane jawnie: dwie z czterech reguł nie miały na tym dniu czego
+rozstrzygać.** Żadna akcja nie przecina granicy minuty (N5 = 0), a reguła
+o powrocie `order_id` po innym agresorze nie zadziałała ani razu — wszystkie
+8 podziałów wynika z granicy koperty. Pierwsze przypuszczenie wskazywało na
+regułę 3 i było błędne; przyczyna została zmierzona, nie założona.
+
+**Wpływ na wnioski W001–W015: żaden.** Zero VIF, zero przyszłych zwrotów,
+zero P&L. **Licznik prób: 0.** H017 nie powstaje.

@@ -931,6 +931,36 @@ i agresor pochodza z biezacego `Trade`, a kolejne `Trade` o tym samym
 samej kopercie. Ponowne pojawienie sie `order_id` po innym agresorze to nowa
 akcja; wystapienie pasywne nigdy nie jest scalane z rola agresora.
 
+### D5-B2 dry run (04.08.2026) — osiem niezmiennikow strukturalnych
+
+Test 2 z listy warunkow przed zakupem miesiaca, wykonany na posiadanej sesji
+2026-07-30. `reports/D5_b2_dry_run.md`.
+
+Wszystkie osiem spelnione: rekordy `Trade` rozliczone **984 113 == 984 113**,
+kazda z **903 116** akcji w dokladnie jednym oknie, suma pasywnych rowna
+rozmiarowi akcji w **0 niezgodnosci**, **390 okien bez pustych i bez wyjscia
+poza RTH**, wynik deterministyczny.
+
+**Dwie z czterech zamrozonych regul nie mialy na tym dniu czego rozstrzygac:**
+
+* **N5 zerowe** — zadna akcja nie przecina granicy minuty. Akcje trwaja ulamki
+  milisekundy, wiec regula przypisania do minuty ostatniego `ts_recv` jest tu
+  bez praktycznego skutku.
+* **Regula 3 nie zadzialala ani razu.** Akcji jest 903 116 przy 903 107
+  unikalnych `order_id`; wszystkie 9 akcji nadmiarowych pochodzi od 8
+  identyfikatorow i **wszystkie osiem podzialow wynika z granicy koperty
+  (regula 2)**, zero z powrotu agresora (regula 3). Moje pierwsze
+  przypuszczenie wskazywalo na regule 3 i bylo bledne — zmierzone, nie
+  zalozone.
+
+Obie reguly zostaja w specyfikacji i sa pokryte testami syntetycznymi, ale ich
+wplyw na wynik miesieczny jest **nieznany i moze byc zerowy**. Nie twierdze,
+ze "reguly zostaly zweryfikowane na realnych danych".
+
+**Czego dry run nie rozstrzyga:** czy definicja jest WLASCIWA dla mechanizmu.
+Sprawdza, czy narzedzie dziala, nie czy mierzy cos uzytecznego. To rozstrzyga
+dopiero test identyfikowalnosci na pelnym miesiacu przy niezmienionych progach.
+
 ### H017 — nadal nie powstaje
 
 Blocker się **zmienił**, nie zniknął. Nie jest nim już oczekiwanie na e-mail,
