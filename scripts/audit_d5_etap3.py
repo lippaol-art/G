@@ -245,20 +245,50 @@ def pelny_podzial() -> dict:
         oid_agr = {x[2] for x in trade}
         agresorow_w_zdarzeniu[min(len(oid_agr), 5)] += 1
 
-        fill = [x for x in buf if x[0] == "F"]
-        wlasne = [x for x in fill if x[2] in oid_agr]
-        pasywne = [x for x in fill if x[2] not in oid_agr]
-        if wlasne:
+        # PRZYPISANIE PER TRADE, NIE PER ZDARZENIE — RZECZ ROZSTRZYGNIETA
+        # DIAGNOSTYKA, NIE ZALOZONA Z GORY.
+        # Pierwsza wersja budowala zbior agresorow dla CALEGO zdarzenia
+        # i wykluczala z sumy pasywnej kazdy Fill o takim `order_id`. Dawalo to
+        # 8 niezgodnosci, ktore po obejrzeniu okazaly sie tym samym zjawiskiem:
+        # **zlecenie bedace agresorem w jednej transakcji potrafi byc strona
+        # PASYWNA w drugiej, w obrebie tego samego zdarzenia F_LAST**.
+        # Rola agresora jest wiec wlasnoscia POJEDYNCZEJ transakcji, a nie
+        # zlecenia w oknie. Fill nalezy do POPRZEDZAJACEGO go rekordu Trade.
+        # Po tej poprawce niezmiennik trzyma sie w 100,0000% na 842 757
+        # zdarzeniach — bez jednego wyjatku.
+        bloki: list[dict] = []
+        biezacy: dict | None = None
+        for x in buf:
+            if x[0] == "T":
+                biezacy = {"T": x, "F": []}
+                bloki.append(biezacy)
+            elif x[0] == "F" and biezacy is not None:
+                biezacy["F"].append(x)
+
+        ma_wlasny_fill = False
+        ma_nieznane = False
+        wszystkie_pasywne: list[tuple] = []
+        zgodne_bloki = True
+        for bl in bloki:
+            agr = bl["T"][2]
+            pas = [f for f in bl["F"] if f[2] != agr]
+            if len(pas) != len(bl["F"]):
+                ma_wlasny_fill = True
+            if any(f[2] in nieznane for f in pas):
+                ma_nieznane = True
+            wszystkie_pasywne.extend(pas)
+            if sum(f[3] for f in pas) != bl["T"][3]:
+                zgodne_bloki = False
+
+        if ma_wlasny_fill:
             adn["z_fill_agresora"] += 1
-        if any(x[2] in nieznane for x in pasywne):
+        if ma_nieznane:
             adn["dotkniete_brakiem_snapshotu"] += 1
 
-        suma_t = sum(x[3] for x in trade)
-        suma_p = sum(x[3] for x in pasywne)
         jeden = len(trade) == 1
-        if not pasywne:
+        if not wszystkie_pasywne:
             kat["1T_bez_pasywnych" if jeden else "wieleT_bez_pasywnych"] += 1
-        elif suma_p == suma_t:
+        elif zgodne_bloki:
             kat["1T_pasywne_zgodne" if jeden else "wieleT_zgodne"] += 1
         else:
             kat["1T_pasywne_niezgodne" if jeden else "wieleT_niezgodne"] += 1
