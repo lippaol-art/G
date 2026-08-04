@@ -73,6 +73,26 @@
   "z_fill_agresora": 6541,
   "przyklady": []
  },
+ "Q6b": {
+  "zdarzen_z_T": 842757,
+  "kategorie": {
+   "wieleT_zgodne": 75169,
+   "1T_pasywne_zgodne": 767588
+  },
+  "suma_kategorii": 842757,
+  "niewyjasnione": 0,
+  "adnotacje": {
+   "dotkniete_brakiem_snapshotu": 986,
+   "z_fill_agresora": 7362
+  },
+  "agresorow_w_zdarzeniu": {
+   "1": 822905,
+   "2": 10220,
+   "5": 4001,
+   "3": 3758,
+   "4": 1873
+  }
+ },
  "Q7": {
   "trade_mbo": 984113,
   "trades": 984113,

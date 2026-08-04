@@ -568,3 +568,39 @@ Rekonstrukcja `trades` z MBO dokładna co do rekordu i sztuki.
 
 **Wpływ na wnioski W001–W014: żaden.** Zero policzonych zwrotów, zero P&L,
 zero backtestu. **Licznik prób: 0.** H017 nie powstaje.
+
+---
+
+## v12 — D5-C: zamknięcie mianownika podziału zdarzeń
+
+```
+hash_wynikow  08af84e30d5d0d4fb9e1b2311883fbd16bef1b0515bead713b343a5421a4189f
+           -> cc56236b1b0c78f4500210e7d3d7db5fe7bdcdde967fcbb1ec88baa5cbc70140
+hash_danych   BEZ ZMIANY
+```
+
+**Zmienione klucze — dokładnie jeden:**
+
+| Klucz | Zmiana |
+|---|---|
+| `raporty.hashe.D5_etap3_wyniki.md` | dodana sekcja Q6b — pełny podział zdarzeń |
+
+**Powód:** niezmiennik Q6 dotyczył 767 588 zdarzeń, a zdarzeń z transakcją jest
+842 757. Różnica 75 169 była niewyjaśniona — metryka bez zapisanego mianownika.
+
+Podział rozłączny i wyczerpujący: `1T_pasywne_zgodne` **767 588** +
+`wieleT_zgodne` **75 169** + pięć pozostałych kategorii **0** = **842 757**,
+**niewyjaśnionych 0**.
+
+**Poprawka reguły przypisania.** Pierwsze przeliczenie dało 8 niezgodności.
+Po obejrzeniu wszystkich ośmiu: zlecenie będące agresorem w jednej transakcji
+potrafi być stroną **pasywną** w drugiej, w tym samym zdarzeniu `F_LAST`.
+Rola agresora jest więc własnością **pojedynczej transakcji**, nie zlecenia
+w oknie. Po zmianie przypisania na per-`Trade` niezmiennik trzyma się
+w **100,0000%** — 842 757 z 842 757.
+
+Trzecia z rzędu „niezgodność danych", która okazała się wadą reguły zliczania.
+Zapisane jako wniosek **W015**.
+
+**Wpływ na wnioski W001–W014: żaden.** Zero policzonych zwrotów, zero P&L.
+**Licznik prób: 0.** H017 nie powstaje.

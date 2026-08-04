@@ -18,6 +18,10 @@ D5-C GO
 zamrożonych pytań zostało rozstrzygniętych; żadne nie okazało się
 nierozstrzygalne z powodu braku snapshotu.
 
+**Mianownik jest zamknięty:** wszystkie **842 757** zdarzeń z transakcją mają
+przypisaną kategorię, kategorie sumują się co do sztuki, **niewyjaśnionych: 0**
+(§3, Q6b).
+
 Kluczowe ustalenie wykracza poza to, o co pytaliśmy: **`order_id` agresora jest
 obecny na **100%** rekordów `Trade` i nigdy nie występuje po obu stronach.**
 To jest jednostka, której szukaliśmy — i której `(ts_event, sequence, side)`
@@ -134,6 +138,83 @@ Właściwy niezmiennik brzmi: **suma `Fill` PASYWNYCH == rozmiar `Trade`** —
 i ten trzyma się bez jednego wyjątku.
 
 To nie była wada danych, tylko wada mojej pierwszej reguły zliczania.
+
+### Q6b — Pełny podział zdarzeń: mianownik zamknięty
+
+Niezmiennik Q6 dotyczył **767 588** zdarzeń, podczas gdy zdarzeń z transakcją
+jest **842 757**. Różnica 75 169 była w pierwszej wersji raportu niewyjaśniona —
+a metryka z niezapisanym mianownikiem jest dokładnie tą pułapką, przed którą
+ostrzega wniosek W003. Poniżej podział **rozłączny i wyczerpujący**.
+
+| Kategoria | Zdarzeń |
+|---|---|
+| `1T_pasywne_zgodne` | **767 588** |
+| `1T_pasywne_niezgodne` | 0 |
+| `1T_bez_pasywnych` | 0 |
+| `wieleT_zgodne` | **75 169** |
+| `wieleT_niezgodne` | 0 |
+| `wieleT_bez_pasywnych` | 0 |
+| `inne` | 0 |
+| **Suma kategorii** | **842 757** |
+| **Niewyjaśnione** | **0** |
+
+Adnotacje **ortogonalne** (mogą wystąpić w każdej kategorii, więc liczone
+osobno i nie sumują się do całości):
+
+| Adnotacja | Zdarzeń | Udział |
+|---|---|---|
+| zawiera `Fill` agresora | 7 362 | 0,87% |
+| dotknięte brakiem snapshotu | **986** | **0,12%** |
+
+Różnica 75 169 to **zdarzenia z więcej niż jednym rekordem `Trade`** — mój
+pierwotny niezmiennik ich po prostu nie badał. Po zbadaniu **wszystkie
+spełniają niezmiennik**.
+
+#### Poprawka, której wymagało zamknięcie mianownika
+
+Pierwsze przeliczenie dało **8** niezgodności w kategorii `wieleT_niezgodne`.
+Obejrzałem wszystkie osiem. Przyczyna jest jedna i **nie jest defektem danych**:
+
+> **Zlecenie będące agresorem w jednej transakcji potrafi być stroną pasywną
+> w drugiej — w obrębie tego samego zdarzenia `F_LAST`.**
+
+```
+seq=526824624
+  T side=B sz=1 oid=…096070   <- agresor kupuje
+  F side=A sz=1 oid=…096064      pasywne
+  T side=A sz=1 oid=…063131   <- DRUGI agresor sprzedaje
+  F side=B sz=1 oid=…096070   <- zlecenie …070, agresor z pierwszej
+                                 transakcji, jest tu strona PASYWNA
+```
+
+Zbiór agresorów budowany dla **całego zdarzenia** wykluczał ten `Fill` jako
+„własny", zaniżając sumę pasywną o dokładnie tę jedną sztukę.
+
+**Rola agresora jest właściwością pojedynczej transakcji, nie zlecenia
+w oknie.** Po zmianie przypisania — `Fill` należy do **poprzedzającego go**
+rekordu `Trade`, a agresorem jest `order_id` z tego właśnie rekordu —
+niezmiennik trzyma się na **842 757 z 842 757, czyli 100,0000%, bez jednego
+wyjątku**.
+
+To **trzecia z rzędu** „niezgodność", która okazała się wadą mojej reguły
+zliczania, a nie danych: najpierw 6 541 (własny `Fill` agresora), potem 8 (rola
+per transakcja). Wzorzec jest na tyle wyraźny, że trafia do rejestru jako
+wniosek **W015**.
+
+#### Rozkład agresorów w zdarzeniu — istotny dla D5-B2
+
+| Agresorów w zdarzeniu | Zdarzeń |
+|---|---|
+| 1 | 822 905 (97,6%) |
+| 2 | 10 220 |
+| 3 | 3 758 |
+| 4 | 1 873 |
+| 5 lub więcej | 4 001 |
+
+**2,4% zdarzeń zawiera więcej niż jednego agresora.** Potwierdza to wprost, że
+`order_id` nie wolno scalać ani przez sesję, ani nawet przez pojedyncze
+zdarzenie `F_LAST`: ten sam identyfikator pełni różne role. Jednostką pozostaje
+matching event z agresorem odczytanym z jego **własnego** rekordu `Trade`.
 
 ### Q7 — Czy z MBO da się odtworzyć posiadany schemat `trades`
 

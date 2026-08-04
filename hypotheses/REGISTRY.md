@@ -249,6 +249,7 @@ Fakty o rynku i o procesie odkryte przy okazji badań. Zasilają projektowanie k
 |----|---------|--------|
 | **W010** | **Podział kubełkowy nie zastępuje kontroli ciągłej.** H001 dzieliła dolny tercyl zakresu medianą wolumenu i pytała, czy grupy różnią się charakterem sesji. Wewnątrz tercyla nadal są różnice zakresu, więc taki podział nie odpowiada na pytanie karty. Regresja `ER ~ percentyl_zakresu + percentyl_wolumenu` liczona wewnątrz kompresji dała jednoznaczne **t = −0.10** dla wolumenu. **Reguła: gdy karta twierdzi „X niesie informację przy kontrolowanym Y", pre-flight musi zawierać test, który Y kontroluje ciągle, a nie tylko kubełkiem.** Drugi wniosek z tej samej partii: **odsetek zdarzeń nie jest zwrotem** — H002 miała separację odsetka powrotów przeżywającą cztery kontrole i zerowy zwrot przy symetrycznych MFE/MAE. | W010 |
 | **W011** | **Model, którym odrzucamy kartę, musi być zwalidowany tak samo starannie jak model, którym byśmy ją przyjęli.** W007 walidował QQQ na zwrotach dziennych; W009 odrzucił H013 rezyduum z modelu NQ na zwrotach nocnych z ES i SOXX. To dwa różne estymatory, a jedyną podaną liczbą o jakości drugiego była statystyka **in-sample**. Osobna walidacja pokazała, że model nocny jest dobry (OOS R² 0.9753, γ = 1.013) — ale **wykryła obciążenie +3.05‱ w sesje zdarzeń**, przez które jedno z sześciu przewidywań zawiodło z powodu wewnętrznego dla modelu, nie własności rynku. Reguła: **przed zamknięciem karty waliduj dokładnie ten obiekt, który dał werdykt** — importowany, nie odtworzony. | W011 |
+| **W015** | **Trzy razy z rzedu "niezgodnosc danych" okazala sie wada mojej reguly zliczania.** W audycie MBO: (1) naiwna suma wszystkich `Fill` dawala 6 541 niezgodnosci, bo `Fill` dostaje takze zlecenie AGRESORA; (2) zbior agresorow budowany dla calego zdarzenia dawal kolejnych 8, bo zlecenie bedace agresorem w jednej transakcji potrafi byc strona PASYWNA w drugiej, w tym samym zdarzeniu `F_LAST`. Po obu poprawkach niezmiennik trzyma sie w **100,0000%** na 842 757 zdarzeniach. Wniosek procesowy: **zanim ogloszysz niezgodnosc w danych dostawcy, obejrzyj kilka konkretnych przypadkow** — zrzut szesciu rekordow rozstrzygal za kazdym razem w minute to, czego agregat nie pokazywal wcale. Drugi wniosek: metryka bez zapisanego MIANOWNIKA jest niepelna. 767 588 zgodnosci brzmi jak komplet, dopoki nie widac, ze zdarzen jest 842 757. | D5-C |
 | **W014** | **Zgodnosc empiryczna nie zastepuje semantyki protokolu zrodlowego.** Grupowanie `(ts_event, sequence, side)` wygladalo niemal idealnie: ceny w grupach monotoniczne, tylko **0,0037%** grup dwustronnych, a definicje A, B i C dawaly zgodny VIF. Interpretacja i tak byla bledna — `sequence` to numer sekwencyjny wiadomosci CME, a jedna wiadomosc moze zawierac wiele Trade Summaries, takze po przeciwnych stronach. **Ladny rozklad empiryczny jest przeslanka, nie dowodem, ze pole znaczy to, co nam pasuje.** Regula procesowa: zanim zmienna zostanie nazwana jednostka mechanizmu, jej znaczenie musi byc potwierdzone **dokumentacja albo przez dostawce**, nie sama zgodnoscia danych. Koszt zignorowania tej reguly w D5: caly Etap 2 zmierzyl poprawnie niewlasciwa jednostke. | D5-B |
 | **W013** | **Kolumna, ktorej nic nie konsumuje, nie ma jak sie zdemaskowac.** Flaga `short_day` byla `False` dla wszystkich **2 551 265** barow, bo produkcyjny pipeline tworzyl pusty kalendarz. Kolumna istniala w schemacie, przechodzila walidacje `REQUIRED_COLUMNS` i przez caly czas nie znaczyla nic — nie wykryl tego ani przeglad kodu, ani testy, bo **zaden modul badawczy jej nie czytal**. Wniosek procesowy: pole dodane na zapas jest dlugiem, nie zabezpieczeniem; kazda flaga w schemacie potrzebuje albo konsumenta, albo testu sprawdzajacego jej **rozklad**, a nie tylko obecnosc. Wykryte dopiero, gdy jedna sesja z probki D5-B zachowala sie niezgodnie z oczekiwaniem. | kalendarz CME |
 | **W012** | **Zbiór zdarzeń zbudowany z rejestru wymaga jeszcze rozdzielenia RODZAJÓW zdarzeń.** Kalendarz EDGAR dał 261 poprawnych publikacji 8-K item 2.02, ale karta H013 była zaprojektowana na kwartalne wyniki po zamknięciu — a w zbiorze były też 29 komunikatów Tesli o produkcji i dostawach. Rozdzielenie **z treści komunikatów** (nigdy z reakcji ceny) jest tanie i daje kontrolę wewnętrzną: każda spółka wyszła po 28–30 raportów, TSLA rozpadła się na dokładnie 29 i 29. **Przekroje próbki nie są wariantami strategii i nie zużywają prób** — nie zmieniają reguły wejścia, tylko odpowiedź na pytanie, które zdarzenia są zdarzeniami tej karty. | W012 |
@@ -874,6 +875,33 @@ Summary normalizowane jest do rekordu Trade, po którym następują rekordy Fill
 pasywnych zleceń; rekord Trade może zawierać `order_id` agresora, gdy CME go
 podaje; granicę zdarzenia per instrument wyznacza **`F_LAST`**.
 **MBP-1 i TBBO nie wystarczą** — nie zawierają szczegółu pasywnych wypełnień.
+
+### Mianownik zamkniety — warunek przed zakupem miesiaca
+
+Niezmiennik Q6 dotyczyl 767 588 zdarzen, a zdarzen z transakcja jest 842 757.
+Roznica 75 169 byla w pierwszej wersji raportu niewyjasniona. Pelny podzial:
+
+| Kategoria | Zdarzen |
+|---|---|
+| `1T_pasywne_zgodne` | **767 588** |
+| `wieleT_zgodne` | **75 169** |
+| pozostale piec kategorii | **0** |
+| **Suma** | **842 757** |
+| **Niewyjasnione** | **0** |
+
+Adnotacje ortogonalne: `Fill` agresora w 7 362 zdarzeniach (0,87%), wplyw braku
+snapshotu w **986** (0,12%).
+
+Zamkniecie mianownika wymagalo poprawki reguly przypisania — patrz **W015**.
+Rola agresora jest wlasnoscia POJEDYNCZEJ TRANSAKCJI, nie zlecenia w oknie:
+zlecenie agresujace w jednej transakcji potrafi byc strona pasywna w drugiej,
+w tym samym zdarzeniu `F_LAST`. Po zmianie przypisania na per-`Trade`
+niezmiennik trzyma sie w **100,0000%** bez jednego wyjatku.
+
+**Rozklad agresorow w zdarzeniu** — istotny dla definicji w D5-B2:
+822 905 zdarzen ma jednego agresora (97,6%), ale **19 852 (2,4%) ma dwoch lub
+wiecej**, do pieciu i powyzej. Dlatego `order_id` nie wolno scalac ani przez
+sesje, ani przez pojedyncze zdarzenie `F_LAST`.
 
 ### H017 — nadal nie powstaje
 
