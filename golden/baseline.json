@@ -27,7 +27,7 @@
   },
   "parquet": {
    "es_1m_cont.parquet": {
-    "bajtow": 29691913,
+    "bajtow": 29692530,
     "do": "2026-07-31",
     "kolumn": 17,
     "kontraktow": 30,
@@ -52,7 +52,7 @@
      "volume": "UInt64"
     },
     "sesji": 1887,
-    "sha256": "52c320b03562797f80c0d110dcf49dca7ccab7170202a33a03f8f5ed8bdef4c2",
+    "sha256": "e758573956df8f1e8682f133f6444c84cfb4194213bedd189a252d4b067757c9",
     "wierszy": 2573653
    },
    "k6/aapl_1m.parquet": {
@@ -286,7 +286,7 @@
     "wspolczynnikow_splitu": 3
    },
    "mnq_1m_cont.parquet": {
-    "bajtow": 35194431,
+    "bajtow": 35194909,
     "do": "2026-07-31",
     "kolumn": 17,
     "kontraktow": 30,
@@ -311,11 +311,11 @@
      "volume": "UInt64"
     },
     "sesji": 1873,
-    "sha256": "7b9be5aa8cccb1e0debfcf8291bfd1c4c6a12138e723c074fdd4ffb31400f4c2",
+    "sha256": "d010b740247626fe08bcc4343f092ea4930f030eed343fe93f73d5e97bd8aa7d",
     "wierszy": 2551265
    },
    "nq_1m_cont.parquet": {
-    "bajtow": 35400341,
+    "bajtow": 35400913,
     "do": "2026-07-31",
     "kolumn": 17,
     "kontraktow": 30,
@@ -340,13 +340,13 @@
      "volume": "UInt64"
     },
     "sesji": 1887,
-    "sha256": "fd2d18d5c9acd5f640009ac41b60099a6f25150c2546ec038e86532f38ec0550",
+    "sha256": "9e207e4faa10bedf328d2c2dc11c8b6d764620cbd672b377cb2167350d0dfb72",
     "wierszy": 2573758
    }
   }
  },
- "hash_danych": "e86a2ace5ec1c3a2b253b38a7763fd3ad73126be846051feba3886db24308519",
- "hash_wynikow": "6fed5171c876bbc5ef1753afda9677ae77405e2dbd18aeb06fdbac24ecd6d3d2",
+ "hash_danych": "595a3ab7e31b6fda362521bd786c2f1fa8cc998abf3c74d3dd43ebe4f2f34c36",
+ "hash_wynikow": "6fbed6d1262c53bd5ceca590c990294f89c5249557d6f2fca7ab8f7c636b0d8a",
  "metryki": {
   "bramki": {
    "koncentracja": false,
@@ -389,9 +389,9 @@
    "W012_H013_przekroje.md": "82a4bf904582c9104274d99193a335781706bc5b94e6f5654910b47d4efdcd5c",
    "W013_H003_preflight.md": "36d5fe8322f0d643341a5399b0c3e548ee19390e99e5cc11e6afa5edb14de707",
    "audyt_typy_i_kalendarz.md": "8c58654d3705eff9b057e64e3295330581dff02c753da7be9c1add2b45eb8c82",
-   "data_quality_es.md": "fa1a7229ec5348b5da3fe7d1f41c9b048339e1829f6076a5c31deade85978b95",
-   "data_quality_mnq.md": "9bdceb78c578469f92b7fc171549be23ca6eddad0e4c79c970ebc7fddc64830c",
-   "data_quality_nq.md": "601aa10804495c3a0abadcd25407599140ef61c3b6fda6d7521f5209892979ea",
+   "data_quality_es.md": "5815a366396b1bfb4751c9cfcdb2a550dc18926a64ea4a47a528c340f734e076",
+   "data_quality_mnq.md": "30162da38c710202d86f2473eff2434adf64ed7d3d15a78e68ab5b4b71fb728b",
+   "data_quality_nq.md": "3696a2c8b4fa13c1406a3511311dc2930e7f03d1b1ffa151f80d0f27c929a1f9",
    "earnings_calendar.md": "095b6594842fe8a532b99a19e5033bf40487b8c10604049181615d96a31d7996",
    "engine_gate.md": "0787ba71202841a802645d03234d985b438fb418c0519e7deb1dca51a65cceac",
    "k6_data_quality.md": "80ee89338a63017c263f7039c97e30f11e5d39a6698a2ffeb035aaf6667b867b",

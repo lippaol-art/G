@@ -1,8 +1,8 @@
 # Sanity-report danych — MNQ 1m
 
-Wygenerowano: 2026-08-03T09:50:43  
+Wygenerowano: 2026-08-04T10:56:06  
 Plik: `data/clean/mnq_1m_cont.parquet`  
-SHA-256: `7b9be5aa8cccb1e0debfcf8291bfd1c4c6a12138e723c074fdd4ffb31400f4c2`  
+SHA-256: `d010b740247626fe08bcc4343f092ea4930f030eed343fe93f73d5e97bd8aa7d`  
 Rozmiar: 35.2 MB
 
 ## Podstawowe liczby
@@ -49,10 +49,10 @@ godzinie sesji azjatyckiej jest normą, nie defektem (rozdz. 4.2).
 | Rodzaj luki | Liczba |
 |---|---:|
 | `none` | 2,545,639 |
-| `anomaly` | 3,304 |
-| `expected` | 2,322 |
+| `anomaly` | 3,112 |
+| `expected` | 2,514 |
 
-**Anomalii do przejrzenia: 3304**
+**Anomalii do przejrzenia: 3112**
 
 | Znacznik czasu | Segment | Dzień sesyjny |
 |---|---|---|
@@ -81,7 +81,7 @@ godzinie sesji azjatyckiej jest normą, nie defektem (rozdz. 4.2).
 | 2019-05-05 23:37:00+00:00 | asia | 2019-05-06 |
 | 2019-05-05 23:40:00+00:00 | asia | 2019-05-06 |
 | 2019-05-05 23:43:00+00:00 | asia | 2019-05-06 |
-| … | *(jeszcze 3279)* | |
+| … | *(jeszcze 3087)* | |
 
 ## Rolowania i back-adjust
 

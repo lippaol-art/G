@@ -4,19 +4,22 @@
 
 | | |
 |---|---|
-| Kanał ustalony | **support@databento.com** — potwierdzony na `databento.com/support` (HTTP 200, 2026-08-03) |
+| Adres odbiorcy | **support@databento.com** — potwierdzony na `databento.com/support` (HTTP 200, 2026-08-03) |
 | Alternatywa | formularz kontaktowy `databento.com/contact` |
-| Treść | zamrożona niżej w §A, gotowa do wysłania bez zmian |
+| Temat | `GLBX.MDP3 trades — semantics of \`sequence\`, \`flags\`/F_LAST, and ts_recv bar alignment` |
+| Treść | zamrożona w §A, przeniesiona do wiadomości bez zmian |
+| **Wersja robocza utworzona** | **2026-08-04, 10:50 UTC** |
+| ID wersji roboczej | `r-2030752981535618052` |
 | **Wysłano** | **NIE** |
-| Powód | w tej sesji **nie ma włączonego kanału poczty** — konektor Gmail jest zainstalowany, ale `enabledInChat: false`, więc jego narzędzia nie są załadowane. Nie mam żadnego innego sposobu wysłania wiadomości. |
+| Powód | konektor Gmail w tej sesji udostępnia **wyłącznie tworzenie wersji roboczych** (`create_draft`, `update_draft`, `list_drafts`) i narzędzia do czytania oraz etykietowania. **Nie ma narzędzia wysyłającego.** Wiadomość jest gotowa w folderze Kopie robocze i wymaga jednego kliknięcia „Wyślij". |
 | Data i godzina wysyłki | *do uzupełnienia po wysłaniu* |
-| Identyfikator zgłoszenia | *do uzupełnienia po wysłaniu* |
-| Status sprawy | **oczekuje na wysłanie** |
-| Przypomnienie | jedno krótkie, po **pięciu dniach roboczych** od wysyłki |
+| Identyfikator zgłoszenia | *do uzupełnienia, jeśli przyjdzie* |
+| Status sprawy | **oczekuje na wysłanie przez właściciela projektu** |
+| Przypomnienie | jedno krótkie, po **pięciu dniach roboczych** od faktycznej wysyłki |
 
-**Nie napisałem, że wysłałem, bo nie wysłałem.** Żeby to ruszyło, potrzebne jest
-jedno z dwojga: włączenie konektora Gmail w ustawieniach tej rozmowy, albo
-wklejenie treści z §A ręcznie. Po wysłaniu uzupełniam tabelę wyżej.
+**Nie napisałem, że wysłałem, bo nie wysłałem.** Wersja robocza istnieje
+i ma pełną treść; brakującym krokiem jest samo wysłanie, którego to połączenie
+nie obsługuje. Po wysyłce uzupełniam datę, godzinę i status.
 
 **Odpowiedź zapisujemy w pełnym brzmieniu** w §C — bez parafrazy i bez skrótów.
 Interpretacja dla projektu idzie osobno, do §D.

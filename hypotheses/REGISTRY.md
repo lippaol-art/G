@@ -743,3 +743,50 @@ następnie pre-flightu trwałości znaku, i dopiero potem pierwszego backtestu.
 
 **H017 nie powstaje w tym wpisie. P&L nie został zmierzony.
 Licznik prób: 0.**
+
+---
+
+## Reguły trwałe dodane 04.08.2026
+
+### R6 — typy ze znakiem przed odejmowaniem
+
+**Każda operacja, której wynik może być ujemny, musi zostać wykonana na typie
+ze znakiem przed odejmowaniem, niezależnie od typu wyniku końcowego.**
+
+Podstawa: ta klasa błędu wystąpiła dwa razy (różnica wolumenów w Etapie 1 D5,
+`n_buy − n_sell` w Etapie 2 D5 — fałszywy werdykt `NO-GO`). Odejmowanie kolumn
+bez znaku przepełnia się do ~1,8·10¹⁹ zamiast dać liczbę ujemną; **nie rzuca
+wyjątku i nie psuje wykresu — zmienia werdykt**.
+
+**Druga warstwa, bo samo rzutowanie kiedyś zostanie pominięte:** zmienna
+o znanych z konstrukcji granicach dostaje jawną asercję zakresu w miejscu
+obliczenia (`engine.guards`: `assert_imbalance` [−1,+1], `assert_udzial`
+i `assert_prawdopodobienstwo` [0,1], `assert_liczebnosc` ≥ 0, `assert_vif` ≥ 1).
+Skaner statyczny: `scripts/audit_typy_bez_znaku.py`.
+
+### R7 — jeden kanoniczny entrypoint bramki lokalnej
+
+**Przed pushem zmian w `engine/`, `validation/` albo pipelinie danych lokalna
+bramka musi uruchamiać dokładnie ten sam zestaw co CI: ruff, mypy, testy
+z pokryciem, strażniki, bramka 5.6 i golden check.**
+
+Podstawa: push z błędami mypy przeszedł lokalnie, bo uruchomiłem ruff i testy,
+a mypy pominąłem. Cztery komendy do zapamiętania to cztery okazje do pominięcia
+jednej.
+
+Realizacja: **`bash scripts/check_all.sh`** (wariant `--szybko` pomija bramkę
+5.6 i golden). Rozjazd między tym skryptem a `.github/workflows/ci.yml` czyni
+bramkę bezużyteczną — zmiana w jednym wymaga zmiany w drugim.
+
+### R8 — przebudowa artefaktów danych tylko z jawnym zakresem zmian
+
+**Przebudowa `data/clean/` wymaga: budowy do katalogu tymczasowego,
+porównania kolumna po kolumnie ze zbiorem poprzednim, jawnej listy kolumn
+dozwolonych i zabronionych, i podmiany atomowej dopiero po zgodności.**
+
+Baseline aktualizuje się **po** potwierdzeniu zakresu, nigdy dlatego, że stary
+przestał przechodzić. Lista kolumn zabronionych jest **wyliczona jawnie**, a nie
+zdefiniowana jako „wszystko poza dozwolonymi" — inaczej dopisanie kolumny do
+schematu po cichu wyłącza kontrolę.
+
+Realizacja: `scripts/rebuild_clean.py`. Pierwsze zastosowanie: baseline v9.

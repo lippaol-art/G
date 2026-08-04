@@ -411,3 +411,83 @@ i odnotowany.
 `short_day`; audyt typów nie znalazł ani jednego niezabezpieczonego
 odejmowania, więc żaden opublikowany wynik nie był nim dotknięty.
 **Licznik prób: 0.**
+
+---
+
+## v9 — kontrolowana przebudowa `data/clean/` po naprawie kalendarza CME
+
+**Pierwsza zmiana `hash_danych` wynikająca z naprawy kodu, nie z zakupu danych.**
+
+```
+hash_danych   e86a2ace5ec1c3a2b253b38a7763fd3ad73126be846051feba3886db24308519
+           -> 595a3ab7e31b6fda362521bd786c2f1fa8cc998abf3c74d3dd43ebe4f2f34c36
+
+hash_wynikow  6fed5171c876bbc5ef1753afda9677ae77405e2dbd18aeb06fdbac24ecd6d3d2
+           -> 6fbed6d1262c53bd5ceca590c990294f89c5249557d6f2fca7ab8f7c636b0d8a
+```
+
+### Powód
+
+Kod znał poprawny kalendarz CME (commit `a508d2d`), ale zapisane parquety nadal
+zawierały martwą flagę `short_day`. Ten sam commit dawałby różne znaczenie
+zależnie od tego, czy ktoś odbudował dane — niespójność, którą trzeba domknąć
+przed H017.
+
+### Zmienione pliki danych
+
+| Symbol | Wierszy | `short_day` `False→True` | Dni | `gap_kind` `anomaly→expected` | SHA-256 stary | SHA-256 nowy |
+|---|---|---|---|---|---|---|
+| MNQ | 2 551 265 | **72 206** | 64 | **192** | `7b9be5aa8cccb1e0…` | `d010b740247626fe…` |
+| NQ | 2 573 758 | **72 494** | 64 | **113** | `fd2d18d5c9acd5f6…` | `9e207e4faa10bedf…` |
+| ES | 2 573 653 | **72 383** | 64 | **178** | `52c320b03562797f…` | `e758573956df8f1e…` |
+
+Kierunek zmian jest **jednostronny w obu kolumnach**: `short_day` wyłącznie
+`False→True`, `gap_kind` wyłącznie `anomaly→expected`. Skrypt przebudowy
+przerywa, gdy pojawi się kierunek przeciwny.
+
+### Potwierdzenie zerowej różnicy — 15 kolumn zabronionych
+
+`ts_utc`, `open`, `high`, `low`, `close`, `volume`, `contract`, `trade_date`,
+`segment`, `px_raw`, `px_adj`, `halt_window`, `days_to_roll`, `dst_transition`,
+`data_condition` — **0 różnic w każdej, w każdym z trzech instrumentów.**
+Liczba wierszy bez zmian. Zestaw kolumn bez zmian.
+
+Kontrola jest **jawną listą**, nie regułą „wszystko poza dozwolonymi", żeby
+dopisanie kolumny do schematu nie osunęło jej po cichu.
+Skrypt: `scripts/rebuild_clean.py`, raport: `reports/przebudowa_clean.json`.
+
+### Zmienione raporty — dokładnie trzy
+
+| Raport | Zmiana |
+|---|---|
+| `data_quality_mnq.md` | `anomaly` 3 304 → 3 112, `expected` 2 322 → 2 514 |
+| `data_quality_nq.md` | analogicznie, −113 anomalii |
+| `data_quality_es.md` | analogicznie, −178 anomalii |
+
+Suma `anomaly + expected` bez zmian — luki nie zniknęły, zostały **poprawnie
+zaklasyfikowane** jako wynikające z oficjalnego kalendarza.
+
+### Potwierdzenie identyczności wyników Gen1
+
+Dowód **empiryczny**, nie z hashy plików statycznych: trzy badania Gen1
+przeliczono na przebudowanych danych i porównano z poprzednimi wersjami.
+
+| Badanie | Linii różniących się poza stopką z datą |
+|---|---|
+| `W001_overnight_drift` | **0** |
+| `W004_partia1_preflight` | **0** |
+| `W010_partia3_preflight` | **0** |
+
+Jedyną różnicą była data generacji, więc oryginały przywrócono — regeneracja
+samej stopki dodałaby do baseline'u szum bez treści.
+
+Dodatkowo: **bramka silnika na realnych danych** (PLAN rozdz. 5.6 — zerowa
+przewaga, znany efekt, symetria, determinizm) przechodzi na przebudowanych
+danych. Metryki silnika, karty hipotez i werdykty: **bez zmian**.
+
+### Rozbieżności baseline'u: 11 zmian, 0 usuniętych, 0 nowych
+
+6 wpisów parquetów (hash + rozmiar × 3), `hash_danych`, `hash_wynikow`
+i 3 raporty jakości. **Ani jeden wpis `metryki.*` ani `silnik.*` nie drgnął.**
+
+**Licznik prób: 0.** P&L nie mierzony. H017 nie powstaje.

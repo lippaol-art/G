@@ -1,8 +1,8 @@
 # Sanity-report danych — NQ 1m
 
-Wygenerowano: 2026-08-03T09:50:48  
+Wygenerowano: 2026-08-04T10:56:07  
 Plik: `data/clean/nq_1m_cont.parquet`  
-SHA-256: `fd2d18d5c9acd5f640009ac41b60099a6f25150c2546ec038e86532f38ec0550`  
+SHA-256: `9e207e4faa10bedf328d2c2dc11c8b6d764620cbd672b377cb2167350d0dfb72`  
 Rozmiar: 35.4 MB
 
 ## Podstawowe liczby
@@ -49,10 +49,10 @@ godzinie sesji azjatyckiej jest normą, nie defektem (rozdz. 4.2).
 | Rodzaj luki | Liczba |
 |---|---:|
 | `none` | 2,570,565 |
-| `expected` | 2,349 |
-| `anomaly` | 844 |
+| `expected` | 2,462 |
+| `anomaly` | 731 |
 
-**Anomalii do przejrzenia: 844**
+**Anomalii do przejrzenia: 731**
 
 | Znacznik czasu | Segment | Dzień sesyjny |
 |---|---|---|
@@ -61,7 +61,6 @@ godzinie sesji azjatyckiej jest normą, nie defektem (rozdz. 4.2).
 | 2019-04-15 22:52:00+00:00 | globex_open | 2019-04-16 |
 | 2019-04-15 23:27:00+00:00 | asia | 2019-04-16 |
 | 2019-04-16 23:39:00+00:00 | asia | 2019-04-17 |
-| 2019-04-21 22:00:00+00:00 | globex_open | 2019-04-22 |
 | 2019-04-22 22:26:00+00:00 | globex_open | 2019-04-23 |
 | 2019-04-23 22:59:00+00:00 | globex_open | 2019-04-24 |
 | 2019-04-29 04:59:00+00:00 | asia | 2019-04-29 |
@@ -71,7 +70,6 @@ godzinie sesji azjatyckiej jest normą, nie defektem (rozdz. 4.2).
 | 2019-05-14 23:33:00+00:00 | asia | 2019-05-15 |
 | 2019-05-24 04:28:00+00:00 | asia | 2019-05-24 |
 | 2019-05-26 23:04:00+00:00 | asia | 2019-05-27 |
-| 2019-05-27 22:00:00+00:00 | globex_open | 2019-05-28 |
 | 2019-05-28 04:12:00+00:00 | asia | 2019-05-28 |
 | 2019-05-30 22:19:00+00:00 | globex_open | 2019-05-31 |
 | 2019-05-30 22:42:00+00:00 | globex_open | 2019-05-31 |
@@ -81,7 +79,9 @@ godzinie sesji azjatyckiej jest normą, nie defektem (rozdz. 4.2).
 | 2019-06-14 03:44:00+00:00 | asia | 2019-06-14 |
 | 2019-06-14 03:47:00+00:00 | asia | 2019-06-14 |
 | 2019-06-14 03:53:00+00:00 | asia | 2019-06-14 |
-| … | *(jeszcze 819)* | |
+| 2019-06-14 03:56:00+00:00 | asia | 2019-06-14 |
+| 2019-06-14 04:46:00+00:00 | asia | 2019-06-14 |
+| … | *(jeszcze 706)* | |
 
 ## Rolowania i back-adjust
 

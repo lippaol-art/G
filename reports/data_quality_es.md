@@ -1,8 +1,8 @@
 # Sanity-report danych — ES 1m
 
-Wygenerowano: 2026-08-03T09:50:51  
+Wygenerowano: 2026-08-04T10:56:08  
 Plik: `data/clean/es_1m_cont.parquet`  
-SHA-256: `52c320b03562797f80c0d110dcf49dca7ccab7170202a33a03f8f5ed8bdef4c2`  
+SHA-256: `e758573956df8f1e8682f133f6444c84cfb4194213bedd189a252d4b067757c9`  
 Rozmiar: 29.7 MB
 
 ## Podstawowe liczby
@@ -49,10 +49,10 @@ godzinie sesji azjatyckiej jest normą, nie defektem (rozdz. 4.2).
 | Rodzaj luki | Liczba |
 |---|---:|
 | `none` | 2,569,700 |
-| `expected` | 2,350 |
-| `anomaly` | 1,603 |
+| `expected` | 2,528 |
+| `anomaly` | 1,425 |
 
-**Anomalii do przejrzenia: 1603**
+**Anomalii do przejrzenia: 1425**
 
 | Znacznik czasu | Segment | Dzień sesyjny |
 |---|---|---|
@@ -72,7 +72,6 @@ godzinie sesji azjatyckiej jest normą, nie defektem (rozdz. 4.2).
 | 2019-04-17 03:59:00+00:00 | asia | 2019-04-17 |
 | 2019-04-17 05:21:00+00:00 | asia | 2019-04-17 |
 | 2019-04-18 04:26:00+00:00 | asia | 2019-04-18 |
-| 2019-04-21 22:00:00+00:00 | globex_open | 2019-04-22 |
 | 2019-04-22 04:16:00+00:00 | asia | 2019-04-22 |
 | 2019-04-22 04:40:00+00:00 | asia | 2019-04-22 |
 | 2019-04-22 06:33:00+00:00 | europe | 2019-04-22 |
@@ -81,7 +80,8 @@ godzinie sesji azjatyckiej jest normą, nie defektem (rozdz. 4.2).
 | 2019-04-23 03:58:00+00:00 | asia | 2019-04-23 |
 | 2019-04-23 04:01:00+00:00 | asia | 2019-04-23 |
 | 2019-04-23 04:15:00+00:00 | asia | 2019-04-23 |
-| … | *(jeszcze 1578)* | |
+| 2019-04-23 04:19:00+00:00 | asia | 2019-04-23 |
+| … | *(jeszcze 1400)* | |
 
 ## Rolowania i back-adjust
 
