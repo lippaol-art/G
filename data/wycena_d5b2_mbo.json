@@ -1,0 +1,192 @@
+{
+ "sesji": 22,
+ "koszt_usd": 78.6044,
+ "rekordow": 837310143,
+ "rozmiar_rozliczeniowy_b": 46889368008,
+ "zapytanie": {
+  "dataset": "GLBX.MDP3",
+  "symbols": [
+   "MNQU6"
+  ],
+  "stype_in": "raw_symbol",
+  "schema": "mbo"
+ },
+ "sesje": [
+  {
+   "sesja": "2026-07-01",
+   "start_utc": "2026-07-01T13:30",
+   "end_utc": "2026-07-01T20:00",
+   "koszt_usd": 3.6891,
+   "rekordow": 39297265,
+   "rozmiar_b": 2200646840
+  },
+  {
+   "sesja": "2026-07-02",
+   "start_utc": "2026-07-02T13:30",
+   "end_utc": "2026-07-02T20:00",
+   "koszt_usd": 5.7527,
+   "rekordow": 61279315,
+   "rozmiar_b": 3431641640
+  },
+  {
+   "sesja": "2026-07-03",
+   "start_utc": "2026-07-03T13:30",
+   "end_utc": "2026-07-03T20:00",
+   "koszt_usd": 0.2498,
+   "rekordow": 2660629,
+   "rozmiar_b": 148995224
+  },
+  {
+   "sesja": "2026-07-06",
+   "start_utc": "2026-07-06T13:30",
+   "end_utc": "2026-07-06T20:00",
+   "koszt_usd": 3.0388,
+   "rekordow": 32369900,
+   "rozmiar_b": 1812714400
+  },
+  {
+   "sesja": "2026-07-07",
+   "start_utc": "2026-07-07T13:30",
+   "end_utc": "2026-07-07T20:00",
+   "koszt_usd": 4.4529,
+   "rekordow": 47432653,
+   "rozmiar_b": 2656228568
+  },
+  {
+   "sesja": "2026-07-08",
+   "start_utc": "2026-07-08T13:30",
+   "end_utc": "2026-07-08T20:00",
+   "koszt_usd": 4.1949,
+   "rekordow": 44684887,
+   "rozmiar_b": 2502353672
+  },
+  {
+   "sesja": "2026-07-09",
+   "start_utc": "2026-07-09T13:30",
+   "end_utc": "2026-07-09T20:00",
+   "koszt_usd": 2.9313,
+   "rekordow": 31224457,
+   "rozmiar_b": 1748569592
+  },
+  {
+   "sesja": "2026-07-10",
+   "start_utc": "2026-07-10T13:30",
+   "end_utc": "2026-07-10T20:00",
+   "koszt_usd": 2.9751,
+   "rekordow": 31691336,
+   "rozmiar_b": 1774714816
+  },
+  {
+   "sesja": "2026-07-13",
+   "start_utc": "2026-07-13T13:30",
+   "end_utc": "2026-07-13T20:00",
+   "koszt_usd": 3.4748,
+   "rekordow": 37014382,
+   "rozmiar_b": 2072805392
+  },
+  {
+   "sesja": "2026-07-14",
+   "start_utc": "2026-07-14T13:30",
+   "end_utc": "2026-07-14T20:00",
+   "koszt_usd": 3.3972,
+   "rekordow": 36187628,
+   "rozmiar_b": 2026507168
+  },
+  {
+   "sesja": "2026-07-15",
+   "start_utc": "2026-07-15T13:30",
+   "end_utc": "2026-07-15T20:00",
+   "koszt_usd": 4.1234,
+   "rekordow": 43923779,
+   "rozmiar_b": 2459731624
+  },
+  {
+   "sesja": "2026-07-16",
+   "start_utc": "2026-07-16T13:30",
+   "end_utc": "2026-07-16T20:00",
+   "koszt_usd": 3.7847,
+   "rekordow": 40315486,
+   "rozmiar_b": 2257667216
+  },
+  {
+   "sesja": "2026-07-17",
+   "start_utc": "2026-07-17T13:30",
+   "end_utc": "2026-07-17T20:00",
+   "koszt_usd": 4.4021,
+   "rekordow": 46891856,
+   "rozmiar_b": 2625943936
+  },
+  {
+   "sesja": "2026-07-20",
+   "start_utc": "2026-07-20T13:30",
+   "end_utc": "2026-07-20T20:00",
+   "koszt_usd": 3.4997,
+   "rekordow": 37279369,
+   "rozmiar_b": 2087644664
+  },
+  {
+   "sesja": "2026-07-21",
+   "start_utc": "2026-07-21T13:30",
+   "end_utc": "2026-07-21T20:00",
+   "koszt_usd": 2.3877,
+   "rekordow": 25434428,
+   "rozmiar_b": 1424327968
+  },
+  {
+   "sesja": "2026-07-22",
+   "start_utc": "2026-07-22T13:30",
+   "end_utc": "2026-07-22T20:00",
+   "koszt_usd": 2.3639,
+   "rekordow": 25180783,
+   "rozmiar_b": 1410123848
+  },
+  {
+   "sesja": "2026-07-23",
+   "start_utc": "2026-07-23T13:30",
+   "end_utc": "2026-07-23T20:00",
+   "koszt_usd": 4.0993,
+   "rekordow": 43666511,
+   "rozmiar_b": 2445324616
+  },
+  {
+   "sesja": "2026-07-24",
+   "start_utc": "2026-07-24T13:30",
+   "end_utc": "2026-07-24T20:00",
+   "koszt_usd": 3.9368,
+   "rekordow": 41935351,
+   "rozmiar_b": 2348379656
+  },
+  {
+   "sesja": "2026-07-27",
+   "start_utc": "2026-07-27T13:30",
+   "end_utc": "2026-07-27T20:00",
+   "koszt_usd": 4.3409,
+   "rekordow": 46240083,
+   "rozmiar_b": 2589444648
+  },
+  {
+   "sesja": "2026-07-28",
+   "start_utc": "2026-07-28T13:30",
+   "end_utc": "2026-07-28T20:00",
+   "koszt_usd": 3.3535,
+   "rekordow": 35721633,
+   "rozmiar_b": 2000411448
+  },
+  {
+   "sesja": "2026-07-29",
+   "start_utc": "2026-07-29T13:30",
+   "end_utc": "2026-07-29T20:00",
+   "koszt_usd": 4.5598,
+   "rekordow": 48571535,
+   "rozmiar_b": 2720005960
+  },
+  {
+   "sesja": "2026-07-30",
+   "start_utc": "2026-07-30T13:30",
+   "end_utc": "2026-07-30T20:00",
+   "koszt_usd": 3.5961,
+   "rekordow": 38306877,
+   "rozmiar_b": 2145185112
+  }
+ ]
+}

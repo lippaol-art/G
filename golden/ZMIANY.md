@@ -604,3 +604,37 @@ Zapisane jako wniosek **W015**.
 
 **Wpływ na wnioski W001–W014: żaden.** Zero policzonych zwrotów, zero P&L.
 **Licznik prób: 0.** H017 nie powstaje.
+
+---
+
+## v13 — D5-C: smoke test magazynu, wycena miesiąca, zamrożenie D5-B2
+
+```
+hash_wynikow  cc56236b1b0c78f4500210e7d3d7db5fe7bdcdde967fcbb1ec88baa5cbc70140
+           -> 0d36881edc8acce5a288e8bf46148bc39cf11daf6550883c5f457e1064297fba
+hash_danych   BEZ ZMIANY
+```
+
+**Zmienione klucze — dokładnie jeden:**
+
+| Klucz | Zmiana |
+|---|---|
+| `raporty.hashe.D5_etap3_wyniki.md` | dodane §5a (smoke test) i §5b (wycena) |
+
+**Powód:** trzy rzeczy domykające drogę do decyzji o zakupie miesiąca.
+
+1. **Smoke test magazynu poza repozytorium.** Audyt powtórzony z danymi pod
+   `PROJECT_G_DATA_ROOT`: wszystkie liczby identyczne, JSON zgodny **co do
+   bajtu**. Czas 281,9 s, szczytowy RSS 2,106 GB, zużycie dysku poza plikiem
+   surowym **zero**. Naprawiona przy okazji niespójność: ścieżka do `trades`
+   omijała `raw_dir`, więc zmienna przenosiła tylko MBO — przy przenosinach na
+   dysk lokalny dałoby to **fałszywy sukces**.
+2. **Wycena 22 sesji sesja po sesji:** 78,6044 USD, 837 310 143 rekordów,
+   46,89 GB rozliczeniowo, ~14,8 GB na dysku. Zapisana w
+   `data/wycena_d5b2_mbo.json`.
+3. **Zamrożona specyfikacja D5-B2** (`docs/D5_ETAP4_SPEC.md`) z kanoniczną
+   jednostką agresywnej akcji per `Trade`, limitem 82,00 USD i **wszystkimi
+   progami z §8 Etapu 2 bez zmian**.
+
+**Zakup miesiąca NIEWYKONANY.** **Wpływ na wnioski W001–W015: żaden.**
+**Licznik prób: 0.** H017 nie powstaje.

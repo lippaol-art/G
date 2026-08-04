@@ -301,6 +301,57 @@ ponownej wyceny dokładnie 22 sesji, zamrożenia limitu i osobnej decyzji.
 
 ---
 
+## 5a. Smoke test magazynu poza repozytorium
+
+Audyt powtórzony w całości z danymi przeniesionymi poza katalog repozytorium
+przez `PROJECT_G_DATA_ROOT`. **Wszystkie liczby identyczne**, plik
+`reports/D5_etap3_wyniki.json` zgodny **co do bajtu**.
+
+| | |
+|---|---|
+| SHA-256 kopii vs manifest | **zgodny** |
+| Zdarzeń / podział / niewyjaśnione | **identyczne** |
+| Q7 (rekonstrukcja `trades`) | **TAK** |
+| Czas przetwarzania | **281,9 s** |
+| Szczytowy RSS | **2,106 GB** |
+| Wolne miejsce przed / po | **26,9 GB / 26,9 GB** |
+| Artefakt wynikowy | 1,8 kB |
+
+Zużycie dysku poza plikiem surowym: **zero** — przetwarzanie strumieniowe nie
+tworzy plików tymczasowych.
+
+Przy okazji naprawiona niespójność: ścieżka do pliku `trades` była zapisana na
+sztywno i omijała `raw_dir`, więc `PROJECT_G_DATA_ROOT` przenosiło tylko MBO,
+a kontrola Q7 po cichu sięgała do repozytorium. **Przy przenosinach na dysk
+lokalny dałoby to fałszywy sukces.**
+
+**Czego ten test NIE zastępuje:** uruchomienia na fizycznej maszynie
+właściciela projektu z dyskiem 300 GB. Potwierdza mechanizm i odtwarzalność,
+nie zachowanie tamtego sprzętu.
+
+---
+
+## 5b. Wycena 22 sesji RTH w MBO — sesja po sesji
+
+`metadata.get_cost` dla dokładnie tych zapytań, które zostałyby wykonane:
+
+| | |
+|---|---|
+| **Koszt łączny** | **78,6044 USD** |
+| Rekordów | 837 310 143 |
+| Rozmiar rozliczeniowy | 46,89 GB |
+| Szacowany rozmiar na dysku | ~14,8 GB |
+| Pozostaje z kredytu 125 USD | 46,40 USD |
+| Rozrzut | 0,2498 USD (07-03, sesja skrócona) … 5,7527 USD (07-02) |
+
+Ekstrapolacja zasobów: **~103 min** przetwarzania, szczytowy RSS **~3,4 GB**
+(skaluje się z największą pojedynczą sesją — 61,3 mln rekordów — a nie z sumą,
+bo przetwarzamy sesja po sesji).
+
+**Zakup niewykonany.** Limit zamrożony w `docs/D5_ETAP4_SPEC.md` na 82,00 USD.
+
+---
+
 ## 6. Reprodukcja
 
 | | |

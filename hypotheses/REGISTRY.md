@@ -903,6 +903,34 @@ niezmiennik trzyma sie w **100,0000%** bez jednego wyjatku.
 wiecej**, do pieciu i powyzej. Dlatego `order_id` nie wolno scalac ani przez
 sesje, ani przez pojedyncze zdarzenie `F_LAST`.
 
+### Smoke test magazynu i wycena miesiaca
+
+Audyt D5-C powtorzony z danymi poza repozytorium (`PROJECT_G_DATA_ROOT`):
+wszystkie liczby identyczne, JSON zgodny **co do bajtu**. Czas **281,9 s**,
+szczytowy RSS **2,106 GB**, zuzycie dysku poza plikiem surowym **zero**.
+
+Naprawiona przy okazji niespojnosc: sciezka do pliku `trades` byla zapisana na
+sztywno i omijala `raw_dir`, wiec zmienna przenosila tylko MBO, a kontrola Q7
+po cichu siegala do repozytorium. Przy przenosinach na dysk lokalny dalaby
+**falszywy sukces**.
+
+Wycena 22 sesji RTH w MBO, sesja po sesji: **78,6044 USD**, 837 310 143
+rekordow, 46,89 GB rozliczeniowo, ~14,8 GB na dysku. Z kredytu 125 USD zostaje
+46,40 USD. Rozrzut od 0,2498 USD (2026-07-03, sesja skrocona) do 5,7527 USD.
+
+**Zakup niewykonany.** Limit zamrozony w `docs/D5_ETAP4_SPEC.md` na 82,00 USD.
+
+### Kanoniczna jednostka zamrozona w D5-B2
+
+Koperta `F_LAST` **nie jest** jednostka obserwacji — 2,4% kopert zawiera dwoch
+lub wiecej agresorow, wiec caly `F_LAST` nie ma jednoznacznego znaku.
+Jednostka jest **agresywna akcja przypisana per `Trade`**: rekord `Trade`
+rozpoczyna transakcje, nastepujace po nim `Fill` do niej naleza, strona
+i agresor pochodza z biezacego `Trade`, a kolejne `Trade` o tym samym
+`order_id` i stronie lacza sie w sweep **tylko** jako bezposredni ciag w tej
+samej kopercie. Ponowne pojawienie sie `order_id` po innym agresorze to nowa
+akcja; wystapienie pasywne nigdy nie jest scalane z rola agresora.
+
 ### H017 — nadal nie powstaje
 
 Blocker się **zmienił**, nie zniknął. Nie jest nim już oczekiwanie na e-mail,

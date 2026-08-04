@@ -38,7 +38,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from engine.paths import raw_dir  # noqa: E402
 
 PLIK_MBO = raw_dir("d5c_mbo", "mnq_mbo_rth_2026-07-30.dbn.zst")
-PLIK_TRADES = Path("data/raw/mnq_trades_2026-07-30.dbn.zst")
+# OBA pliki przez `raw_dir`. Pierwsza wersja miala tu twarda sciezke, wiec
+# `PROJECT_G_DATA_ROOT` przenosilo tylko MBO, a kontrola Q7 po cichu siegala
+# do repozytorium. Przy przenosinach na dysk lokalny dalaby falszywy sukces.
+PLIK_TRADES = raw_dir("mnq_trades_2026-07-30.dbn.zst")
 F_LAST = 128
 
 
