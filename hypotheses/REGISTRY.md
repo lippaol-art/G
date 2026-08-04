@@ -891,3 +891,67 @@ development setem, więc **nie dokładamy nowej daty do ekspozycji**. Nie
 kupujemy całego miesiąca. Nie mierzymy przyszłych zwrotów ani VIF.
 
 **Licznik prób: 0.** Żaden przyszły zwrot ani P&L nie został obejrzany.
+
+---
+
+## D5 Etap 3 — wykonany (04.08.2026): `D5-C GO`
+
+Specyfikacja zamrożona **przed zakupem** (`docs/D5_ETAP3_SPEC.md`, reguła R4).
+Wynik: `reports/D5_etap3_wyniki.md`.
+
+### Werdykt: `D5-C GO`
+
+**MBO pozwala kanonicznie odtworzyć zdarzenia dopasowania.** Wszystkie dziewięć
+zamrożonych pytań rozstrzygnięte; żadne nie okazało się nierozstrzygalne
+z powodu braku snapshotu.
+
+### Kanoniczna jednostka została znaleziona
+
+| Miara | `(ts_event, sequence, side)` — D5-B | **`order_id` agresora — MBO** |
+|---|---|---|
+| Obecność | zawsze | **100,00% rekordów `Trade`** |
+| Grupy dwustronne | **732** | **0 (0,0000%)** |
+| Status u dostawcy | oficjalnie odrzucone | zalecane |
+
+903 107 unikalnych agresorów na 984 113 transakcji; 92,87% zdejmuje jeden
+poziom, maksimum 32. Rozkład dokładnie taki, jakiego oczekuje się od zleceń
+przechodzących przez księgę.
+
+### Cztery ustalenia strukturalne
+
+1. **Zero zdarzeń z `Trade` bez `Fill`** — struktura Trade→Fill sprawdza się
+   bez wyjątku na 842 757 zdarzeniach.
+2. **Suma pasywnych `Fill` == rozmiar `Trade` w 100,000%** — zero niezgodności
+   na 767 588 zdarzeniach.
+3. **Rekonstrukcja `trades` z MBO dokładna**: 984 113 = 984 113 rekordów,
+   1 790 715 = 1 790 715 sztuk wolumenu.
+4. **Brak snapshotu nie przeszkadza**: tylko 0,19% wypełnień odwołuje się do
+   zleceń sprzed okna, i dotyczy to wyłącznie proweniencji zlecenia pasywnego.
+
+### Poprawiony niezmiennik — wart zapamiętania
+
+Naiwna suma **wszystkich** rekordów `Fill` dawała 6 541 niezgodności. Zrzut
+zdarzeń pokazał przyczynę: **`Fill` dostaje także zlecenie agresora**,
+rozpoznawalne po `order_id` identycznym z rekordem `Trade`. Właściwy
+niezmiennik to suma `Fill` **pasywnych**, i ten trzyma się bez wyjątku.
+To była wada mojej reguły zliczania, nie danych.
+
+### Koszt i skala
+
+Sesja: **3,5961 USD** przy zamrożonym limicie 4,00 USD; 38 306 877 rekordów;
+**0,678 GB** na dysku wobec 2,145 GB rozliczeniowo. Pierwsze podejście dało
+HTTP 504 przy transferze — plik nie powstał, druga próba po 20 s powiodła się.
+
+Szacunek dla 22 sesji RTH: **~79 USD, ~47 GB rozliczeniowo, ~15 GB na dysku,
+~17 min przetwarzania.** **Zakup miesiąca NIEWYKONANY** — wymaga lokalnego
+`PROJECT_G_DATA_ROOT`, ponownej wyceny, zamrożenia limitu i osobnej decyzji.
+
+### H017 — nadal nie powstaje
+
+Blocker przesunął się z „brak kanonicznej rekonstrukcji" na **„brak próbki
+wystarczającej do testu identyfikowalności na poprawnej jednostce"**.
+Następny etap to **D5-B2**: powtórzenie testu identyfikowalności przy
+**niezmienionych progach** z §8 specyfikacji Etapu 2, na nierównowadze liczonej
+po `order_id` agresora.
+
+**P&L nie mierzony. Przyszłe zwroty nietknięte. Licznik prób: 0.**

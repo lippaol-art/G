@@ -538,3 +538,33 @@ o granicach okien 60-sekundowych była prawidłowa.
 w opisie PR, zanim trafiły do rejestru.
 
 **Licznik prób: 0.** P&L nie mierzony. H017 nie powstaje.
+
+---
+
+## v11 — D5-C `GO`: kanoniczna jednostka zdarzenia agresora znaleziona
+
+```
+hash_wynikow  0c74df56bd8ed810cce3a0d249b7f467dcc6e9747fe62b0a9b9c7bbe0fbe0149
+           -> 08af84e30d5d0d4fb9e1b2311883fbd16bef1b0515bead713b343a5421a4189f
+hash_danych   BEZ ZMIANY
+```
+
+**Zmienione klucze — dokładnie jeden:**
+
+| Klucz | Zmiana |
+|---|---|
+| `raporty.hashe.D5_etap3_wyniki.md` | NOWY |
+
+`hash_danych` bez zmiany: próbka `mbo` leży w `data/raw/` (poza `.gitignore`),
+a baseline haszuje `data/clean/`. Żaden plik `clean/` nie został dotknięty.
+
+**Powód:** audyt jednodniowej próbki MBO (2026-07-30, RTH). Werdykt `D5-C GO`.
+`order_id` agresora obecny na **100,00%** rekordów `Trade`, **0 agresorów po
+obu stronach** wobec 732 dwustronnych par `(ts_event, sequence)` z D5-B.
+Suma pasywnych `Fill` == rozmiar `Trade` w **100,000%** przypadków.
+Rekonstrukcja `trades` z MBO dokładna co do rekordu i sztuki.
+
+**Koszt:** 3,5961 USD przy zamrożonym limicie 4,00 USD.
+
+**Wpływ na wnioski W001–W014: żaden.** Zero policzonych zwrotów, zero P&L,
+zero backtestu. **Licznik prób: 0.** H017 nie powstaje.
