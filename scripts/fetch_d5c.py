@@ -36,6 +36,7 @@ import databento as db
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+from engine.databento_io import metadane_z_ponowieniem  # noqa: E402
 from engine.paths import raw_dir, wolne_gb  # noqa: E402
 
 ET = ZoneInfo("America/New_York")
@@ -81,9 +82,15 @@ def main() -> int:
     a, b = okno()
     q = dict(**ZAPYTANIE, start=a, end=b)
 
-    koszt = c.metadata.get_cost(**q)
-    rekordow = c.metadata.get_record_count(**q)
-    rozmiar = c.metadata.get_billable_size(**q)
+    # Metadane sa darmowe i idempotentne, wiec ponawianie ich jest bezpieczne.
+    # `get_record_count` dla 38 mln rekordow MBO potrafi przekroczyc czas bramy
+    # (zaobserwowane: HTTP 504 na maszynie lokalnej). Pobieranie ponizej NIE
+    # jest ponawiane automatycznie — patrz `engine/databento_io.py`.
+    koszt = metadane_z_ponowieniem(c.metadata.get_cost, opis="get_cost", **q)
+    rekordow = metadane_z_ponowieniem(c.metadata.get_record_count,
+                                      opis="get_record_count", **q)
+    rozmiar = metadane_z_ponowieniem(c.metadata.get_billable_size,
+                                     opis="get_billable_size", **q)
     print(f"okno UTC : {a} .. {b}")
     print(f"koszt    : {koszt:.4f} USD  (limit {LIMIT_USD:.2f})")
     print(f"rekordow : {rekordow:,}")

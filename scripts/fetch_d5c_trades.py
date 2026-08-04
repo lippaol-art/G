@@ -31,6 +31,7 @@ import databento as db
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+from engine.databento_io import metadane_z_ponowieniem  # noqa: E402
 from engine.paths import raw_dir, wolne_gb  # noqa: E402
 
 ZAPYTANIE = dict(dataset="GLBX.MDP3", symbols=["MNQU6"],
@@ -53,8 +54,9 @@ def main() -> int:
     c = db.Historical(os.environ["DATABENTO_API_KEY"])
     q = dict(**ZAPYTANIE, start=START_UTC, end=END_UTC)
 
-    koszt = c.metadata.get_cost(**q)
-    rekordow = c.metadata.get_record_count(**q)
+    koszt = metadane_z_ponowieniem(c.metadata.get_cost, opis="get_cost", **q)
+    rekordow = metadane_z_ponowieniem(c.metadata.get_record_count,
+                                      opis="get_record_count", **q)
     print(f"okno UTC : {START_UTC} .. {END_UTC}")
     print(f"koszt    : {koszt:.4f} USD  (limit {LIMIT_USD:.2f})")
     print(f"rekordow : {rekordow:,}  (oczekiwane 1 696 891)", flush=True)
