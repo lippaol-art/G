@@ -38,7 +38,14 @@ def _py_files() -> list[Path]:
 
 
 def _all_repo_files() -> list[Path]:
-    skip = {".git", "__pycache__", ".pytest_cache", "data", ".ruff_cache", ".mypy_cache"}
+    # `.venv`/`venv`: gitignorowane, ale ten skan chodzi po dysku, nie po
+    # `git ls-files`. Zlapane na maszynie lokalnej, gdzie instalacja tworzy
+    # wirtualne srodowisko WEWNATRZ drzewa repo (`py -3.12 -m venv .venv`) —
+    # pakiety (ruff, numpy, pyarrow) maja we wlasnych testach/metadanych ciagi
+    # wygladajace jak sekrety, np. "password=\"hunter2\"" w binarce testowej
+    # ruff.exe. To falszywe alarmy o zrodle poza kontrola tego repozytorium.
+    skip = {".git", "__pycache__", ".pytest_cache", "data", ".ruff_cache",
+            ".mypy_cache", ".venv", "venv"}
     return [
         p for p in ROOT.rglob("*")
         if p.is_file() and not any(part in skip for part in p.parts)
