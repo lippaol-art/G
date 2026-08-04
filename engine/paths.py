@@ -25,6 +25,7 @@ wylacznie surowymi danymi, ktore i tak sa w `.gitignore`.
 from __future__ import annotations
 
 import os
+import shutil
 from pathlib import Path
 
 #: Katalog repozytorium (dwa poziomy w gore od tego pliku).
@@ -61,9 +62,12 @@ def wolne_gb(sciezka: Path | None = None) -> float:
 
     Sprawdzane PRZED pobraniem duzej probki: przerwany transfer na pelnym dysku
     zostawia obcieta sesje, a ta klasa awarii juz w tym projekcie wystapila.
+
+    `shutil.disk_usage`, NIE `os.statvfs` — to drugie nie istnieje na Windows.
+    Zlapane przy pierwszym uruchomieniu na maszynie lokalnej wlasciciela
+    projektu (`mypy` na Windows: "Module has no attribute statvfs").
     """
     cel = sciezka or data_root()
     while not cel.exists() and cel != cel.parent:
         cel = cel.parent
-    st = os.statvfs(cel)
-    return st.f_bavail * st.f_frsize / 1e9
+    return shutil.disk_usage(cel).free / 1e9
