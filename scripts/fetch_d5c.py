@@ -50,6 +50,19 @@ LIMIT_USD = 4.00
 #: Awaryjne zatrzymanie: ponizej tego zapasu nie zaczynamy i nie kontynuujemy.
 REZERWA_GB = 8.0
 
+#: Manifest PIERWOTNEGO zakupu — sledzony przez golden baseline, NIETYKALNY.
+KANONICZNY = Path("data/manifest_d5c.json")
+
+
+def sciezka_manifestu_lokalnego() -> Path:
+    """Manifest ponownego pobrania — POZA repozytorium.
+
+    Trafia pod `PROJECT_G_DATA_ROOT`, zeby lokalny smoke test nie ruszal
+    `hash_danych`. Gdy zmiennej nie ma, ladujemy obok danych surowych, i tak
+    objetych `.gitignore`.
+    """
+    return raw_dir().parent / "manifests" / "manifest_d5c_local.json"
+
 
 def okno() -> tuple[str, str]:
     """RTH WYPROWADZONE ZE STREFY ET — nigdy ze stalej UTC."""
@@ -102,6 +115,10 @@ def main() -> int:
     c.timeseries.get_range(**q, path=str(out))
 
     raw = out.read_bytes()
+    sha = hashlib.sha256(raw).hexdigest()
+    bajtow = len(raw)
+    del raw   # nie trzymamy 2 GB w pamieci dluzej niz na policzenie hasha
+
     manifest = dict(
         etap="D5-C", sesja=SESJA, zapytanie=ZAPYTANIE,
         rth="09:30-16:00 America/New_York (UTC wyprowadzone ze strefy)",
@@ -112,23 +129,48 @@ def main() -> int:
         rozmiar_rozliczeniowy_b=rozmiar,
         plik=out.name,
         sciezka=str(out),
-        bajtow_na_dysku=len(raw),
-        sha256=hashlib.sha256(raw).hexdigest(),
+        bajtow_na_dysku=bajtow,
+        sha256=sha,
         wolne_gb_przed=round(wolne_przed, 2),
         wolne_gb_po=round(wolne_gb(kat), 2),
         pobrano_utc=dt.datetime.now(dt.UTC).isoformat(timespec="seconds"),
         databento=db.__version__,
     )
-    del raw   # nie trzymamy 2 GB w pamieci dluzej niz na policzenie hasha
 
-    Path("data/manifest_d5c.json").write_text(
-        json.dumps(manifest, indent=1), encoding="utf-8")
+    # MANIFEST KANONICZNY JEST NIETYKALNY.
+    # `data/manifest_d5c.json` dokumentuje PIERWOTNY zakup i jest sledzony
+    # przez golden baseline. Nadpisanie go lokalna sciezka Windows, nowa data
+    # pobrania i nowym stanem wolnego miejsca ruszyloby `hash_danych` mimo
+    # BAJTOWO IDENTYCZNYCH danych — dokladnie ta klasa falszywej roznicy,
+    # ktora juz raz zatrzymala bramke (konwersja koncow linii na Windows).
+    if KANONICZNY.exists():
+        odniesienie = json.loads(KANONICZNY.read_text(encoding="utf-8"))
+        zgodny = odniesienie.get("sha256") == sha
+        cel = sciezka_manifestu_lokalnego()
+        cel.parent.mkdir(parents=True, exist_ok=True)
+        manifest["ponowne_pobranie"] = True
+        manifest["sha256_kanoniczny"] = odniesienie.get("sha256")
+        manifest["zgodny_z_kanonicznym"] = zgodny
+        cel.write_text(json.dumps(manifest, indent=1), encoding="utf-8")
+        gdzie = cel
+    else:
+        KANONICZNY.write_text(json.dumps(manifest, indent=1), encoding="utf-8")
+        zgodny = True
+        gdzie = KANONICZNY
 
-    print(f"\n-> {out}  ({manifest['bajtow_na_dysku'] / 1e9:.3f} GB na dysku)")
-    print(f"   SHA-256 : {manifest['sha256']}")
+    print(f"\n-> {out}  ({bajtow / 1e9:.3f} GB na dysku)")
+    print(f"   SHA-256 : {sha}")
     print(f"   koszt   : {manifest['koszt_usd']} USD")
     print(f"   wolne po: {manifest['wolne_gb_po']:.1f} GB")
-    print("-> data/manifest_d5c.json")
+    print(f"-> {gdzie}")
+
+    if KANONICZNY.exists() and not zgodny:
+        print(f"\n   SHA-256 kanoniczny: {manifest['sha256_kanoniczny']}")
+        sys.exit("STOP: pobrany plik ROZNI SIE od zapisanego w manifescie "
+                 "kanonicznym. Nie uzywaj go do odtworzenia D5-C, dopoki "
+                 "roznica nie zostanie wyjasniona.")
+    if KANONICZNY.exists():
+        print("   zgodny z manifestem kanonicznym: TAK")
     return 0
 
 
