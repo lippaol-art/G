@@ -133,3 +133,98 @@ def assert_raw_series(series_kind: str, *, what: str = "poziom referencyjny") ->
 
 def _ctx(context: str) -> str:
     return f" [{context}]" if context else ""
+
+
+# ==========================================================================
+# ZAKRESY ZMIENNYCH — druga warstwa po rzutowaniu typow
+# ==========================================================================
+#
+# DLACZEGO TO ISTNIEJE. Odejmowanie kolumn bez znaku przepelnia sie do ~1,8e19
+# zamiast dac liczbe ujemna. Blad NIE rzuca wyjatku i NIE psuje wykresu —
+# zmienia werdykt. W tym projekcie wystapil DWA razy: przy roznicy wolumenow
+# (Etap 1 D5) i przy `n_buy - n_sell` (Etap 2 D5, falszywy `NO-GO`).
+#
+# Sama zasada "rzutuj na Int64" okazala sie niewystarczajaca, bo trzeba jeszcze
+# pamietac, zeby ja zastosowac. Asercja zakresu jest kontrola NIEZALEZNA od
+# tego, czy autor pamietal: zmienna o znanych z konstrukcji granicach musi
+# w nich lezec, a wartosc poza nimi jest dowodem bledu obliczenia, nie
+# wlasnoscia rynku.
+#
+# Zasada: asercja NA ZMIENNEJ, w miejscu jej obliczenia — nie na typie.
+
+
+class RangeError(ValueError):
+    """Zmienna wyszla poza zakres, ktory ma z konstrukcji."""
+
+
+def _skrajne(wartosci) -> tuple[float, float]:
+    """(min, max) dla numpy, polars Series i zwyklych sekwencji."""
+    import math
+    from numbers import Real
+
+    if isinstance(wartosci, Real):           # pojedyncza liczba tez jest zakresem
+        lo = hi = wartosci
+    elif hasattr(wartosci, "min") and hasattr(wartosci, "max"):
+        lo, hi = wartosci.min(), wartosci.max()
+    else:
+        seq = list(wartosci)
+        if not seq:
+            return 0.0, 0.0
+        lo, hi = min(seq), max(seq)
+    if lo is None or hi is None:            # pusta seria — nie ma czego badac
+        return 0.0, 0.0
+    lo, hi = float(lo), float(hi)
+    if math.isnan(lo) or math.isnan(hi):
+        raise RangeError("wartosci zawieraja NaN — zakres nierozstrzygalny")
+    return lo, hi
+
+
+def assert_w_zakresie(wartosci, lo: float, hi: float, *, nazwa: str,
+                      tol: float = 1e-9) -> None:
+    """Ogolna asercja zakresu domknietego [lo, hi]."""
+    a, b = _skrajne(wartosci)
+    if a < lo - tol or b > hi + tol:
+        raise RangeError(
+            f"{nazwa}: wartosci w [{a!r}, {b!r}], wymagane [{lo}, {hi}]. "
+            "Wartosc poza zakresem konstrukcyjnym oznacza BLAD OBLICZENIA "
+            "(typowo przepelnienie odejmowania kolumn bez znaku), "
+            "a nie wlasnosc danych."
+        )
+
+
+def assert_imbalance(wartosci, *, nazwa: str = "imbalance") -> None:
+    """Nierownowaga (a-b)/(a+b) dla nieujemnych a, b: zawsze w [-1, +1]."""
+    assert_w_zakresie(wartosci, -1.0, 1.0, nazwa=nazwa)
+
+
+def assert_udzial(wartosci, *, nazwa: str = "udzial") -> None:
+    """Udzial czesci w calosci: zawsze w [0, 1]."""
+    assert_w_zakresie(wartosci, 0.0, 1.0, nazwa=nazwa)
+
+
+def assert_prawdopodobienstwo(wartosci, *, nazwa: str = "prawdopodobienstwo") -> None:
+    """Prawdopodobienstwo: zawsze w [0, 1]."""
+    assert_w_zakresie(wartosci, 0.0, 1.0, nazwa=nazwa)
+
+
+def assert_liczebnosc(wartosci, *, nazwa: str = "liczebnosc") -> None:
+    """Liczebnosc: nigdy ujemna. Wartosc ujemna to zwykle roznica liczonych
+    wielkosci, ktora nie powinna byc liczebnoscia."""
+    a, _ = _skrajne(wartosci)
+    if a < 0:
+        raise RangeError(f"{nazwa}: wartosc ujemna ({a!r}), liczebnosc musi byc >= 0")
+
+
+def assert_vif(wartosci, *, nazwa: str = "VIF") -> None:
+    """VIF = 1/(1-R^2) dla R^2 w [0,1): zawsze >= 1.
+
+    Wartosc ponizej 1 oznacza ujemne R^2, czyli dopasowanie gorsze od sredniej —
+    przy regresji Z WYRAZEM WOLNYM jest to niemozliwe i swiadczy o bledzie
+    numerycznym albo o modelu bez wyrazu wolnego, ktory trzeba obsluzyc jawnie.
+    """
+    a, _ = _skrajne(wartosci)
+    if a < 1.0 - 1e-9:
+        raise RangeError(
+            f"{nazwa}: {a!r} < 1. VIF < 1 wymaga ujemnego R^2, co przy regresji "
+            "z wyrazem wolnym jest niemozliwe — sprawdz obliczenie."
+        )

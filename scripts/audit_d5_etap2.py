@@ -30,6 +30,8 @@ import polars as pl
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+from engine.guards import assert_imbalance, assert_udzial, assert_vif
+
 ET = ZoneInfo("America/New_York")
 UTC = ZoneInfo("UTC")
 KAT = Path("data/raw/d5b_rth")
@@ -231,9 +233,7 @@ def main() -> int:
     # (roznica podzielona przez sume tych samych nieujemnych skladnikow).
     # Wartosc poza tym przedzialem oznacza blad obliczenia, nie wlasnosc rynku.
     for kol in ("A_count", "B_fill", "C_volume"):
-        lo, hi = o[kol].min(), o[kol].max()
-        if not (lo >= -1.0 - 1e-12 and hi <= 1.0 + 1e-12):
-            sys.exit(f"BLAD: {kol} poza [-1,+1]: min={lo!r} max={hi!r}")
+        assert_imbalance(o[kol], nazwa=kol)
     # kubelek pory dnia liczony od poczatku RTH danej sesji
     o = o.with_columns(
         ((pl.col("okno").dt.hour().cast(pl.Int32) * 60
@@ -261,10 +261,14 @@ def main() -> int:
             v = _r2(m[kol].to_numpy(), kontrolne(m, pory=True))
             dz.append(1 / max(1 - v, 1e-12))
         dz = np.array(dz)
+        # VIF = 1/(1-R^2) przy regresji Z WYRAZEM WOLNYM nie moze byc < 1.
+        assert_vif([vif_p, vif_b], nazwa=f"pooled VIF {kol}")
+        assert_vif(dz, nazwa=f"dzienny VIF {kol}")
         # koncentracja zmiennosci po sesjach
         ss = o.group_by("sesja").agg(
             ((pl.col(kol) - y.mean()) ** 2).sum().alias("ss"))["ss"].to_numpy()
         konc = float(ss.max() / ss.sum())
+        assert_udzial(konc, nazwa=f"koncentracja sesji {kol}")
         wyniki[kol] = dict(pooled_vif=vif_p, pooled_vif_bez_pory=vif_b,
                            mediana_dzienna=float(np.median(dz)),
                            p10=float(np.percentile(dz, 10)),
@@ -293,6 +297,7 @@ def main() -> int:
     ssk = o.group_by("kubelek").agg(
         ((pl.col("A_count") - y.mean()) ** 2).sum().alias("ss"))["ss"].to_numpy()
     konc_pory = float(ssk.max() / ssk.sum())
+    assert_udzial(konc_pory, nazwa="koncentracja pory dnia")
 
     # 5. "probka zawiera wystarczajaca zmiennosc OBU stron agresji" — nie
     #    wystarczy, ze obie strony wystepuja lacznie; sprawdzamy najgorsza sesje.
@@ -303,6 +308,7 @@ def main() -> int:
     min_strona = float(np.minimum(znak["dod"].to_numpy(),
                                   znak["uje"].to_numpy()).min())
     glob_dod = float((y > 0).mean())
+    assert_udzial([glob_dod, min_strona], nazwa="udzialy stron agresji")
     print(f"\n  strony agresji: okien z I>0 {100*glob_dod:.1f}%, I<0 "
           f"{100*(y < 0).mean():.1f}%, I=0 {100*(y == 0).mean():.1f}%")
     print(f"  najslabsza sesja — mniejsza strona: {100*min_strona:.1f}% okien")

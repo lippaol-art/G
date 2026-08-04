@@ -17,7 +17,7 @@
    "p10": 1.6312733402853072,
    "p90": 2.0629913877767683,
    "udzial_ponizej": 1.0,
-   "max_koncentracja": 0.10207174751212343,
+   "max_koncentracja": 0.10207174751212345,
    "sesji": 21,
    "koncentracja_pory_dnia": 0.09993985644649651,
    "min_strona_sesji": 0.3923076923076923,
@@ -40,7 +40,7 @@
    "p10": 2.2899003793312267,
    "p90": 3.317872544218729,
    "udzial_ponizej": 1.0,
-   "max_koncentracja": 0.07033223795977593,
+   "max_koncentracja": 0.07033223795977592,
    "sesji": 21
   }
  },
