@@ -1,5 +1,36 @@
 # D5-B — wynik testu identyfikowalności
 
+> ## ⚠ WERDYKT ZASTĄPIONY PO ODPOWIEDZI DATABENTO
+>
+> **Obliczenia dla empirycznej agregacji pozostają odtwarzalne, ale `sequence`
+> nie identyfikuje pojedynczego matching event. Główny warunek pomiarowy A jest
+> więc niespełniony.**
+>
+> **Aktualny status: `D5-B INCONCLUSIVE — niewłaściwa jednostka pomiaru`.**
+>
+> Odpowiedź Databento z 2026-08-04 (pełna treść: `docs/D5_PYTANIE_DATABENTO.md`
+> §C) stwierdza, że `sequence` jest numerem sekwencyjnym wiadomości CME, a jedna
+> wiadomość może zawierać wiele Trade Summaries, również po przeciwnych
+> stronach. Reguła `(ts_event, sequence, side)` **nie jest** identyfikatorem
+> jednego zdarzenia agresora.
+>
+> **Ten raport zostaje w repozytorium bez zmian poniżej tego bloku.** Nie
+> usuwam go i nie przepisuję historii tak, jakby błąd nigdy nie wystąpił —
+> wszystkie liczby są poprawne dla zadeklarowanego agregatu empirycznego,
+> błędna była jego interpretacja jako liczby zdarzeń agresora.
+>
+> Co pozostaje w mocy: potwierdzenie `ts_recv` jako podstawy agregacji barów
+> (§3 i pytanie Q6), zgodność rekonstrukcji 8 400 z 8 400 minut, poprawność
+> pola `side`, oraz cała kontrola jakości danych.
+>
+> Czego nie wolno zrobić: **B i C nie mogą przejąć roli A.** Były kontrolami
+> pomiaru, a zmiana głównej definicji po zobaczeniu wyników złamałaby regułę
+> zamrożoną przed zakupem.
+>
+> **Licznik prób: 0.** Żaden przyszły zwrot ani P&L nie został obejrzany.
+
+---
+
 **Specyfikacja zamrożona przed zakupem:** `docs/D5_ETAP2_SPEC.md`
 (commit `91d2649`, poprawka zakresu RTH `00fdcad`).
 **Data wykonania:** 2026-08-03.
@@ -11,11 +42,14 @@ kierunku. H017 nie powstaje w tym dokumencie.
 ## 1. Werdykt
 
 ```
-D5-B GO
+D5-B GO          <- ZASTĄPIONY 2026-08-04, patrz blok na początku dokumentu
+D5-B INCONCLUSIVE — niewłaściwa jednostka pomiaru   <- STATUS AKTUALNY
 ```
 
-Wszystkie sześć warunków z §8 specyfikacji spełnione, kontrole B i C zgodne
-z A co do werdyktu.
+Wszystkie sześć warunków z §8 specyfikacji zostało spełnionych **liczbowo**,
+a kontrole B i C były zgodne z A. Warunki mierzyły jednak identyfikowalność
+agregatu, który — jak potwierdził dostawca — nie odpowiada zadeklarowanej
+jednostce mechanizmu. Tabela poniżej pozostaje poprawnym zapisem pomiaru.
 
 | # | Warunek z §8 | Wymóg | Zmierzone | |
 |---|---|---|---|---|

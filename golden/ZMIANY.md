@@ -491,3 +491,50 @@ danych. Metryki silnika, karty hipotez i werdykty: **bez zmian**.
 i 3 raporty jakości. **Ani jeden wpis `metryki.*` ani `silnik.*` nie drgnął.**
 
 **Licznik prób: 0.** P&L nie mierzony. H017 nie powstaje.
+
+---
+
+## v10 — D5-B zdegradowane do `INCONCLUSIVE` po odpowiedzi Databento
+
+```
+hash_wynikow  6fbed6d1262c53bd5ceca590c990294f89c5249557d6f2fca7ab8f7c636b0d8a
+           -> 0c74df56bd8ed810cce3a0d249b7f467dcc6e9747fe62b0a9b9c7bbe0fbe0149
+hash_danych   BEZ ZMIANY
+```
+
+**Zmienione klucze — dokładnie jeden:**
+
+| Klucz | Zmiana |
+|---|---|
+| `raporty.hashe.D5_etap2_wyniki.md` | blok zastąpienia werdyktu na początku |
+
+**Powód:** Databento potwierdziło (2026-08-04, 11:00 UTC), że `sequence` jest
+numerem sekwencyjnym wiadomości CME i **nie identyfikuje** pojedynczego
+zdarzenia dopasowania — jedna wiadomość może zawierać wiele Trade Summaries,
+także po przeciwnych stronach.
+
+**Obliczenia D5-B nie są numerycznie błędne.** Błędna była interpretacja
+głównej zmiennej A jako liczby zdarzeń agresora. Dlatego zmieniony jest
+**status**, a nie liczby:
+
+```
+D5-B GO  ->  D5-B INCONCLUSIVE — niewłaściwa jednostka pomiaru
+```
+
+**Raport nie został usunięty ani przepisany.** Blok zastąpienia dodany na
+początku, oryginalna treść w całości poniżej. `reports/D5_etap2_wyniki.json`
+celowo **bez zmian** — to zapis obliczenia, które pozostaje poprawne
+i odtwarzalne; ostrzeżenie o nieaktualnym werdykcie trafiło do docstringa
+`scripts/audit_d5_etap2.py`, żeby ponowne uruchomienie nie było czytane jako
+aktualny status.
+
+**Potwierdzone przy okazji i pozostające w mocy:** `ts_recv` jako podstawa
+agregacji barów GLBX.MDP3 — **oficjalnie, przez dostawcę**. Cała decyzja
+o granicach okien 60-sekundowych była prawidłowa.
+
+**Wpływ na wnioski W001–W012: żaden.** Dodane W013 (martwa flaga) i W014
+(zgodność empiryczna nie zastępuje semantyki protokołu) oraz reguła R9
+(zwięzłość zapytań do wsparcia). Uzupełnione R4 i R5, które cytowałem
+w opisie PR, zanim trafiły do rejestru.
+
+**Licznik prób: 0.** P&L nie mierzony. H017 nie powstaje.

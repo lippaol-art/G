@@ -346,7 +346,7 @@
   }
  },
  "hash_danych": "595a3ab7e31b6fda362521bd786c2f1fa8cc998abf3c74d3dd43ebe4f2f34c36",
- "hash_wynikow": "6fbed6d1262c53bd5ceca590c990294f89c5249557d6f2fca7ab8f7c636b0d8a",
+ "hash_wynikow": "0c74df56bd8ed810cce3a0d249b7f467dcc6e9747fe62b0a9b9c7bbe0fbe0149",
  "metryki": {
   "bramki": {
    "koncentracja": false,
@@ -376,7 +376,7 @@
    "A3_halt_weryfikacja.md": "721ccd1b8baacc0fc864b92fbaab170c517ba1581dd43bcf0b8180e209a5c60b",
    "B00_benchmarks.md": "5f464a9e1aa25b12ce1685c816fe1d8d5f3248e2204a90e84697965ed1a16cac",
    "D5_etap1_kontrole.md": "c1715e5779962cb8df8eecc74b814557300de9a9a4223251284c2be7cc517316",
-   "D5_etap2_wyniki.md": "f08f0e44425da5c4b86cc7b37be130ede75ac611a5ad0a95cefaf505d0705ffc",
+   "D5_etap2_wyniki.md": "66297bdfae32c741f0c3a48afdc30af90f1ca855effd79f0fd58f5e67c050df5",
    "R1_regresja_spa.md": "1e2111e05f9bcd1114fae99b440c41b59a98785728f8343bd6b338cfeb8c8a0d",
    "W001_overnight_drift.md": "0f956c3e8ffd3f10e857929a3e5db76d4b39a5a4f3b56f28dafa4f68fd095b29",
    "W004_partia1_preflight.md": "256f0e90562b285e66c8fabb51f9f4543c0dc29de059c2b8bd59f0c7e96b20ac",

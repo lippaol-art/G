@@ -249,6 +249,8 @@ Fakty o rynku i o procesie odkryte przy okazji badań. Zasilają projektowanie k
 |----|---------|--------|
 | **W010** | **Podział kubełkowy nie zastępuje kontroli ciągłej.** H001 dzieliła dolny tercyl zakresu medianą wolumenu i pytała, czy grupy różnią się charakterem sesji. Wewnątrz tercyla nadal są różnice zakresu, więc taki podział nie odpowiada na pytanie karty. Regresja `ER ~ percentyl_zakresu + percentyl_wolumenu` liczona wewnątrz kompresji dała jednoznaczne **t = −0.10** dla wolumenu. **Reguła: gdy karta twierdzi „X niesie informację przy kontrolowanym Y", pre-flight musi zawierać test, który Y kontroluje ciągle, a nie tylko kubełkiem.** Drugi wniosek z tej samej partii: **odsetek zdarzeń nie jest zwrotem** — H002 miała separację odsetka powrotów przeżywającą cztery kontrole i zerowy zwrot przy symetrycznych MFE/MAE. | W010 |
 | **W011** | **Model, którym odrzucamy kartę, musi być zwalidowany tak samo starannie jak model, którym byśmy ją przyjęli.** W007 walidował QQQ na zwrotach dziennych; W009 odrzucił H013 rezyduum z modelu NQ na zwrotach nocnych z ES i SOXX. To dwa różne estymatory, a jedyną podaną liczbą o jakości drugiego była statystyka **in-sample**. Osobna walidacja pokazała, że model nocny jest dobry (OOS R² 0.9753, γ = 1.013) — ale **wykryła obciążenie +3.05‱ w sesje zdarzeń**, przez które jedno z sześciu przewidywań zawiodło z powodu wewnętrznego dla modelu, nie własności rynku. Reguła: **przed zamknięciem karty waliduj dokładnie ten obiekt, który dał werdykt** — importowany, nie odtworzony. | W011 |
+| **W014** | **Zgodnosc empiryczna nie zastepuje semantyki protokolu zrodlowego.** Grupowanie `(ts_event, sequence, side)` wygladalo niemal idealnie: ceny w grupach monotoniczne, tylko **0,0037%** grup dwustronnych, a definicje A, B i C dawaly zgodny VIF. Interpretacja i tak byla bledna — `sequence` to numer sekwencyjny wiadomosci CME, a jedna wiadomosc moze zawierac wiele Trade Summaries, takze po przeciwnych stronach. **Ladny rozklad empiryczny jest przeslanka, nie dowodem, ze pole znaczy to, co nam pasuje.** Regula procesowa: zanim zmienna zostanie nazwana jednostka mechanizmu, jej znaczenie musi byc potwierdzone **dokumentacja albo przez dostawce**, nie sama zgodnoscia danych. Koszt zignorowania tej reguly w D5: caly Etap 2 zmierzyl poprawnie niewlasciwa jednostke. | D5-B |
+| **W013** | **Kolumna, ktorej nic nie konsumuje, nie ma jak sie zdemaskowac.** Flaga `short_day` byla `False` dla wszystkich **2 551 265** barow, bo produkcyjny pipeline tworzyl pusty kalendarz. Kolumna istniala w schemacie, przechodzila walidacje `REQUIRED_COLUMNS` i przez caly czas nie znaczyla nic — nie wykryl tego ani przeglad kodu, ani testy, bo **zaden modul badawczy jej nie czytal**. Wniosek procesowy: pole dodane na zapas jest dlugiem, nie zabezpieczeniem; kazda flaga w schemacie potrzebuje albo konsumenta, albo testu sprawdzajacego jej **rozklad**, a nie tylko obecnosc. Wykryte dopiero, gdy jedna sesja z probki D5-B zachowala sie niezgodnie z oczekiwaniem. | kalendarz CME |
 | **W012** | **Zbiór zdarzeń zbudowany z rejestru wymaga jeszcze rozdzielenia RODZAJÓW zdarzeń.** Kalendarz EDGAR dał 261 poprawnych publikacji 8-K item 2.02, ale karta H013 była zaprojektowana na kwartalne wyniki po zamknięciu — a w zbiorze były też 29 komunikatów Tesli o produkcji i dostawach. Rozdzielenie **z treści komunikatów** (nigdy z reakcji ceny) jest tanie i daje kontrolę wewnętrzną: każda spółka wyszła po 28–30 raportów, TSLA rozpadła się na dokładnie 29 i 29. **Przekroje próbki nie są wariantami strategii i nie zużywają prób** — nie zmieniają reguły wejścia, tylko odpowiedź na pytanie, które zdarzenia są zdarzeniami tej karty. | W012 |
 | **W009** | **Odwrócenie znaku efektu w środku próbki jest mocniejszym dowodem braku mechanizmu niż koncentracja w jednym roku.** H005 zginęło na tym, że jeden rok dawał 52% wyniku. H013 zginęło na czymś gorszym: lata 2019–2022 dają średnio ujemny wynik, 2023–2026 dodatni — **efekt nie jest skoncentrowany, tylko zmienia kierunek**. Karta z koncentracją może mieć mechanizm działający w jednym reżimie; karta ze zmianą znaku nie ma mechanizmu wcale. Wniosek procesowy: **rozkład wyniku po latach raportujemy zawsze ze znakiem i udziałem, nie samą wartością bezwzględną** — inaczej te dwa różne tryby porażki są nieodróżnialne. Dodatkowo potwierdzone po raz drugi (po H014): **warunkowanie, które pogarsza wynik, obala przesłankę niezależnie od znaku efektu**. | W009 |
 | **W008** | **Etykiety zdarzeń biorą się z rejestru, nigdy z reakcji rynku — i sam pomiar reakcji też trzeba zweryfikować.** Kalendarz z SEC EDGAR (8-K item 2.02, 261 publikacji) definiuje próbę; detektor służy wyłącznie kontroli. Kontrola potwierdziła przesłankę H013: mediana ruchu po zamknięciu w dni publikacji **3.56% wobec 0.11%** w pozostałe (32×), obrót **96× tła**, zero publikacji z pustym oknem danych. Ujawniła też dwie pułapki pomiarowe: (1) pole `acceptanceDateTime` z API bywa czasem ET z sufiksem `Z` — 29 publikacji MSFT trafiłoby w środek sesji; (2) **pojedynczy odczyt o 17:00 ma przeciwny znak niż stan przed otwarciem w 16% zdarzeń**, bo kurs potrafi przejść całą amplitudę reakcji i wrócić. Wniosek procesowy: **definicja okna pomiaru jest częścią mechanizmu, nie detalem implementacyjnym**, i musi być rozstrzygnięta kryterium pomiarowym przed backtestem, nigdy po zobaczeniu P&L. | W008 |
@@ -262,7 +264,7 @@ Fakty o rynku i o procesie odkryte przy okazji badań. Zasilają projektowanie k
 
 ---
 
-## Reguły trwałe projektu (R1–R3)
+## Reguły trwałe projektu (R1–R3, R9)
 
 Zapisane 02.08.2026 na podstawie kontekstu właściciela projektu: ograniczony budżet,
 docelowo konto fundowane 200 000 USD z limitem 5% dziennie i 10% całkowicie.
@@ -271,6 +273,7 @@ docelowo konto fundowane 200 000 USD z limitem 5% dziennie i 10% całkowicie.
 | # | Reguła |
 |---|--------|
 | **R1** | **Każde nowe płatne źródło danych lub narzędzie wymaga czterech rzeczy przed zakupem:** uzasadnienia (co konkretnie odblokowuje), oszacowania kosztu, sprawdzenia darmowej alternatywy i **zgody właściciela**. Formalizuje procedurę zastosowaną przy zakupie warstwy K6 za $7.82. |
+| **R9** | **Zapytania do wsparcia dostawcy piszemy zwiezle: 2-4 zdania kontekstu, jeden przyklad, maksymalnie 2-3 pytania na zgloszenie.** Wprost poproszone przez Databento: *I think your LLM may be making these questions a bit longer and more complex than necessary. We have real humans respond to every message.* Nasze pierwsze zgloszenie mialo szesc pytan i pelna tabele statystyk. Odpowiedz byla wyczerpujaca mimo to, ale po drugiej stronie siedzi czlowiek i to jego czas. Jedno zgloszenie = jeden watek problemowy. |
 | **R2** | **Zakaz strojenia pod wynik docelowy.** Żadna zmiana specyfikacji, parametru ani reguły wejścia po zobaczeniu P&L, jeśli motywem jest zbliżenie się do zakładanego wyniku miesięcznego. Deklarowane 1–2%/mies. jest potrzebą finansową właściciela, **nie targetem strategii**. Jeśli przewagi nie ma, projekt ma to wykazać, a nie dopasować. Wzmacnia W002 i W004. |
 | **R3** | **Limity firmowe 5%/10% są barierami awaryjnymi, nie roboczymi.** Wewnętrzne limity strategii muszą być istotnie niższe. Metryką bramki operacyjnej jest **prawdopodobieństwo utrzymania konta**, nie zwrot ani Sharpe. |
 
@@ -746,7 +749,32 @@ Licznik prób: 0.**
 
 ---
 
-## Reguły trwałe dodane 04.08.2026
+## Reguły trwałe R4–R8
+
+Numeracja R4 i R5 byla przeze mnie cytowana w opisie PR zanim trafila tutaj —
+to byl blad zapisu, nie nowa regula. Obie formalizuja praktyke stosowana
+od poczatku kierunku D5.
+
+### R4 — specyfikacja zamrozona w commicie PRZED zakupem danych
+
+**Zadne dane nie sa kupowane, dopoki definicja pomiaru, warunki GO/NO-GO
+i limit kosztu nie sa zapisane w commicie.** Zamrozony limit zatrzymal zakup
+dwukrotnie i za kazdym razem mial racje: moje ekstrapolacje kosztu myllily sie
+o 21% (Etap 1) i o 40% (Etap 2, lipiec 2026 wobec marca 2025 przy identycznej
+stawce za rekord).
+
+Regula obejmuje takze **kolejnosc kontroli**: kontrola jakosci danych
+zadeklarowana w specyfikacji musi przejsc PRZED policzeniem glownej metryki,
+a nie po. W D5-B rekonstrukcja OHLCV calego miesiaca poprzedzila VIF wlasnie
+z tego powodu.
+
+### R5 — asercja zakresu dla zmiennych o znanych granicach
+
+**Zmienna o granicach wynikajacych z konstrukcji dostaje jawna asercje tego
+zakresu w miejscu obliczenia.** Wartosc poza zakresem jest dowodem bledu
+obliczenia, nie wlasnoscia rynku. Wchlonieta przez druga warstwe R6, ale
+zapisana osobno, bo dotyczy KAZDEJ zmiennej o znanym zakresie, nie tylko
+roznic typow bez znaku.
 
 ### R6 — typy ze znakiem przed odejmowaniem
 
@@ -790,3 +818,76 @@ zdefiniowana jako „wszystko poza dozwolonymi" — inaczej dopisanie kolumny do
 schematu po cichu wyłącza kontrolę.
 
 Realizacja: `scripts/rebuild_clean.py`. Pierwsze zastosowanie: baseline v9.
+
+---
+
+## D5 Etap 2 — WERDYKT ZASTĄPIONY (04.08.2026): `D5-B INCONCLUSIVE`
+
+Wpis `D5-B GO` powyżej **pozostaje w rejestrze bez zmian** jako zapis tego, co
+zmierzyliśmy i uznaliśmy 03.08.2026. Nie przepisuję historii.
+
+### Co się zmieniło
+
+Odpowiedź Databento z 2026-08-04, 11:00 UTC (pełna treść:
+`docs/D5_PYTANIE_DATABENTO.md` §C) stwierdza wprost:
+
+> `sequence` is the original CME venue message sequence number. It is not
+> a unique matching-event identifier. A CME Trade Summary message can contain
+> multiple trade summaries, so records sharing `(ts_event, sequence)` are not
+> guaranteed to represent one aggressing order or matching event.
+
+**Obliczenia D5-B nie są numerycznie błędne. Błędna była interpretacja głównej
+zmiennej A jako liczby zdarzeń agresora.**
+
+### Nowy status
+
+```
+D5-B INCONCLUSIVE — niewłaściwa jednostka pomiaru
+```
+
+**Nie `NO-GO`**, ponieważ nie wykazaliśmy, że mechanizm nie działa: pole `side`
+jest poprawne, `trades` odtwarzają bary co do ticka, kontrole B i C też miały
+niski VIF. Problemem jest **niemożność odtworzenia pojedynczego zdarzenia
+agresora z wybranego schematu**.
+
+**Nie `GO`**, ponieważ zamrożona specyfikacja mówiła, że główny werdykt pochodzi
+**wyłącznie z A**, a A opiera się na grupowaniu oficjalnie odrzuconym przez
+dostawcę. **B i C nie mogą przejąć roli A** — były kontrolami pomiaru, a zmiana
+głównej definicji po zobaczeniu wyników złamałaby regułę zamrożoną przed
+zakupem.
+
+### Co pozostaje w mocy
+
+| Ustalenie | Status |
+|---|---|
+| **`ts_recv` jako podstawa agregacji barów** | **oficjalnie potwierdzone przez dostawcę** (Q6) — bary agregowane po `ts_recv`, znacznik interwału wystawiany jako `ts_event` bara |
+| Rekonstrukcja 8 400 z 8 400 minut co do ticka | bez zmian |
+| Poprawność pola `side` (D5-A GO) | bez zmian |
+| Kontrola jakości danych, brak duplikatów | bez zmian |
+| 732 pary dwustronne | **wyjaśnione** — normalna struktura protokołu, nie defekt danych |
+| `flags == 0` w `trades` | **wyjaśnione** — zachowanie oczekiwane, niezależne od wersji DBN |
+
+### Kanoniczna droga rekonstrukcji
+
+Dostawca wskazał **`mbo` jako minimalny właściwy schemat**: każde CME Trade
+Summary normalizowane jest do rekordu Trade, po którym następują rekordy Fill
+pasywnych zleceń; rekord Trade może zawierać `order_id` agresora, gdy CME go
+podaje; granicę zdarzenia per instrument wyznacza **`F_LAST`**.
+**MBP-1 i TBBO nie wystarczą** — nie zawierają szczegółu pasywnych wypełnień.
+
+### H017 — nadal nie powstaje
+
+Blocker się **zmienił**, nie zniknął. Nie jest nim już oczekiwanie na e-mail,
+tylko **brak kanonicznej rekonstrukcji zdarzeń z MBO**. Powody:
+
+1. nie mamy poprawnie zrekonstruowanych zdarzeń agresora,
+2. główna zmienna A nie odpowiada deklarowanemu mechanizmowi,
+3. B i C nie mogą przejąć roli głównej po zobaczeniu wyniku.
+
+### Następny krok
+
+Jednodniowy audyt `mbo` na sesji **2026-07-30** — tej samej, która już jest
+development setem, więc **nie dokładamy nowej daty do ekspozycji**. Nie
+kupujemy całego miesiąca. Nie mierzymy przyszłych zwrotów ani VIF.
+
+**Licznik prób: 0.** Żaden przyszły zwrot ani P&L nie został obejrzany.

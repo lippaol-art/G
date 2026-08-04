@@ -1,6 +1,26 @@
 #!/usr/bin/env python3
 """D5-B — test identyfikowalnosci. Specyfikacja zamrozona: docs/D5_ETAP2_SPEC.md.
 
+!!! WERDYKT TEGO SKRYPTU ZOSTAL ZASTAPIONY (2026-08-04) !!!
+Skrypt nadal wypisuje `D5-B GO`, bo wszystkie szesc warunkow liczbowych jest
+spelnionych — i to jest poprawny wynik OBLICZENIA. Nie jest to jednak aktualny
+status kierunku D5.
+
+Databento potwierdzilo, ze `sequence` jest numerem sekwencyjnym wiadomosci CME,
+a jedna wiadomosc moze zawierac wiele Trade Summaries, rowniez po przeciwnych
+stronach. Reguła `(ts_event, sequence, side)` NIE identyfikuje pojedynczego
+zdarzenia agresora, wiec glowna zmienna A nie mierzy zadeklarowanej jednostki
+mechanizmu.
+
+    AKTUALNY STATUS: D5-B INCONCLUSIVE — niewlasciwa jednostka pomiaru
+
+Pelna odpowiedz: docs/D5_PYTANIE_DATABENTO.md §C. Interpretacja: §D.
+Raport z blokiem zastapienia: reports/D5_etap2_wyniki.md.
+Kanoniczna rekonstrukcja wymaga schematu `mbo` i flagi F_LAST.
+
+Ten plik ZOSTAJE bez zmian w logice — sluzy odtwarzalnosci pomiaru, nie jako
+zrodlo werdyktu.
+
 CO TO JEST, A CZYM NIE JEST.
 Jedno pytanie: **czy nierownowaga zdarzen agresora w RTH da sie statystycznie
 odroznic od ROWNOCZESNEGO momentum ceny w RTH?**
