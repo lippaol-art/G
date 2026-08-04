@@ -194,19 +194,41 @@ KATEGORIE = (
 )
 
 
-def _dodane_order_id() -> np.ndarray:
-    """Przebieg 1: identyfikatory zlecen ZLOZONYCH w oknie obserwacji."""
-    ids = array("q")
+def _fill_sprzed_okna() -> set[int]:
+    """Przebieg 1: identyfikatory wypelnien odwolujacych sie do zlecen
+    zlozonych PRZED oknem obserwacji.
+
+    TEST JEST ODWROCONY I TO JEST SEDNO WYDAJNOSCI. Pytanie brzmi "czy to
+    wypelnienie dotyczy zlecenia spoza okna", wiec odruchowo sprawdza sie
+    przynaleznosc do zbioru zlecen ZNANYCH — a tych jest 16,6 mln. Dwie
+    wczesniejsze wersje na tym poleglly:
+
+      * `np.isin` wolane osobno dla kazdego z 842 757 zdarzen na tablicy
+        16,6 mln elementow — koszt kwadratowy, po 30 minutach przebieg byl
+        wciaz w polowie,
+      * zbior Pythona z 16,6 mln liczb — ~1 GB, po ktorym odsmiecacz skanuje
+        kontenery przy kazdej alokacji.
+
+    Rozwiazanie: ciezki test wykonujemy RAZ, wektorowo, i zwracamy zbior
+    NIEZNANYCH identyfikatorow. Jest ich rzedu trzech tysiecy, wiec kontrola
+    per zdarzenie jest darmowa.
+    """
+    add = array("q")
+    fill = array("q")
     for r in db.DBNStore.from_file(PLIK_MBO):
         a = r.action if isinstance(r.action, str) else r.action.value
         if a == "A":
-            ids.append(int(r.order_id))
-    return np.unique(np.array(ids, dtype="int64"))
+            add.append(int(r.order_id))
+        elif a == "F":
+            fill.append(int(r.order_id))
+    znane = np.unique(np.array(add, dtype="int64"))
+    f = np.unique(np.array(fill, dtype="int64"))
+    return set(f[~np.isin(f, znane)].tolist())
 
 
 def pelny_podzial() -> dict:
     """Przebieg 2: rozlaczna klasyfikacja wszystkich zdarzen z transakcja."""
-    dodane = _dodane_order_id()
+    nieznane = _fill_sprzed_okna()
     kat: Counter = Counter()
     adn = Counter()
     agresorow_w_zdarzeniu: Counter = Counter()
@@ -228,7 +250,7 @@ def pelny_podzial() -> dict:
         pasywne = [x for x in fill if x[2] not in oid_agr]
         if wlasne:
             adn["z_fill_agresora"] += 1
-        if pasywne and not np.isin([x[2] for x in pasywne], dodane).all():
+        if any(x[2] in nieznane for x in pasywne):
             adn["dotkniete_brakiem_snapshotu"] += 1
 
         suma_t = sum(x[3] for x in trade)
