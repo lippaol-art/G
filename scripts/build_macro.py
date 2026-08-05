@@ -99,7 +99,7 @@ def wczytaj_cache() -> None:
 
 def zapisz_cache() -> None:
     CACHE.parent.mkdir(parents=True, exist_ok=True)
-    CACHE.write_text(json.dumps(_cache), encoding="utf-8")
+    CACHE.write_text(json.dumps(_cache), encoding="utf-8", newline="\n")
 
 
 #: Prog liczby barow RTH uznajacy dzien za sesje. NIE 300 — dzien skrocony
@@ -384,7 +384,7 @@ def main() -> int:
         f"Dane: `{WYJSCIE}`. Odtworzenie: `python3 scripts/build_macro.py`",
     ]
     RAPORT.parent.mkdir(parents=True, exist_ok=True)
-    RAPORT.write_text("\n".join(L) + "\n", encoding="utf-8")
+    RAPORT.write_text("\n".join(L) + "\n", encoding="utf-8", newline="\n")
 
     # Manifest zrodel. Strony BLS i Fedu sa zmienne w czasie, wiec sam CSV nie
     # wystarcza do odtworzenia — trzeba wiedziec, z jakiego snapshotu powstal.
@@ -410,7 +410,7 @@ def main() -> int:
         f"Odtworzenie: `python3 {Path(__file__).name if False else 'scripts/build_macro.py'}`",
     ]
     MANIFEST.parent.mkdir(parents=True, exist_ok=True)
-    MANIFEST.write_text("\n".join(M) + "\n", encoding="utf-8")
+    MANIFEST.write_text("\n".join(M) + "\n", encoding="utf-8", newline="\n")
     print(f"-> {MANIFEST}")
 
     print(f"-> {WYJSCIE} ({len(gotowe)} zdarzen, {len(podstawowe)} w probie podstawowej)")

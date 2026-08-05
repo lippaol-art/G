@@ -556,7 +556,7 @@ def main(argv: list[str]) -> int:
     WYJSCIE.parent.mkdir(parents=True, exist_ok=True)
     WYJSCIE.write_text(
         json.dumps(baseline, ensure_ascii=False, indent=1, sort_keys=True) + "\n",
-        encoding="utf-8")
+        encoding="utf-8", newline="\n")
     print(f"-> {WYJSCIE}")
     print(f"   hash danych : {baseline['hash_danych']}")
     print(f"   hash wynikow: {baseline['hash_wynikow']}")

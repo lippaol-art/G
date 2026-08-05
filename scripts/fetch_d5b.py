@@ -100,7 +100,7 @@ def main() -> int:
         pobrano_utc=dt.datetime.now(dt.UTC).isoformat(timespec="seconds"),
         databento=db.__version__, pliki=wpisy,
     )
-    META.write_text(json.dumps(info, indent=1), encoding="utf-8")
+    META.write_text(json.dumps(info, indent=1), encoding="utf-8", newline="\n")
     print(f"\nRAZEM {info['sesji']} sesji  {info['rekordow']:,} rek.  "
           f"{info['bajtow'] / 1e6:.1f} MB  wycena {info['koszt_wyceny_usd']} USD")
     print(f"pobrano teraz: {pobrane}, pominieto jako kompletne: {pominiete}")

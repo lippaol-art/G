@@ -83,7 +83,7 @@ def wczytaj_zdarzenia() -> list[dict]:
     if not KALENDARZ.exists():
         sys.exit(f"Brak {KALENDARZ} — uruchom scripts/build_macro.py")
     out = []
-    with KALENDARZ.open(encoding="utf-8") as f:
+    with KALENDARZ.open(encoding="utf-8", newline="\n") as f:
         for r in csv.DictReader(f):
             if r["bars_ok"] != "tak" or "poza planowym" in r["notes"]:
                 continue
@@ -460,7 +460,7 @@ def main() -> int:
     ]
 
     RAPORT.parent.mkdir(parents=True, exist_ok=True)
-    RAPORT.write_text("\n".join(L) + "\n", encoding="utf-8")
+    RAPORT.write_text("\n".join(L) + "\n", encoding="utf-8", newline="\n")
     print(f"-> {RAPORT}")
     print(f"   N glowne {len(glowne)}, warm-up {len(warmup)}")
     print(f"   beta ranga = {beta[-1]:+.4f} (t HC3 {tb[-1]:+.2f})")

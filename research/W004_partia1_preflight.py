@@ -415,7 +415,7 @@ def main() -> int:
     ]
 
     RAPORT.parent.mkdir(parents=True, exist_ok=True)
-    RAPORT.write_text("\n".join(L) + "\n", encoding="utf-8")
+    RAPORT.write_text("\n".join(L) + "\n", encoding="utf-8", newline="\n")
     print(f"-> {RAPORT}")
     print(f"H011 kontrast t={tk:+.2f} | H005 PDH k4+ t={t_stat(x4):+.2f}, "
           f"PDL t={t_stat(x4l):+.2f}, rok {naj_rok} = {udzialy[naj_rok]:.0%}")

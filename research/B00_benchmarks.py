@@ -238,7 +238,7 @@ def main() -> int:
     ]
 
     RAPORT.parent.mkdir(parents=True, exist_ok=True)
-    RAPORT.write_text("\n".join(L) + "\n", encoding="utf-8")
+    RAPORT.write_text("\n".join(L) + "\n", encoding="utf-8", newline="\n")
     # NaN -> null. `json.dumps` domyslnie pisze goly `NaN`, ktorego scisle
     # parsery odrzucaja — a ten plik ma sluzyc porownaniom maszynowym w kroku 3
     # testu oryginalnosci, wiec musi byc czytelny takze poza Pythonem.
@@ -253,7 +253,7 @@ def main() -> int:
         _bez_nan({"symbol": SYMBOL, "n_bars": len(bars), "n_days": len(dni),
                   "generated": datetime.now(UTC).isoformat(timespec="seconds"),
                   "benchmarks": wyniki}),
-        indent=2, ensure_ascii=False, allow_nan=False), encoding="utf-8")
+        indent=2, ensure_ascii=False, allow_nan=False), encoding="utf-8", newline="\n")
     print(f"\n-> {RAPORT}\n-> {JSON_OUT}")
     return 0
 

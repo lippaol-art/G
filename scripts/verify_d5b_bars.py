@@ -161,7 +161,7 @@ def main() -> int:
                     "zakresy_utc": [{"sesja": s, "od": t0, "do": t1}
                                     for s, t0, t1 in zakresy]},
                    indent=1, default=str),
-        encoding="utf-8")
+        encoding="utf-8", newline="\n")
     return 0 if czysto else 1
 
 

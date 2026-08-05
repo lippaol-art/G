@@ -158,7 +158,7 @@ def main() -> int:
     Path("reports").mkdir(exist_ok=True)
     Path("reports/przebudowa_clean.json").write_text(
         json.dumps({"zakres_dozwolony": DOZWOLONE, "symbole": raporty},
-                   indent=1, default=str), encoding="utf-8")
+                   indent=1, default=str), encoding="utf-8", newline="\n")
     print("\n-> reports/przebudowa_clean.json")
     return 0
 

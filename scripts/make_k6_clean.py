@@ -225,7 +225,7 @@ def main() -> int:
                  f"{c['trade_date'].min()} | {c['trade_date'].max()} |")
     L += ["", "Odtworzenie: `python3 scripts/make_k6_clean.py`"]
     RAPORT.parent.mkdir(parents=True, exist_ok=True)
-    RAPORT.write_text("\n".join(L) + "\n", encoding="utf-8")
+    RAPORT.write_text("\n".join(L) + "\n", encoding="utf-8", newline="\n")
     print(f"-> {RAPORT}  (splity: {n_przyjete} przyjete, {n_odrzucone} odrzucone)")
     return 0
 

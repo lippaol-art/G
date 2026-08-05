@@ -181,7 +181,7 @@ def klasyfikuj(tekst_naglowka: str) -> str:
 def main() -> int:
     if not WEJSCIE.exists():
         sys.exit(f"Brak {WEJSCIE} — uruchom scripts/build_earnings.py")
-    wiersze = list(csv.DictReader(WEJSCIE.open(encoding="utf-8")))
+    wiersze = list(csv.DictReader(WEJSCIE.open(encoding="utf-8", newline="\n")))
 
     cache: dict[str, str] = {}
     if CACHE.exists():
@@ -194,9 +194,9 @@ def main() -> int:
         if i % 25 == 0:
             print(f"  {i}/{len(brak)}")
             CACHE.parent.mkdir(parents=True, exist_ok=True)
-            CACHE.write_text(json.dumps(cache, indent=1), encoding="utf-8")
+            CACHE.write_text(json.dumps(cache, indent=1), encoding="utf-8", newline="\n")
     CACHE.parent.mkdir(parents=True, exist_ok=True)
-    CACHE.write_text(json.dumps(cache, indent=1), encoding="utf-8")
+    CACHE.write_text(json.dumps(cache, indent=1), encoding="utf-8", newline="\n")
 
     for r in wiersze:
         r["rodzaj"] = klasyfikuj(cache.get(r["accession"], ""))

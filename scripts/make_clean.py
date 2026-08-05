@@ -83,7 +83,7 @@ def append_manifest(symbol: str, path: Path, rep, sha: str) -> None:
     linie = [f"- {e.roll_date}: {e.from_contract} -> {e.to_contract} (spread {e.spread:+.2f})"
              for e in rep.roll_events]
     tresc = naglowek + wpis + "\n".join(linie) + "\n"
-    with MANIFEST.open("a", encoding="utf-8") as f:
+    with MANIFEST.open("a", encoding="utf-8", newline="\n") as f:
         f.write(tresc)
 
 

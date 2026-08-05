@@ -361,7 +361,7 @@ def main() -> int:
     ]
 
     RAPORT.parent.mkdir(parents=True, exist_ok=True)
-    RAPORT.write_text("\n".join(L) + "\n", encoding="utf-8")
+    RAPORT.write_text("\n".join(L) + "\n", encoding="utf-8", newline="\n")
     print(f"-> {RAPORT}")
     for nazwa, (r2, obc, mae) in wyn.items():
         print(f"  {nazwa:34s} R²={r2:.4f}  obc={obc:+.2f}‱  MAE={mae:.2f}‱")

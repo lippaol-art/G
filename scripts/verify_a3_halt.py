@@ -214,7 +214,7 @@ def main() -> int:
     pomiary = [zmierz(s) for s in INSTRUMENTY]
     REPORTS.mkdir(exist_ok=True)
     out = REPORTS / "A3_halt_weryfikacja.md"
-    out.write_text(raport(pomiary), encoding="utf-8")
+    out.write_text(raport(pomiary), encoding="utf-8", newline="\n")
     print(f"-> {out}")
     for p in pomiary:
         przed, po = p["okresy"]["przed"], p["okresy"]["po"]

@@ -146,7 +146,7 @@ def sesje_zdarzen() -> tuple[set[date], dict[date, list[str]]]:
     if not KALENDARZ.exists():
         sys.exit(f"Brak {KALENDARZ} — uruchom scripts/build_earnings.py")
     kto: dict[date, list[str]] = {}
-    with KALENDARZ.open(encoding="utf-8") as f:
+    with KALENDARZ.open(encoding="utf-8", newline="\n") as f:
         for r in csv.DictReader(f):
             if not r["sesja_reakcji"]:
                 continue
@@ -543,7 +543,7 @@ def main() -> int:
     ]
 
     RAPORT.parent.mkdir(parents=True, exist_ok=True)
-    RAPORT.write_text("\n".join(L) + "\n", encoding="utf-8")
+    RAPORT.write_text("\n".join(L) + "\n", encoding="utf-8", newline="\n")
     print(f"-> {RAPORT}")
     print(f"   N zdarzen {n}, korelacja {kor:+.4f}, t {t_glowne:+.2f}, "
           f"srednio {p_masked.mean()*poziom:+.1f} pkt")

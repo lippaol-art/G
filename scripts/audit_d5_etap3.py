@@ -467,7 +467,7 @@ def main() -> int:
 
     Path("reports").mkdir(exist_ok=True)
     Path("reports/D5_etap3_wyniki.json").write_text(
-        json.dumps(w, indent=1, default=str), encoding="utf-8")
+        json.dumps(w, indent=1, default=str), encoding="utf-8", newline="\n")
     print("\n-> reports/D5_etap3_wyniki.json")
     return 0
 

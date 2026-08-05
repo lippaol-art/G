@@ -93,7 +93,7 @@ def main() -> int:
         sciezka=str(out), sha256=sha, databento=db.__version__,
     )
     Path("data/manifest_d5c_trades.json").write_text(
-        json.dumps(manifest, indent=1), encoding="utf-8")
+        json.dumps(manifest, indent=1), encoding="utf-8", newline="\n")
 
     print(f"\n-> {out}  ({out.stat().st_size / 1e6:.1f} MB)")
     print(f"   SHA-256   : {sha}")

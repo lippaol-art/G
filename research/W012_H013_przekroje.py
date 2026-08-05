@@ -46,7 +46,7 @@ def t_stat(x: np.ndarray) -> float:
 def wczytaj() -> list[dict]:
     if not KALENDARZ.exists():
         sys.exit(f"Brak {KALENDARZ} — uruchom scripts/classify_earnings.py")
-    return list(csv.DictReader(KALENDARZ.open(encoding="utf-8")))
+    return list(csv.DictReader(KALENDARZ.open(encoding="utf-8", newline="\n")))
 
 
 def main() -> int:
@@ -212,7 +212,7 @@ def main() -> int:
     ]
 
     RAPORT.parent.mkdir(parents=True, exist_ok=True)
-    RAPORT.write_text("\n".join(L) + "\n", encoding="utf-8")
+    RAPORT.write_text("\n".join(L) + "\n", encoding="utf-8", newline="\n")
     print(f"-> {RAPORT}")
     for p in przekroje:
         if p.get("n", 0) >= 5:

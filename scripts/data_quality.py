@@ -377,7 +377,7 @@ def main() -> int:
 
     REPORTS.mkdir(exist_ok=True)
     out = REPORTS / f"data_quality_{args.symbol.lower()}.md"
-    out.write_text(build_report(args.symbol, args.timeframe), encoding="utf-8")
+    out.write_text(build_report(args.symbol, args.timeframe), encoding="utf-8", newline="\n")
     print(f"-> {out}")
     return 0
 

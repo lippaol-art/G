@@ -161,10 +161,10 @@ def main() -> int:
         manifest["ponowne_pobranie"] = True
         manifest["sha256_kanoniczny"] = odniesienie.get("sha256")
         manifest["zgodny_z_kanonicznym"] = zgodny
-        cel.write_text(json.dumps(manifest, indent=1), encoding="utf-8")
+        cel.write_text(json.dumps(manifest, indent=1), encoding="utf-8", newline="\n")
         gdzie = cel
     else:
-        KANONICZNY.write_text(json.dumps(manifest, indent=1), encoding="utf-8")
+        KANONICZNY.write_text(json.dumps(manifest, indent=1), encoding="utf-8", newline="\n")
         zgodny = True
         gdzie = KANONICZNY
 

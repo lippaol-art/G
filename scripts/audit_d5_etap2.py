@@ -362,7 +362,7 @@ def main() -> int:
                     "wyniki": wyniki, "okien": o.height,
                     "sesji": o["sesja"].n_unique(),
                     "kontrole_agregacji": kontrole_agg}, indent=1, default=str),
-        encoding="utf-8")
+        encoding="utf-8", newline="\n")
     return 0
 
 

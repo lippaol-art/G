@@ -112,7 +112,7 @@ def wczytaj_kalendarz() -> dict[str, set[date]]:
     if not KALENDARZ.exists():
         sys.exit(f"Brak {KALENDARZ} — uruchom scripts/build_earnings.py")
     wynik: dict[str, set[date]] = {s: set() for s in CIK}
-    with KALENDARZ.open(encoding="utf-8") as f:
+    with KALENDARZ.open(encoding="utf-8", newline="\n") as f:
         for r in csv.DictReader(f):
             if r["klasa"] == AMC:
                 wynik[r["symbol"]].add(
@@ -370,7 +370,7 @@ def main() -> int:
     ]
 
     RAPORT.parent.mkdir(parents=True, exist_ok=True)
-    RAPORT.write_text("\n".join(L) + "\n", encoding="utf-8")
+    RAPORT.write_text("\n".join(L) + "\n", encoding="utf-8", newline="\n")
     print(f"-> {RAPORT}")
     print(f"   publikacji AMC {n_wynik}, cichych {len(ciche)} "
           f"(bez barow {len(bez_barow)}), obcych duzych reakcji {len(obce)}")

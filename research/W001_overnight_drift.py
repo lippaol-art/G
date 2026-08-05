@@ -423,7 +423,7 @@ def main() -> int:
     ]
 
     RAPORT.parent.mkdir(parents=True, exist_ok=True)
-    RAPORT.write_text("\n".join(L) + "\n", encoding="utf-8")
+    RAPORT.write_text("\n".join(L) + "\n", encoding="utf-8", newline="\n")
     print(f"\n-> {RAPORT}")
     print(f"\nSharpe nocny MNQ: 2019-2026 = {sh_full:.2f}, {ROK_PODZIALU}-2026 = {sh_post:.2f}")
     print(f"Prog DSR: SR >= {sr_dsr:.2f}  |  cena warunkowania do decyla: "

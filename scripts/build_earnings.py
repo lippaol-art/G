@@ -383,7 +383,7 @@ def main() -> int:
     ]
 
     RAPORT.parent.mkdir(parents=True, exist_ok=True)
-    RAPORT.write_text("\n".join(L) + "\n", encoding="utf-8")
+    RAPORT.write_text("\n".join(L) + "\n", encoding="utf-8", newline="\n")
     print(f"-> {WYJSCIE} ({len(gotowe)} publikacji)")
     print(f"-> {RAPORT}")
     print(f"   AMC {klasy[AMC]}, BMO {klasy[BMO]}, poza sesja {klasy[POZA_SESJA]}, "

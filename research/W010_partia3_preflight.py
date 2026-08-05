@@ -672,7 +672,7 @@ def main() -> int:
     ]
 
     RAPORT.parent.mkdir(parents=True, exist_ok=True)
-    RAPORT.write_text("\n".join(L) + "\n", encoding="utf-8")
+    RAPORT.write_text("\n".join(L) + "\n", encoding="utf-8", newline="\n")
     print(f"-> {RAPORT}")
     print(f"H001: t(ER) {t_er:+.2f}, t(zakres) {t_zak:+.2f}, "
           f"beta2 wolumen t={tb[2]:+.2f}; N {int(z_rownowagi.sum())}/{int(z_braku.sum())}")

@@ -200,7 +200,7 @@ def main() -> int:
     wyniki["bledy"] = bledy
     Path("reports").mkdir(exist_ok=True)
     Path("reports/D5_b2_dry_run.json").write_text(
-        json.dumps(wyniki, indent=1, default=str), encoding="utf-8")
+        json.dumps(wyniki, indent=1, default=str), encoding="utf-8", newline="\n")
     print("\n-> reports/D5_b2_dry_run.json")
     return 1 if bledy else 0
 
