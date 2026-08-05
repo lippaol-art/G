@@ -92,3 +92,69 @@ def test_modul_nie_udostepnia_ponawiania_pobierania():
     zakazane = [n for n in publiczne
                 if any(s in n.lower() for s in ("range", "pobier", "download"))]
     assert not zakazane, f"modul nie moze ponawiac pobierania: {zakazane}"
+
+
+class TestDzielenie:
+    """Podzial zakresu — sumowanie metadanych po kawalkach."""
+
+    def test_kawalki_pokrywaja_caly_zakres_bez_luk(self):
+        from engine.databento_io import _kawalki
+
+        cz = list(_kawalki("2026-07-30T13:30", "2026-07-30T20:00", 30))
+        assert len(cz) == 13
+        assert cz[0][0] == "2026-07-30T13:30"
+        assert cz[-1][1] == "2026-07-30T20:00"
+        # koniec kazdego kawalka == poczatek nastepnego: brak luk i nakladek
+        for (_, konc), (pocz, _) in zip(cz[:-1], cz[1:], strict=True):
+            assert konc == pocz
+
+    def test_ostatni_kawalek_przyciety_do_konca(self):
+        from engine.databento_io import _kawalki
+
+        cz = list(_kawalki("2026-07-30T13:00", "2026-07-30T13:40", 30))
+        assert cz == [("2026-07-30T13:00", "2026-07-30T13:30"),
+                      ("2026-07-30T13:30", "2026-07-30T13:40")]
+
+    def test_sumuje_wyniki_kawalkow(self):
+        from engine.databento_io import metadane_dzielone
+
+        wolania = []
+
+        def fn(*, start, end, **kw):
+            wolania.append((start, end))
+            return 100
+
+        suma = metadane_dzielone(fn, start="2026-07-30T13:30",
+                                 end="2026-07-30T20:00", minut=30)
+        assert len(wolania) == 13
+        assert suma == 1300
+
+    def test_przekazuje_pozostale_argumenty(self):
+        from engine.databento_io import metadane_dzielone
+
+        widziane = {}
+
+        def fn(*, start, end, schema, dataset):
+            widziane["schema"] = schema
+            widziane["dataset"] = dataset
+            return 1
+
+        metadane_dzielone(fn, start="2026-07-30T13:30", end="2026-07-30T14:00",
+                          minut=30, schema="mbo", dataset="GLBX.MDP3")
+        assert widziane == {"schema": "mbo", "dataset": "GLBX.MDP3"}
+
+    def test_ponawianie_dziala_wewnatrz_kawalkow(self):
+        from engine.databento_io import metadane_dzielone
+
+        proby = {"n": 0}
+
+        def fn(*, start, end):
+            proby["n"] += 1
+            if proby["n"] == 1:
+                raise BladBramy("504 gateway")
+            return 10
+
+        suma = metadane_dzielone(fn, start="2026-07-30T13:30",
+                                 end="2026-07-30T14:30", minut=30,
+                                 odstepy=(0,))
+        assert suma == 20, "dwa kawalki po 10, mimo jednej nieudanej proby"

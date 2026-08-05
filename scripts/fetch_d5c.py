@@ -36,7 +36,7 @@ import databento as db
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from engine.databento_io import metadane_z_ponowieniem  # noqa: E402
+from engine.databento_io import metadane_dzielone  # noqa: E402
 from engine.paths import raw_dir, wolne_gb  # noqa: E402
 
 ET = ZoneInfo("America/New_York")
@@ -82,15 +82,18 @@ def main() -> int:
     a, b = okno()
     q = dict(**ZAPYTANIE, start=a, end=b)
 
-    # Metadane sa darmowe i idempotentne, wiec ponawianie ich jest bezpieczne.
-    # `get_record_count` dla 38 mln rekordow MBO potrafi przekroczyc czas bramy
-    # (zaobserwowane: HTTP 504 na maszynie lokalnej). Pobieranie ponizej NIE
-    # jest ponawiane automatycznie — patrz `engine/databento_io.py`.
-    koszt = metadane_z_ponowieniem(c.metadata.get_cost, opis="get_cost", **q)
-    rekordow = metadane_z_ponowieniem(c.metadata.get_record_count,
-                                      opis="get_record_count", **q)
-    rozmiar = metadane_z_ponowieniem(c.metadata.get_billable_size,
-                                     opis="get_billable_size", **q)
+    # ZAPYTANIA DZIELONE, NIE POJEDYNCZE. Dla MBO pytanie o cala sesje RTH
+    # (38,3 mln rekordow) trwa 54-60 s przy 60-sekundowym limicie bramy —
+    # to loteria, nie awaria przejsciowa. Podzial na kawalki po 30 min daje
+    # czasy 2,5-37 s, a suma jest zweryfikowana empirycznie co do rekordu
+    # i co do czwartego miejsca po przecinku. Szczegoly: engine/databento_io.py.
+    bez_czasu = {k: v for k, v in q.items() if k not in ("start", "end")}
+    koszt = metadane_dzielone(c.metadata.get_cost, start=a, end=b,
+                              opis="koszt", **bez_czasu)
+    rekordow = int(metadane_dzielone(c.metadata.get_record_count, start=a, end=b,
+                                     opis="rekordy", **bez_czasu))
+    rozmiar = int(metadane_dzielone(c.metadata.get_billable_size, start=a, end=b,
+                                    opis="rozmiar", **bez_czasu))
     print(f"okno UTC : {a} .. {b}")
     print(f"koszt    : {koszt:.4f} USD  (limit {LIMIT_USD:.2f})")
     print(f"rekordow : {rekordow:,}")
