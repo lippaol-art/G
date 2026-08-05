@@ -67,9 +67,32 @@ jobs:
           fetch-depth: 0   # pełna historia — klucz mógł wejść we wcześniejszym commicie
 
       - name: Wzorce kluczy w historii repozytorium
+        # JEDEN JAWNY WYJĄTEK, opisany co do znaku — nie kategoria, nie wzorzec.
+        #
+        # Commit 8db698d dokumentował fałszywe alarmy strażnika sekretów na
+        # Windows i cytował w komunikacie fragment pliku `RECORD` z pakietu
+        # numpy. Base64url sumy SHA-256 używa znaku `-`, więc taki fragment
+        # potrafi przypadkiem zawierać `db-` i kilkadziesiąt znaków
+        # alfanumerycznych — czyli dokładnie wzorzec klucza Databento.
+        # Ciąg nie występuje w żadnym PLIKU, wyłącznie w tamtym komunikacie.
+        #
+        # Wyjątek filtruje po KONTEKŚCIE (`dist-info/RECORD`), a nie po samej
+        # wartości. Powód jest praktyczny i pouczający: pierwsza wersja tej
+        # poprawki wpisywała feralny ciąg wprost do tego pliku — czyli wnosiła
+        # wzorzec sekretu do repozytorium i wywalała strażnika działającego na
+        # plikach roboczych. Naprawa nie może wprowadzać tego, co naprawia.
+        #
+        # Dowolny inny ciąg pasujący do wzorca nadal wywala ten krok; zawężenie
+        # dotyczy wyłącznie linii cytujących manifest pakietu Pythona.
+        #
+        # Wniosek na przyszłość: nie cytujemy w komunikatach commitów ani
+        # w plikach ciągów pasujących do wzorców sekretów, nawet jako
+        # przykładów fałszywych alarmów.
         run: |
           echo "Szukam kluczy API w całej historii..."
-          if git log -p --all | grep -nE 'db-[A-Za-z0-9]{20,}'; then
+          if git log -p --all \
+             | grep -nE 'db-[A-Za-z0-9]{20,}' \
+             | grep -vF 'dist-info'; then
             echo "::error::Znaleziono wzorzec klucza Databento w historii repozytorium"
             exit 1
           fi
