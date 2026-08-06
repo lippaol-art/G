@@ -194,6 +194,30 @@ class TestKontrolaWyceny:
             metadane_dzielone(lambda **kw: 100, start="2026-07-30T14:00",
                               end="2026-07-30T13:00", minut=30)
 
+    def test_kawalek_none_wskazuje_ktory(self):
+        from engine.databento_io import metadane_dzielone
+
+        wartosci = iter([10, None, 10])
+        with pytest.raises(ValueError, match="None"):
+            metadane_dzielone(lambda **kw: next(wartosci),
+                              start="2026-07-30T13:30", end="2026-07-30T15:00",
+                              minut=30)
+
+    def test_pusty_kawalek_w_srodku_ostrzega_ale_nie_przerywa(self, capsys):
+        from engine.databento_io import metadane_dzielone
+
+        # Przerwa w handlu potrafi dac 30 minut bez rekordow, wiec to NIE jest
+        # blad — ale zle zbudowany zakres zapytania wyglada dokladnie tak samo
+        # i nie wolno, zeby przeszlo bez sladu.
+        wartosci = iter([1000, 0, 1000])
+        suma = metadane_dzielone(lambda **kw: next(wartosci),
+                                 start="2026-07-30T13:30", end="2026-07-30T15:00",
+                                 minut=30)
+        assert suma == 2000
+        wyjscie = capsys.readouterr().out
+        assert "1 z 3 kawalkow pustych" in wyjscie
+        assert "14:00-14:30" in wyjscie, "ostrzezenie musi WSKAZAC ktory kawalek"
+
     def test_poprawna_wycena_nadal_przechodzi(self):
         from engine.databento_io import metadane_dzielone
 

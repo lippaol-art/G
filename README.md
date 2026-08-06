@@ -8,6 +8,9 @@ makroekonomicznych.
 specyfikacja techniczna silnika, metodologia badawcza i katalog hipotez. Wersja 1.1, po czterech
 niezależnych audytach zewnętrznych.
 
+**Stan bieżący projektu: [`HANDOFF.md`](HANDOFF.md). `PLAN.*` to historyczny dokument wizji** —
+nadal wiążący tam, gdzie definiuje metodę i progi, ale nieaktualizowany o postęp prac.
+
 ---
 
 ## Stan projektu
@@ -86,6 +89,10 @@ validation/      aparat statystyczny
 
 hypotheses/
   REGISTRY.md    katalog hipotez: benchmarki, przeformułowane, kandydaci
+  H0xx.md        karty pojedynczych hipotez wraz z werdyktami
+
+research/        skrypty badawcze W0xx — zamrożone po wydaniu werdyktu
+reports/         wyniki badań i audytów, cytowane z rejestru
 
 scripts/
   check_all.sh           kanoniczna bramka lokalna = CI + golden baseline

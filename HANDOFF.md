@@ -5,12 +5,16 @@ Kontener jest efemeryczny, więc wszystko potrzebne do kontynuacji jest tutaj i 
 
 Data: 06.08.2026 · Branch: `claude/financial-market-strategy-8mb1y1` · PR #4
 
-> **Reguła utrzymania tego pliku.** HANDOFF jest aktualizowany w TYM SAMYM commicie,
-> który zmienia stan projektu — nie „przy okazji", nie później. Ten plik przez pięć dni
-> twierdził, że Etap 1 jest zablokowany przez politykę sieciową, w czasie gdy dane były
-> już w repozytorium, a Gen1 zamknięta. Nieaktualny HANDOFF jest gorszy niż jego brak:
-> świeża sesja Claude'a zaczyna od niego i pójdzie „odblokowywać" rozwiązany problem
-> albo powtórzy zamknięte badanie.
+> **Reguła utrzymania tego pliku.** HANDOFF aktualizuje się w TYM SAMYM commicie, który
+> zmienia stan projektu. **Nieaktualny HANDOFF to defekt P1, jak czerwony test** — nie
+> „dług dokumentacyjny" do nadrobienia później. Ten plik przez pięć dni twierdził, że
+> Etap 1 jest zablokowany przez politykę sieciową, w czasie gdy dane były już w repozytorium,
+> a Gen1 zamknięta. Świeża sesja zaczyna od niego i poszłaby „odblokowywać" rozwiązany
+> problem albo powtórzyć zamknięte badanie.
+
+**Podział ról między agentami: [`docs/PROTOKOL_WSPOLPRACY.md`](docs/PROTOKOL_WSPOLPRACY.md).**
+Przeczytaj go, zanim wystawisz jakąkolwiek ocenę własnej pracy — Wykonawca nie wystawia
+sobie werdyktu końcowego.
 
 ---
 
@@ -78,8 +82,23 @@ Niezmiennie obowiązuje:
 `PROJECT_G_DATA_ROOT`; `clean_dir()` **zawsze** zostaje w repo, bo od niego zależy golden
 baseline. Konfiguracja maszyny lokalnej: `docs/URUCHOMIENIE_LOKALNE.md`.
 
+### Maszyna właściciela (Windows)
+
+| Rola | Ścieżka |
+|---|---|
+| Klon repozytorium | `C:\ProjektG` |
+| Dane surowe poza repo | `C:\ProjektG_dane` → `PROJECT_G_DATA_ROOT` |
+
+**Rozstrzyga zmienna środowiskowa, nie ta tabela.** Jeżeli `PROJECT_G_DATA_ROOT` wskazuje
+gdzie indziej, prawdą jest zmienna — tabela jest tylko zapisem przyjętej konwencji.
+Sprawdzenie: `python -c "from engine.paths import raw_dir; print(raw_dir())"`.
+
+### Budżet
+
 Każdy wydany dolar jest w `data/KOSZTY.md`, łącznie z ponownymi naliczeniami — duplikacja ma
-tam własną pozycję i nie wolno jej chować w sumie zbiorczej.
+tam własną pozycję i nie wolno jej chować w sumie zbiorczej. **Ten plik jest źródłem prawdy
+o budżecie; nie przepisuj kwot tutaj**, bo dwie kopie liczby rozjadą się przy pierwszym
+zakupie. Stan i pozycje planowane: `data/KOSZTY.md` §2–3.
 
 ---
 
@@ -203,6 +222,18 @@ rozdzielone `hash_danych` i `hash_wynikow`, żeby zmiana danych nie maskowała z
    `engine/metrics.py` ma flagę `Metrics.suspicious`.
 7. **Nie ponawiaj automatycznie płatnych pobrań.** Metadane są darmowe i idempotentne —
    te ponawiamy. Pobranie tworzy plik i obciąża konto — tu decyduje człowiek.
+8. **Ręczna edycja `validation/trial_counter.json` jest ZAKAZANA.** Jedyna dozwolona droga
+   to `scripts/rejestruj_probe.py`. Powód jest asymetryczny: zawyżenie licznika obniża
+   własny werdykt niepotrzebnie, ale **zaniżenie certyfikuje strategię niezasłużenie
+   i nie zostawia śladu w żadnym wyniku**.
+9. **Przed każdym odczytem lockboxa — wpis do `validation/lockbox_log.json`.** Jedno
+   spojrzenie = zużycie sejfu. Bez dziennika reguła istnieje tylko w docstringu i nie
+   da się po fakcie stwierdzić, ile razy sejf otwarto.
+10. **Od H017: karta bez zielonego `scripts/waliduj_karte.py` nie może zostać zamrożona.**
+    Linter sprawdza to, czego brak wychodzi dopiero po wydaniu prób: nazwanego przymuszonego
+    uczestnika, różnicę wobec benchmarków, warunek negatywny, plan N/mocy, liczbę wariantów
+    i sekcję „Recenzje". Karty Gen1 powstały przed linterem i **nie są** wstecznie objęte —
+    ich wyniki mają pozostać odtwarzalne, a nie zgodne z późniejszym formularzem.
 
 ---
 
@@ -245,7 +276,11 @@ validation/
 
 scripts/fetch_d5b2_month.py   NASTĘPNY KROK: zakup 21 sesji MBO
 scripts/check_all.sh          kanoniczna bramka lokalna = CI + golden baseline
-tests/                        531 testów, w tym regresja na liczbach z PLAN.pdf
+scripts/rejestruj_probe.py    JEDYNA droga zmiany licznika prób
+scripts/waliduj_karte.py      linter kart hipotez — bramka zamrożenia od H017
+validation/lockbox_log.json   dziennik otwarć sejfu OOS
+docs/PROTOKOL_WSPOLPRACY.md   role, meldunek, pakiety recenzji, arbitraż
+tests/                        regresja na liczbach z PLAN.pdf + strażnicy procesu
 ```
 
 ---

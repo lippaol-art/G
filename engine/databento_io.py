@@ -120,9 +120,16 @@ def metadane_dzielone(
         raise ValueError(f"{opis}: pusty zakres {start}..{end} — nie ma czego "
                          "wyceniac; sprawdz kolejnosc granic")
     suma: float = 0
+    wartosci: list[tuple[str, str, float]] = []
     for i, (a, b) in enumerate(czesci, start=1):
         v = metadane_z_ponowieniem(fn, start=a, end=b, odstepy=odstepy,
                                    opis=f"{opis} [{i}/{len(czesci)}]", **kwargs)
+        # `None` PRZECHODZI PRZEZ SUMOWANIE JAKO BLAD TYPU, ale komunikat
+        # `unsupported operand` nie mowi, KTORY kawalek zawiodl. Lapiemy tutaj,
+        # zeby bledna odpowiedz API dalo sie zlokalizowac w czasie.
+        if v is None:
+            raise ValueError(f"{opis}: kawalek {i}/{len(czesci)} ({a}..{b}) "
+                             "zwrocil None — API nie odpowiedzialo wartoscia")
         # KAWALEK UJEMNY NIE ISTNIEJE. Liczba rekordow, bajtow i koszt sa
         # nieujemne z definicji, wiec wartosc ujemna oznacza, ze `fn` nie jest
         # tym, czym myslimy — sumowanie jej dalej ukryloby blad w totalu.
@@ -130,9 +137,21 @@ def metadane_dzielone(
             raise ValueError(f"{opis}: kawalek {i}/{len(czesci)} ({a}..{b}) "
                              f"zwrocil {v} — wartosc ujemna jest niemozliwa")
         suma += v
+        wartosci.append((a, b, v))
         if postep:
             print(f"  {opis} {a[11:]}-{b[11:]}: {v:,}" if isinstance(v, int)
                   else f"  {opis} {a[11:]}-{b[11:]}: {v:.4f}", flush=True)
+    # PUSTY KAWALEK W SRODKU ZAKRESU jest podejrzany, ale NIE jest z gory bledem:
+    # przerwa w handlu potrafi dac 30 minut bez rekordow. Nie przerywamy wiec
+    # pracy — ale nie wolno, zeby przeszlo to bez sladu, bo dokladnie tak
+    # wygladalby tez zle zbudowany zakres zapytania.
+    puste = [(a, b) for a, b, v in wartosci if v == 0]
+    if puste and len(puste) < len(wartosci):
+        print(f"  UWAGA {opis}: {len(puste)} z {len(wartosci)} kawalkow pustych "
+              f"({', '.join(a[11:] + '-' + b[11:] for a, b in puste[:6])}"
+              f"{', ...' if len(puste) > 6 else ''}). Przerwa w handlu jest "
+              "mozliwa; zly zakres zapytania wyglada tak samo.", flush=True)
+
     # ZERO W SUMIE TO ALARM, NIE WYNIK. Wywolujemy to wylacznie dla sesji,
     # o ktorych z gory wiadomo, ze sa handlowe — zero oznacza wiec zly symbol,
     # zly zbior albo zakres poza dostepnoscia danych, a nie "tania sesja".
@@ -140,7 +159,7 @@ def metadane_dzielone(
     # ktora przepuszcza zakup przez limit kosztu zamiast go zatrzymac.
     if suma <= 0:
         raise ValueError(f"{opis}: suma {len(czesci)} kawalkow wynosi {suma} "
-                         f"dla zakresu {start}..{end}. Sesja handlowa nie moze "
-                         "byc pusta — sprawdz symbol, zbior i dostepnosc danych "
-                         "ZANIM cokolwiek kupisz.")
+                         f"dla zakresu {start}..{end}; WSZYSTKIE kawalki puste. "
+                         "Sesja handlowa nie moze byc pusta — sprawdz symbol, "
+                         "zbior i dostepnosc danych ZANIM cokolwiek kupisz.")
     return suma

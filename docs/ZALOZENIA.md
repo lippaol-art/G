@@ -317,6 +317,46 @@ kryterium, nie w wartości progu.
 O poprawności back-adjustu orzeka wyłącznie **niezmiennik stałości offsetu**
 (zero rozrzutu w 90 z 90 kontraktów).
 
+### G4 — ✅ ZAMKNIĘTE: blokada egress na `hist.databento.com` (lipiec 2026)
+
+Przeniesione tutaj z docstringu `engine/loader.py`, gdzie zostało jako martwy
+wpis po ustaniu problemu i przez pięć dni opisywało stan nieistniejący.
+
+**Objaw:** `curl` do `hist.databento.com:443` zwracał `CONNECT tunnel failed,
+response 403`; `$HTTPS_PROXY/__agentproxy/status` pokazywał `connect_rejected`.
+PyPI działało normalnie, więc blokada dotyczyła konkretnego hosta, nie sieci.
+
+**Rozstrzygnięcie:** była to **odmowa polityki organizacji**, nie awaria.
+Po dodaniu domeny do allow-listy i starcie nowej sesji host odpowiada 200.
+Etap 1 wykonany, dane w `data/clean/`.
+
+**Co z tego zostaje jako reguła, a nie anegdota.** Odpowiedzi 403/407 od bramy
+zgłaszamy, nie obchodzimy — zgodnie z `/root/.ccr/README.md`. Dwie próby
+wystarczą do stwierdzenia stanu; ponawianie w pętli, szukanie innego hosta
+i wyłączanie weryfikacji TLS są zakazane niezależnie od pilności zadania.
+
+### G5 — ⏸️ ODROCZONE: parquety w historii gita
+
+**Nie jest to wada** — to decyzja z rosnącym kosztem, spisana zanim zacznie boleć.
+
+Klon waży ~417 MB, a każda przebudowa `data/clean/` dokłada ~100 MB do historii
+**na zawsze**, bo git nie zapomina blobów. Przy obecnym tempie (przebudowy rzadkie,
+kontrolowane przez `scripts/rebuild_clean.py`) jest to akceptowalne.
+
+Dwie drogi wyjścia, obie do podjęcia dopiero, gdy klonowanie stanie się uciążliwe:
+
+| Droga | Zysk | Koszt |
+|---|---|---|
+| `git-lfs` | historia bez blobów, `git clone` lekki | zależność od LFS u każdego, kto klonuje; limity hostingu |
+| Artefakty release + SHA w manifeście | zero zależności, pełna kontrola | dane przestają być wersjonowane razem z kodem — trzeba je pobrać osobno |
+
+**Warunek nienaruszalny przy każdej z nich:** golden baseline musi dalej liczyć
+`hash_danych` z tych samych bajtów. Migracja, która to zmienia, unieważnia
+baseline i wymaga wersji w `golden/ZMIANY.md`.
+
+**Decyzja odroczona świadomie.** Nie podejmować przed werdyktem D5-B2 — migracja
+historii w trakcie otwartego etapu badawczego to ryzyko bez terminu.
+
 ---
 
 ## Jak używać tego rejestru
