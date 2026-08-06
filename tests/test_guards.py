@@ -312,6 +312,40 @@ class TestDocConsistency:
         assert deflated_sharpe_annualized(1.5, 1500, 5).passes
         assert not deflated_sharpe_annualized(0.8, 1500, 10).passes
 
+    def test_ci_instaluje_extras_potrzebne_testom(self):
+        """CI musi instalowac kazdy extras, bez ktorego test sie nie zaimportuje.
+
+        POWSTALO PO REALNEJ AWARII (06.08.2026). Test downloadera importuje
+        `scripts/fetch_d5b2_month.py`, ten importuje `databento` — a CI
+        instalowalo tylko `[dev,validation]`. Lokalna bramka byla ZIELONA, bo
+        lokalnie `databento` jest zainstalowane.
+
+        `scripts/check_all.sh` tego nie wykryje z zalozenia: porownuje KOMENDY
+        z CI, a rozjazd byl w ZALEZNOSCIACH. Ten straznik zamyka te luke od
+        drugiej strony — pilnuje, ze nikt nie usunie extras z workflow.
+
+        `live` celowo POZA lista: ib_async jest potrzebny dopiero na Etapie 5
+        i zaden test go dzis nie importuje.
+        """
+        ci = (ROOT / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
+        m = re.search(r"pip install -e '\.\[([^\]]+)\]'", ci)
+        assert m, "nie znaleziono linii instalacji extras w ci.yml"
+        zainstalowane = {s.strip() for s in m.group(1).split(",")}
+
+        wymagane = {
+            "dev": "pytest, ruff, mypy — bez nich nie ma czego uruchomic",
+            "validation": "arch i scikit-learn; bez nich spa.py i dsr.py cicho "
+                          "schodza na sciezke zapasowa i sciezka glowna nie "
+                          "jest wykonana ani razu",
+            "data": "databento; bez niego skryptow zakupowych nie da sie nawet "
+                    "zaimportowac, wiec ich testy nie moglyby biec w CI — a to "
+                    "jedyne skrypty, ktorych blad kosztuje pieniadze",
+        }
+        braki = {k: v for k, v in wymagane.items() if k not in zainstalowane}
+        assert not braki, (
+            "ci.yml nie instaluje extras: "
+            + "; ".join(f"`{k}` ({v})" for k, v in braki.items()))
+
     def test_wszystkie_moduly_maja_odwolanie_do_specyfikacji(self):
         """Kazdy modul musi wskazywac, ktora czesc PLAN.pdf realizuje —
         inaczej po miesiacach nikt nie odtworzy, skad wziely sie decyzje."""

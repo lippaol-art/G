@@ -23,9 +23,20 @@ jobs:
         # `validation` instalowane ŚWIADOMIE: bez `arch` i `scikit-learn` moduły
         # spa.py i dsr.py cicho schodzą na ścieżkę zapasową, więc ich ścieżka
         # główna nie byłaby wykonana ani razu — ani lokalnie, ani w CI.
+        #
+        # `data` z DOKŁADNIE TEGO SAMEGO POWODU, dopisane 06.08.2026. Bez
+        # `databento` skrypty zakupowe nie dają się nawet zaimportować, więc
+        # żaden ich test nie mógłby biec w CI — a to są jedyne skrypty, których
+        # błąd kosztuje realne pieniądze i jest nieodwracalny.
+        #
+        # Jak to wyszło: bramka lokalna była zielona, bo lokalnie `databento`
+        # jest zainstalowane. `scripts/check_all.sh` porównuje KOMENDY z CI,
+        # a ten rozjazd był w ZALEŻNOŚCIACH — czego z założenia nie wykryje.
+        # Stąd reguła: nowy test importujący moduł z extras wymaga sprawdzenia,
+        # czy CI ten extras instaluje.
         run: |
           python -m pip install --upgrade pip
-          pip install -e '.[dev,validation]'
+          pip install -e '.[dev,validation,data]'
           pip install ruff mypy
 
       - name: Linter (ruff)
