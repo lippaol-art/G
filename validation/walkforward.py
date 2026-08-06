@@ -106,6 +106,12 @@ def make_split(
 ) -> Split:
     """Buduje sekwencje okien walk-forward + lockbox na koncu historii.
 
+    PRZED KAZDYM ODCZYTEM LOCKBOXA — wpis do `validation/lockbox_log.json`
+    (data UTC, hipoteza, powod, SHA). Wpis powstaje PRZED odczytem, nie po:
+    po fakcie nie jest juz kontrola, tylko relacja. Bez dziennika regula ponizej
+    istnieje wylacznie w tym docstringu i nie da sie stwierdzic, ile razy
+    sejf otwarto — a to jest jedyna liczba, ktora tu cokolwiek znaczy.
+
     Lockbox to ostatnie `lockbox_months` miesiecy, ktorych NIE dotykamy w zadnej
     iteracji badawczej. Sluzy wylacznie do finalnej, jednorazowej weryfikacji
     kandydata. Jedno spojrzenie = zuzycie sejfu (odnotowane w rejestrze).

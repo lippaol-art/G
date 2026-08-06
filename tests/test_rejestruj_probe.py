@@ -35,14 +35,22 @@ def _licznik(total=0, by=None, sharpes=None, history=None) -> dict:
     }
 
 
+KARTA_ZAMROZONA = "# H017\n\nSHA zamrozenia: abc1234def5678\n"
+
+
 @pytest.fixture
 def licznik(tmp_path, monkeypatch):
-    """Podstawia licznik na plik tymczasowy i udaje czyste drzewo."""
+    """Podstawia licznik i katalog kart na tymczasowe, udaje czyste drzewo."""
     import scripts.rejestruj_probe as rp
 
     plik = tmp_path / "trial_counter.json"
     plik.write_text(json.dumps(_licznik()), encoding="utf-8")
+    karty = tmp_path / "hypotheses"
+    karty.mkdir()
+    for nazwa in ("H017", "B06"):
+        (karty / f"{nazwa}.md").write_text(KARTA_ZAMROZONA, encoding="utf-8")
     monkeypatch.setattr(rp, "LICZNIK", plik)
+    monkeypatch.setattr(rp, "KARTY", karty)
     monkeypatch.setattr(rp, "stan_drzewa", lambda: "")
     monkeypatch.setattr(rp, "_git", lambda *a: "0" * 40)
     return plik
@@ -119,32 +127,53 @@ class TestOdmowy:
         assert d["total_trials"] == 1
         assert d["trial_sharpes_daily"] == [-0.08]
 
-    def test_jedenasty_wariant_karty_przerywa(self, tmp_path, monkeypatch):
-        import scripts.rejestruj_probe as rp
-
-        plik = tmp_path / "c.json"
-        plik.write_text(json.dumps(_licznik(total=10, by={"H017": 10})))
-        monkeypatch.setattr(rp, "LICZNIK", plik)
-        monkeypatch.setattr(rp, "stan_drzewa", lambda: "")
-        monkeypatch.setattr(rp, "_git", lambda *a: "0" * 40)
-
+    def test_jedenasty_wariant_karty_przerywa(self, licznik, monkeypatch):
+        licznik.write_text(json.dumps(_licznik(total=10, by={"H017": 10})),
+                           encoding="utf-8")
         with pytest.raises(SystemExit) as e:
             _uruchom(ARGS, monkeypatch)
         assert "10" in str(e.value)
-        assert json.loads(plik.read_text())["total_trials"] == 10
+        assert json.loads(licznik.read_text())["total_trials"] == 10
 
-    def test_limit_partii_przerywa(self, tmp_path, monkeypatch):
-        import scripts.rejestruj_probe as rp
-
-        plik = tmp_path / "c.json"
-        plik.write_text(json.dumps(_licznik(total=40, by={"H099": 9})))
-        monkeypatch.setattr(rp, "LICZNIK", plik)
-        monkeypatch.setattr(rp, "stan_drzewa", lambda: "")
-        monkeypatch.setattr(rp, "_git", lambda *a: "0" * 40)
-
+    def test_limit_partii_przerywa(self, licznik, monkeypatch):
+        licznik.write_text(json.dumps(_licznik(total=40, by={"H099": 9})),
+                           encoding="utf-8")
         with pytest.raises(SystemExit) as e:
             _uruchom(ARGS, monkeypatch)
         assert "partia" in str(e.value)
+
+    def test_karta_nieistniejaca_przerywa(self, licznik, monkeypatch):
+        """Proba bez karty to backtest bez pre-rejestracji."""
+        with pytest.raises(SystemExit) as e:
+            _uruchom(["--karta", "H999", "--sr-dzienny", "0.03",
+                      "--opis", "x"], monkeypatch)
+        assert "nie ma karty" in str(e.value)
+        assert json.loads(licznik.read_text())["total_trials"] == 0
+
+    def test_karta_pending_przerywa(self, licznik, monkeypatch, tmp_path):
+        """Niezamrozona karta moze zostac dopasowana do wyniku PO jego
+        zobaczeniu — a caly aparat DSR zaklada, ze bylo odwrotnie."""
+        (tmp_path / "hypotheses" / "H017.md").write_text(
+            "# H017\n\nSHA zamrozenia: PENDING\n", encoding="utf-8")
+        with pytest.raises(SystemExit) as e:
+            _uruchom(ARGS, monkeypatch)
+        assert "PENDING" in str(e.value)
+        assert json.loads(licznik.read_text())["total_trials"] == 0
+
+    def test_karta_bez_pola_sha_przerywa(self, licznik, monkeypatch, tmp_path):
+        (tmp_path / "hypotheses" / "H017.md").write_text(
+            "# H017\n\nkarta bez pola\n", encoding="utf-8")
+        with pytest.raises(SystemExit) as e:
+            _uruchom(ARGS, monkeypatch)
+        assert "SHA zamrozenia" in str(e.value)
+
+    def test_sha_zamrozenia_zapisany_osobno_od_sha_kodu(self, licznik, monkeypatch):
+        """Te dwa moga sie roznic i wtedy roznica sama jest informacja:
+        o ile kod wyprzedzil specyfikacje, przeciw ktorej wynik ma byc wazny."""
+        _uruchom([*ARGS, "--sha", "f" * 40], monkeypatch)
+        w = json.loads(licznik.read_text())["history"][0]
+        assert w["commit"] == "f" * 40
+        assert w["sha_zamrozenia_karty"] == "abc1234def5678"
 
     def test_brak_opisu_przerywa(self, licznik, monkeypatch):
         with pytest.raises(SystemExit) as e:

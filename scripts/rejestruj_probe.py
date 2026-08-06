@@ -12,13 +12,17 @@ bo kazda kolejna edycja odbywa sie pod presja wyniku, ktory wlasnie zobaczylismy
 
 Ten skrypt zamienia dyscypline w mechanizm, ZANIM padnie pierwsza proba.
 
-CZTERY ODMOWY. Skrypt PRZERYWA, gdy:
+SZESC ODMOW. Skrypt PRZERYWA, gdy:
   1. drzewo robocze jest brudne — zapisany SHA nie identyfikowalby wtedy kodu,
      ktory da sie wynik odtworzyc; byloby to odniesienie do stanu, ktorego
      nie ma w historii,
-  2. `--sr-dzienny` wyglada na SR ROCZNY (patrz `PROG_SR_DZIENNY`),
-  3. karta przekroczylaby limit 10 wariantow,
-  4. partia przekroczylaby limit 40 wariantow.
+  2. karta nie istnieje w `hypotheses/` — proba bez karty to backtest bez
+     pre-rejestracji, czyli dokladnie to, przed czym chroni caly ten aparat,
+  3. karta nie ma SHA ZAMROZENIA albo ma `PENDING` — niezamrozona karta moze
+     zostac dopasowana do wyniku PO jego zobaczeniu,
+  4. `--sr-dzienny` wyglada na SR ROCZNY (patrz `PROG_SR_DZIENNY`),
+  5. karta przekroczylaby limit 10 wariantow,
+  6. partia przekroczylaby limit 40 wariantow.
 
 Uruchomienie:
     python3 scripts/rejestruj_probe.py --karta H017 --sr-dzienny 0.031 \
@@ -33,12 +37,21 @@ from __future__ import annotations
 import argparse
 import datetime as dt
 import json
+import re
 import subprocess
 import sys
 from pathlib import Path
 
 KORZEN = Path(__file__).resolve().parent.parent
 LICZNIK = KORZEN / "validation" / "trial_counter.json"
+KARTY = KORZEN / "hypotheses"
+
+#: Znacznik zamrozenia karty. `PENDING` przed freeze; po zamrozeniu pelny SHA.
+#: Ten sam wzorzec czyta `scripts/waliduj_karte.py` — jedno miejsce prawdy
+#: o formacie, zeby linter i rejestrator nie rozjechaly sie interpretacja.
+WZORZEC_SHA = re.compile(
+    r"SHA\s+zamro[żz]enia\s*[:|]\s*[`*]*\s*(PENDING|[0-9a-f]{7,40})",
+    re.IGNORECASE)
 
 #: SR DZIENNY, nie roczny — najczestszy blad implementacji DSR (poprawka A2-4
 #: z audytu 2). SR dzienny 0.5 to po annualizacji ~7.9, czyli wartosc, ktorej
@@ -55,6 +68,28 @@ def _git(*args: str) -> str:
 def stan_drzewa() -> str:
     """Zwraca pusty napis, gdy drzewo czyste; inaczej liste zmian."""
     return _git("status", "--porcelain")
+
+
+def sha_zamrozenia(karta: str) -> str:
+    """Zwraca SHA zamrozenia karty albo przerywa z powodem.
+
+    Rejestracja proby przeciw karcie NIEZAMROZONEJ jest bez wartosci: karte
+    da sie wtedy dopasowac do wyniku po jego zobaczeniu, a caly aparat DSR
+    zaklada, ze specyfikacja byla ustalona WCZESNIEJ.
+    """
+    plik = KARTY / f"{karta}.md"
+    if not plik.exists():
+        sys.exit(f"STOP: nie ma karty {plik}. Proba bez "
+                 "karty to backtest bez pre-rejestracji — czyli dokladnie to, "
+                 "przed czym chroni caly ten aparat.")
+    m = WZORZEC_SHA.search(plik.read_text(encoding="utf-8"))
+    if m is None:
+        sys.exit(f"STOP: karta {karta} nie ma pola `SHA zamrozenia`. "
+                 "Uruchom `python3 scripts/waliduj_karte.py` i uzupelnij karte.")
+    if m.group(1).upper() == "PENDING":
+        sys.exit(f"STOP: karta {karta} ma `SHA zamrozenia: PENDING` — nie jest "
+                 "zamrozona. Zamroz ja (wpisz SHA commita) PRZED pierwsza proba.")
+    return m.group(1)
 
 
 def wczytaj() -> dict:
@@ -94,6 +129,7 @@ def main() -> int:
                    help="Sharpe DZIENNY tej proby (nie roczny!)")
     p.add_argument("--opis", help="co dokladnie testowano — jednym zdaniem")
     p.add_argument("--raport", help="sciezka raportu z ta proba")
+    p.add_argument("--sha", help="commit kodu, ktory dal ten wynik (domyslnie HEAD)")
     p.add_argument("--benchmark", action="store_true",
                    help="uruchomienie z parametrami z literatury: NIE zuzywa proby")
     p.add_argument("--pokaz", action="store_true", help="tylko stan licznika")
@@ -119,7 +155,10 @@ def main() -> int:
                  "niezacommitowanych zmianach wskazywalby stan, ktorego nie ma "
                  "w historii. Zacommituj i uruchom ponownie.")
 
-    # --- odmowa 2: SR roczny podany jako dzienny --------------------------
+    # --- odmowy 2 i 3: karta istnieje i JEST ZAMROZONA --------------------
+    sha_karty = sha_zamrozenia(args.karta)
+
+    # --- odmowa 4: SR roczny podany jako dzienny --------------------------
     if abs(args.sr_dzienny) > PROG_SR_DZIENNY:
         sys.exit(f"STOP: |SR| = {abs(args.sr_dzienny):.3f} przekracza "
                  f"{PROG_SR_DZIENNY} i wyglada na SR ROCZNY. DSR wymaga SR "
@@ -134,13 +173,13 @@ def main() -> int:
             sys.exit("STOP: `benchmarks_excluded` jest False, wiec benchmark "
                      "zuzywa probe — nie wolno go rejestrowac tym trybem.")
     else:
-        # --- odmowa 3: limit na karte -------------------------------------
+        # --- odmowa 5: limit na karte -------------------------------------
         if zuzyte + 1 > r["max_variants_per_hypothesis"]:
             sys.exit(f"STOP: karta {args.karta} zuzyla juz {zuzyte} z "
                      f"{r['max_variants_per_hypothesis']} wariantow. Limit nie "
                      "jest preferencja — przy 30 wariantach certyfikacji nie "
                      "przechodzi nawet strategia o Sharpe 1.5 (tabela 6.5).")
-        # --- odmowa 4: limit na partie ------------------------------------
+        # --- odmowa 6: limit na partie ------------------------------------
         if dane["total_trials"] + 1 > r["max_variants_per_batch"]:
             sys.exit(f"STOP: partia zuzyla {dane['total_trials']} z "
                      f"{r['max_variants_per_batch']} prob. Zamknij partie "
@@ -152,7 +191,11 @@ def main() -> int:
         "opis": args.opis,
         "sr_dzienny": args.sr_dzienny,
         "benchmark": bool(args.benchmark),
-        "commit": _git("rev-parse", "HEAD"),
+        "commit": args.sha or _git("rev-parse", "HEAD"),
+        # SHA zamrozenia karty zapisany OSOBNO od SHA kodu: te dwa moga sie
+        # roznic i wtedy roznica sama w sobie jest informacja — ile kod
+        # wyprzedzil specyfikacje, przeciw ktorej wynik ma byc wazny.
+        "sha_zamrozenia_karty": sha_karty,
         "raport": args.raport,
     }
     dane["history"].append(wpis)
