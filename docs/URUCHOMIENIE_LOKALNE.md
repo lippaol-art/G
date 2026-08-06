@@ -207,6 +207,36 @@ Zakup może ruszyć **bez kolejnej decyzji**, gdy wszystkie są spełnione:
 **Istnienie pliku nie jest dowodem kompletności.** Ta reguła powstała po tym,
 jak przerwany transfer zostawił obciętą sesję, która parsowała się bez błędu.
 
+### 8.1 Kopia zapasowa — obowiązkowa po KAŻDYM zakupie danych
+
+Surowe pliki `.dbn.zst` są **poza repozytorium** i nie chroni ich żadna historia
+gita. Miesięczna próbka MBO kosztuje ~78 USD odtworzenia; skopiowanie jej na
+drugi nośnik kosztuje kilka minut. Ta asymetria zamyka dyskusję.
+
+Bezpośrednio po zakończeniu pobierania, przed jakąkolwiek analizą:
+
+```powershell
+robocopy "C:\ProjektG_dane" "E:\kopia_projektg" /MIR /R:2 /W:5 /LOG+:"E:\kopia_projektg\robocopy.log"
+```
+
+- `/MIR` odwzorowuje strukturę razem z katalogiem `manifests\` — **manifest bez
+  danych i dane bez manifestu są warte tyle samo, czyli niewiele**, bo bez SHA
+  nie da się potwierdzić, że plik jest tym, za który się podaje;
+- `/R:2 /W:5` zamiast domyślnych stu prób — awaria nośnika ma być widoczna od razu,
+  a nie po godzinie ponawiania;
+- `E:` to przykład. Warunek jest jeden: **inny nośnik fizyczny**. Kopia na tym
+  samym dysku chroni przed skasowaniem pliku, a nie przed awarią dysku.
+
+Weryfikacja kopii — porównanie SHA, nie rozmiaru:
+
+```powershell
+Get-FileHash "E:\kopia_projektg\d5b2_mbo\*.dbn.zst" -Algorithm SHA256 |
+  Select-Object Hash, Path
+```
+
+Zgodność z wartościami w `manifests\manifest_d5b2.json` jest jedynym dowodem, że
+kopia jest kopią. Równy rozmiar pliku nim nie jest.
+
 ---
 
 ## 9. Czego nie robimy po przeniesieniu

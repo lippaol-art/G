@@ -357,6 +357,26 @@ baseline i wymaga wersji w `golden/ZMIANY.md`.
 **Decyzja odroczona świadomie.** Nie podejmować przed werdyktem D5-B2 — migracja
 historii w trakcie otwartego etapu badawczego to ryzyko bez terminu.
 
+### G6 — ⏸️ ODROCZONE: bramka 5.6 na każdym pushu każdej gałęzi
+
+**Fakt, zweryfikowany w `.github/workflows/ci.yml`:** wyzwalacz to
+`push: branches: ["**"]`, a krok „Bramka silnika na realnych danych" przepuszcza
+2 551 265 barów przez pętlę Pythona. Biegnie to przy **każdym** pushu, także przy
+commicie zmieniającym wyłącznie dokumentację.
+
+Możliwa zmiana: szybka ścieżka (linter, typy, testy, strażnicy) na gałęziach
+roboczych, pełna bramka na `pull_request` i na gałęzi domyślnej.
+
+**Nie zmieniamy tego bez zgody właściciela** i nie jest to kwestia poprawności,
+tylko kosztu czasu CI. Argument przeciw zmianie jest realny: bramka 5.6 to
+kryterium GO/NO-GO całego projektu, a każde okno, w którym nie biegnie, jest oknem,
+w którym regresja może wjechać na gałąź niezauważona. Przy obecnej skali projektu
+(jeden autor, kilka pushów dziennie) koszt jest do zniesienia, a pewność ma wartość.
+
+**Warunek, gdyby decyzja zapadła:** `scripts/check_all.sh` musi dalej odpowiadać
+CI krok w krok — z jawnym rozróżnieniem, który zestaw kroków dotyczy gałęzi,
+a który PR-a. Rozjazd między bramką lokalną a CI czyni bramkę bezużyteczną.
+
 ---
 
 ## Jak używać tego rejestru
