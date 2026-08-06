@@ -3,7 +3,14 @@
 **Ten dokument jest napisany dla sesji, która nie widziała poprzedniej rozmowy.**
 Kontener jest efemeryczny, więc wszystko potrzebne do kontynuacji jest tutaj i w repo.
 
-Data: 31.07.2026 · Branch: `claude/financial-market-strategy-8mb1y1` · PR #4
+Data: 06.08.2026 · Branch: `claude/financial-market-strategy-8mb1y1` · PR #4
+
+> **Reguła utrzymania tego pliku.** HANDOFF jest aktualizowany w TYM SAMYM commicie,
+> który zmienia stan projektu — nie „przy okazji", nie później. Ten plik przez pięć dni
+> twierdził, że Etap 1 jest zablokowany przez politykę sieciową, w czasie gdy dane były
+> już w repozytorium, a Gen1 zamknięta. Nieaktualny HANDOFF jest gorszy niż jego brak:
+> świeża sesja Claude'a zaczyna od niego i pójdzie „odblokowywać" rozwiązany problem
+> albo powtórzy zamknięte badanie.
 
 ---
 
@@ -14,117 +21,121 @@ Nasdaq-100). Dokument założycielski `docs/PLAN.pdf` (49 stron, wersja 1.1 po c
 niezależnych audytach zewnętrznych) jest **jedynym źródłem prawdy** — kod ma go realizować,
 a nie odwrotnie.
 
-Gotowe: fundament repo, rdzeń silnika backtestowego, komplet aparatu walidacyjnego,
-strażnicy niezmienników, CI. **233 testy zielone, pokrycie 90%, ruff czysty.**
+Gotowe: fundament repo, silnik backtestowy, komplet aparatu walidacyjnego, strażnicy
+niezmienników, CI, golden baseline. **531 testów zielonych, pokrycie 92%, ruff i mypy czyste.**
+Dane rynkowe są w repozytorium (MNQ/NQ/ES, bary M1, 2019–2026). Bramka silnika z PLAN
+rozdz. 5.6 zaliczona na pełnych 2 551 265 barach.
 
-Niegotowe i zablokowane: **pobranie danych rynkowych (Etap 1)**. Bez nich nie da się
-uruchomić ani jednego badania.
+Zamknięte: **Gen1 — wszystkie 16 hipotez odrzucone w pre-flightach.** Wniosek przekrojowy:
+bary M1 przewidują amplitudę, nie kierunek. **Licznik prób nadal wynosi 0** — ani jedna
+karta nie doszła do backtestu, bo żadna nie przeszła taniej bramki wstępnej. To jest wynik
+poprawny, nie porażka procesu.
 
-| Commit | Zawartość |
-|--------|-----------|
-| `78b864d` | Dokument v1.1 po audytach (49 stron) |
-| `8626064` | Etap 0 + rdzeń silnika (sessions, costs, backtest) + DSR, power |
-| `2a743a2` | Strażnicy niezmienników + CI |
-| *(ten)* | Framework walidacji + roll, features, metrics, loader + ten dokument |
+Trwa: **D5 — audyt wykonalności mechanizmu przepływu agresywnego** na danych MBO.
+Stan i najbliższy krok: sekcja 4.
 
 ---
 
-## 2. BLOKER: dostęp sieciowy do Databento
+## 2. Sieć i klucz API — stan faktyczny
 
-### Objaw
-
-```
-$ curl -u "$DATABENTO_API_KEY:" https://hist.databento.com/v0/metadata.list_datasets
-curl: (56) CONNECT tunnel failed, response 403
-```
-
-### Co już sprawdzono
-
-- `$HTTPS_PROXY/__agentproxy/status` pokazuje wpisy `connect_rejected` dla
-  `hist.databento.com:443` z komentarzem *„gateway answered 403 to CONNECT
-  (policy denial or upstream failure)"*.
-- PyPI działa normalnie (HTTP 200) — blokada dotyczy **konkretnie hosta Databento**,
-  nie sieci w ogóle.
-- Właściciel projektu dodał domenę do allow-listy środowiska **w trakcie poprzedniej sesji**,
-  ale 403 utrzymał się. Polityka egress jest wiązana przy starcie sesji, więc zmiana
-  **wymaga nowej sesji**, żeby zadziałać.
-
-### Weryfikacja jedną komendą
+**Blokera sieciowego nie ma.** `hist.databento.com` odpowiada 200. Historyczny opis blokady
+z 31.07.2026 usunięty, bo opisywał stan nieistniejący. Weryfikacja jedną komendą:
 
 ```bash
 curl -sS --max-time 20 -o /dev/null -w "%{http_code}\n" \
   -u "$DATABENTO_API_KEY:" https://hist.databento.com/v0/metadata.list_datasets
 ```
 
-`200` = odblokowane, można ruszać z Etapem 1. `000` z błędem 56 = nadal zablokowane.
+Gdyby kiedykolwiek wróciło 403/407: to **odmowa polityki organizacji**, nie awaria.
+`/root/.ccr/README.md` mówi wprost — zgłosić, nie obchodzić. Nie ponawiać w pętli, nie szukać
+innego hosta, nie wyłączać weryfikacji TLS.
 
-### Czego NIE robić
+**Klucz API: rotacja nadal zalecana, świadomie odłożona przez właściciela.** Pierwszy klucz
+przeszedł przez transkrypt rozmowy. Ryzyko jest ograniczone (odczyt danych, koszt limitowany
+kredytami), więc nie jest to bloker — ale rekomendacja pozostaje otwarta i nie wolno jej
+uznać za zamkniętą bez decyzji właściciela.
 
-- **Nie ponawiać** odmów polityki w pętli. Dokumentacja proxy (`/root/.ccr/README.md`) mówi
-  wprost: odmowy 403/407 należy zgłaszać, nie obchodzić. Dwie próby wystarczą do
-  stwierdzenia stanu.
-- **Nie szukać obejść** (inny host, tunel, wyłączenie weryfikacji TLS). To naruszenie
-  polityki organizacji, a nie problem techniczny do rozwiązania.
+Niezmiennie obowiązuje:
 
-### Jeśli nadal zablokowane
-
-Alternatywa całkowicie omijająca problem: właściciel pobiera dane lokalnie u siebie
-(ten sam skrypt `scripts/build_dataset.py`) i wgrywa gotowe pliki parquet do `data/clean/`.
-Reszta pipeline'u działa bez zmian.
-
----
-
-## 3. Klucz API — obowiązkowa rotacja
-
-Poprzedni klucz został wklejony do czatu, więc **znajduje się w transkrypcie rozmowy**.
-Traktuj go jako spalony.
-
-1. Wygeneruj **nowy** klucz w panelu Databento, stary unieważnij.
-2. Przekaż go jako **sekret środowiska**, nie przez czat — przetrwa restart kontenera,
-   co przy projekcie wieloletnim ma realne znaczenie.
-3. Kod czyta wyłącznie `os.environ["DATABENTO_API_KEY"]`. Nigdzie nie ma wartości domyślnej
-   i nie wolno jej dodawać.
-4. `.gitignore` blokuje `.env*`, `data/raw/`, `*.dbn`. Strażnik
-   `tests/test_guards.py::TestSecrets` skanuje repo pod kątem wzorców kluczy, a CI robi to
-   samo na **całej historii gita**.
+1. Klucz czytany **wyłącznie** z `os.environ["DATABENTO_API_KEY"]`. Nigdzie nie ma wartości
+   domyślnej i nie wolno jej dodawać.
+2. `.gitignore` blokuje `.env*`, `data/raw/`, `*.dbn`.
+3. Strażnik `tests/test_guards.py::TestSecrets` skanuje repo pod kątem wzorców kluczy,
+   a CI robi to samo na **całej historii gita** — łącznie z komunikatami commitów.
 
 ---
 
-## 4. Etap 1 krok po kroku
+## 3. Gdzie leżą dane
 
-```bash
-# 0. Sprawdź, czy sieć odblokowana (patrz sekcja 2)
+| Co | Gdzie | Uwaga |
+|---|---|---|
+| Bary M1 MNQ/NQ/ES, kontrakt ciągły | `data/clean/*.parquet` | **w repozytorium**, wersjonowane |
+| Kalendarze: wyniki, makro, warstwa K6 | `data/clean/*.csv`, `data/clean/k6/` | w repozytorium |
+| Surowe MBO / trades (`*.dbn.zst`) | **poza repozytorium** | `.gitignore`; ścieżkę wskazuje `PROJECT_G_DATA_ROOT` |
+| Manifesty zakupów surowych | `PROJECT_G_DATA_ROOT/manifests/` | poza repo, bo dotyczą plików spoza repo |
 
-# 1. Klucz w środowisku
-export DATABENTO_API_KEY="db-..."
+`engine/paths.py` jest jedynym miejscem, które rozstrzyga te ścieżki. `raw_dir()` honoruje
+`PROJECT_G_DATA_ROOT`; `clean_dir()` **zawsze** zostaje w repo, bo od niego zależy golden
+baseline. Konfiguracja maszyny lokalnej: `docs/URUCHOMIENIE_LOKALNE.md`.
 
-# 2. Zależności
-pip install -e '.[dev,data]'
+Każdy wydany dolar jest w `data/KOSZTY.md`, łącznie z ponownymi naliczeniami — duplikacja ma
+tam własną pozycję i nie wolno jej chować w sumie zbiorczej.
 
-# 3. NAJPIERW szacunek kosztu — nigdy nie pobieraj w ciemno
-python3 scripts/build_dataset.py --estimate-only
+---
+
+## 4. Najbliższy krok: D5-B2
+
+### Skąd się wziął ten etap
+
+Gen1 wyczerpała to, co da się zobaczyć w barach M1. D5 pyta o mechanizm głębszy: czy
+**przepływ agresywny** (kto inicjuje transakcje) niesie informację o przyszłości, a nie tylko
+o sobie samym. To wymaga danych MBO — drogich, więc kupowanych etapami, z limitem zamrożonym
+w commicie **sprzed** zakupu.
+
+### Przebyta droga — i dlaczego warto ją znać
+
+| Etap | Wynik | Lekcja |
+|---|---|---|
+| D5-A | GO | mechanizm w ogóle mierzalny |
+| D5-B (schemat `trades`) | ~~GO~~ → **INCONCLUSIVE** | obliczenia były poprawne, **interpretacja nie**: `sequence` to numer wiadomości CME, nie identyfikator zdarzenia dopasowania. Potwierdzone oficjalnie przez Databento (`docs/D5_PYTANIE_DATABENTO.md`). Werdykt cofnięty, historia nieusunięta. |
+| D5-C (jeden dzień MBO) | **GO** | znaleziona kanoniczna jednostka: **akcja agresywna per Trade**, po `order_id`. 842 757 zdarzeń rozliczonych, **0 niewyjaśnionych**. |
+| Dry run D5-B2 | **8/8 niezmienników** | rekonstrukcja działa: 903 116 akcji na 2026-07-30 |
+| Test 1 i 2 na maszynie lokalnej | **zgodne co do liczby** | laboratorium jest przenośne; trzy błędy cross-platform wyszły dopiero tam |
+
+**Uwaga o F_LAST, która kosztowała cofnięcie werdyktu raz i nie może kosztować drugi.**
+Koperta `F_LAST` **nie jest** jednostką obserwacji — 2,4% kopert zawiera co najmniej dwóch
+agresorów. Jednostką jest akcja agresywna przypisana **per Trade**. Reguły są zamrożone
+w `docs/D5_ETAP4_SPEC.md` §1 i zaimplementowane w `engine/mbo_events.py`.
+
+### Co zrobić teraz — dokładnie
+
+```powershell
+git pull --ff-only
+
+# 1. Wycena bez zakupu. Metadane są darmowe.
+python scripts/fetch_d5b2_month.py --wycena
+
+# 2. Zakup, dopiero gdy wycena zmieści się w limicie 82,00 USD
+python scripts/fetch_d5b2_month.py
 ```
 
-Oczekiwany koszt: **25–60 USD** za MNQ + NQ, OHLCV-1m, od 2019-04-14 (start produktu MNQ)
-do dziś. Nowe konto Databento ma **125 USD kredytów startowych**, więc praktyczny koszt
-tej fazy wynosi zero. Jeśli szacunek wychodzi radykalnie wyżej — zatrzymaj się i zapytaj
-właściciela, coś jest nie tak z parametrami zapytania.
+Oczekiwane: ~**75,01 USD** za 21 sesji. **2026-07-30 jest już kompletna i musi zostać
+pominięta** — inaczej naliczy się trzeci raz. Skrypt sprawdza to sam (`kompletny()`:
+obecność + niezerowy rozmiar + parsowalność + zgodność liczby rekordów).
 
-```bash
-# 4. Pobranie
-python3 scripts/build_dataset.py
+**Po błędzie pobierania skrypt NIE ponawia automatycznie i to jest celowe.** Pobieranie jest
+płatne i tworzy plik; ślepe ponowienie grozi podwójnym naliczeniem i cichym zostawieniem
+obciętej sesji, która parsuje się bez błędu. Sprawdź stan pliku i uruchom skrypt ponownie —
+sesje kompletne zostaną pominięte bez kosztu.
 
-# 5. Czyszczenie i budowa kontraktu ciągłego  (DO NAPISANIA — patrz sekcja 6)
-# 6. Sanity-report                            (DO NAPISANIA — patrz sekcja 6)
+Po zakupie: kopia zapasowa surowego MBO na drugi dysk. Odtworzenie kosztuje ~78 USD,
+skopiowanie kosztuje nic.
 
-# 7. Commit oczyszczonych danych
-git add data/clean/*.parquet data/manifest.md
-git commit -m "data: MNQ+NQ OHLCV-1m 2019-2026, kontrakt ciągły"
-```
+### Potem: bramka GO/NO-GO
 
-**Do `data/manifest.md` wpisz obowiązkowo:** zakres dat, wersję schematu dostawcy, datę
-pobrania i sumy kontrolne. Databento zmienił normalizację `GLBX.MDP3` w lipcu 2026 —
-bez przypiętej wersji nie odtworzysz później, na czym liczone były wyniki.
+Rekonstrukcja akcji sesja po sesji → okna 60-sekundowe po `ts_recv` → model z **sześcioma
+progami z §8 specyfikacji, zamrożonymi przed zobaczeniem wyniku**. Wynik jest naprawdę
+nieznany. Przy NO-GO licznik prób zostaje na zerze i to też jest wynik.
 
 ---
 
@@ -145,9 +156,6 @@ Liczby: `reports/engine_gate.md` (odtworzenie: `python3 scripts/engine_gate_repo
 | **Symetria** — odwrócenie long↔short na strategii losowej | wynik lustrzany przed kosztami | błąd w obsłudze jednej ze stron | rozjazd **dokładnie 0.0 USD** na 1 980 transakcjach |
 | **Determinizm** — dwa przebiegi z tym samym ziarnem | wyniki bitowo identyczne | nieziarnowana losowość gdzieś w ścieżce | identyczny SHA-256 listy transakcji; inne ziarno → inny wynik (kontrola) |
 
-Testy `@pytest.mark.needs_data` odblokowują się automatycznie, gdy istnieje
-`data/clean/mnq_1m_cont.parquet`.
-
 **Uwaga o ujemnym odchyleniu w teście zerowej przewagi.** Wynik lekko ujemny jest
 POŻĄDANY i nie wolno go „naprawiać". Rozbicie w `reports/engine_gate.md` pokazuje
 źródła: 0.9% transakcji wychodzi jako `stop_gap` (open bara już poza stopem — realny
@@ -156,70 +164,74 @@ dotknięcie. Dodatnie t byłoby alarmem; ujemne o tej wielkości jest projektem.
 
 ---
 
-## 6. Czego jeszcze nie ma w kodzie
+## 6. Golden baseline — kontrola, której nie ma w CI
 
-| Element | Uwagi |
-|---------|-------|
-| Kalendarz zdarzeń makro | PLAN rozdz. 4.5. Scraping do `data/clean/events.csv`. |
-| Warstwa danych K6 | PLAN rozdz. 4.7 — ES, wagi NDX, ceny after-hours megacapów. Potrzebna dopiero do partii 2. |
+`golden/baseline.json` (obecnie **v14**) zamraża wyniki liczbowe projektu. CI go nie
+uruchamia, bo w CI nie ma danych rynkowych — jest to więc jedyna kontrola wychwytująca
+**niezamierzoną zmianę wyników po refaktorze**, i działa tylko lokalnie:
 
----
+```bash
+bash scripts/check_all.sh          # pełna bramka, w tym baseline
+bash scripts/check_all.sh --szybko # bez bramki 5.6 i bez baseline
+```
 
-## 7. Pierwsze zadanie badawcze po danych
+`scripts/check_all.sh` jest kanoniczną bramką i **musi odpowiadać `.github/workflows/ci.yml`
+krok w krok**. Powstał po tym, jak push z błędami mypy przeszedł lokalnie, bo uruchomiłem
+ruff i testy, a mypy pominąłem. Każda zmiana w workflow wymaga zmiany tam — i odwrotnie.
 
-**Test zaniku dryfu nocnego.** Rozstrzyga los karty H004 i jest tani — kilkadziesiąt minut.
-
-Zewnętrzne badania (cytowane w audycie oryginalności) wskazują, że dryf overnight na
-indeksach US wygasł po 2020 roku: ~3.7% rocznie w latach 1998–2020 wobec wartości bliskiej
-zeru w 2021–2025. **Nie przyjmujemy tego na wiarę ani nie odrzucamy** — sprawdzamy na
-własnych danych:
-
-1. Dekompozycja zwrotów close→open rok po roku, 2019–2026, z przedziałami ufności.
-2. Porównanie z zwrotami wewnątrzsesyjnymi (open→close).
-3. Wynik → `hypotheses/REGISTRY.md`, sekcja wniosków przekrojowych.
-
-- **Dryf obecny w ostatnich latach** → H004 wchodzi do badań z pytaniem o warunkowość reżimową.
-- **Dryf wygasł** → H004 schodzi do benchmarków, a my mamy własny, policzony dowód zaniku
-  znanego efektu i nie budujemy na nim niczego.
-
-Potem: **partia 0** (uruchomienie benchmarków B01–B04 z parametrami z literatury — nie zużywają
-licznika prób), następnie **partia 1** (H011, H005, H010).
+Historia zmian baseline'u wraz z uzasadnieniem każdej: `golden/ZMIANY.md`. Baseline ma
+rozdzielone `hash_danych` i `hash_wynikow`, żeby zmiana danych nie maskowała zmiany logiki.
 
 ---
 
-## 8. Zasady, których nie wolno naruszyć
+## 7. Zasady, których nie wolno naruszyć
 
-1. **Limit 10 wariantów na hipotezę.** Nie jest to preferencja stylistyczna, tylko wynik
-   tabeli wykonalności DSR: przy 30 wariantach certyfikacji nie przechodzi nawet strategia
-   o Sharpe 1.5. Licznik w `validation/trial_counter.json` jest wspólny dla całego projektu.
+1. **Limit 10 wariantów na hipotezę.** Nie preferencja stylistyczna, tylko wynik tabeli
+   wykonalności DSR: przy 30 wariantach certyfikacji nie przechodzi nawet strategia o Sharpe
+   1.5. Licznik w `validation/trial_counter.json` jest wspólny dla całego projektu.
 2. **Test oryginalności przed testem statystycznym.** Każda karta musi mieć nazwany publiczny
    benchmark i nazwaną **różnicę mechanizmu** (nie parametrów) — inaczej schodzi do benchmarków
    zanim spali choć jedną próbę. PLAN rozdz. 8.4.
 3. **Zero syntetycznych danych w badaniach.** Ręcznie budowane bary w testach jednostkowych to
    fixture'y i są w porządku; żaden wniosek o rynku nie może pochodzić z danych innych niż realne.
-4. **Nie uruchamiaj eksploracji, zanim testy silnika z sekcji 5 nie są zielone.**
-5. **Wyniki „zbyt piękne" traktuj jako objaw błędu.** Profit factor powyżej 2 przy strategii
+4. **Zakaz strojenia pod wynik docelowy (R2).** Żadnej zmiany specyfikacji ani parametru po
+   zobaczeniu P&L, jeśli motywem jest zbliżenie się do 1–2% miesięcznie.
+5. **Każde nowe płatne źródło (R1)** wymaga: uzasadnienia, oszacowania kosztu, sprawdzenia
+   darmowej alternatywy i **zgody właściciela**. Limit zamrożony w commicie sprzed zakupu (R4).
+6. **Wyniki „zbyt piękne" traktuj jako objaw błędu.** Profit factor powyżej 2 przy strategii
    intraday — protokół nakazuje najpierw szukać buga, dopiero potem się cieszyć.
    `engine/metrics.py` ma flagę `Metrics.suspicious`.
+7. **Nie ponawiaj automatycznie płatnych pobrań.** Metadane są darmowe i idempotentne —
+   te ponawiamy. Pobranie tworzy plik i obciąża konto — tu decyduje człowiek.
 
 ---
 
-## 9. Mapa repozytorium
+## 8. Mapa repozytorium
 
 ```
 docs/PLAN.pdf            ŹRÓDŁO PRAWDY — 49 stron, czytaj przed zmianami w kodzie
+docs/D5_ETAP4_SPEC.md    zamrożona specyfikacja bieżącego etapu
+docs/SYNTEZA_GEN1.md     dlaczego wszystkie 16 kart Gen1 upadło
+docs/URUCHOMIENIE_LOKALNE.md   konfiguracja maszyny właściciela
 hypotheses/REGISTRY.md   katalog hipotez, pamięć instytucjonalna, stan każdej karty
 HANDOFF.md               ten dokument
+data/KOSZTY.md           każdy wydany dolar, łącznie z duplikacjami
 
 engine/
-  sessions.py    segmentacja doby w ET, DST, kalendarz CME, klasyfikacja luk
-  costs.py       koszty i poślizg (baza 2.20 USD RT, skalowanie zmiennością)
-  backtest.py    rozstrzyganie wewnątrzbarowe (tabela 5.4), warstwa ryzyka
-  guards.py      HistoryView (blokada lookaheadu), zakaz volume==0, rozdzielenie serii
-  roll.py        rolowanie wolumenowe, back-adjust różnicowy, px_raw/px_adj
-  features.py    ATR, VWAP, percentyle, poziomy referencyjne (tylko na px_raw)
-  metrics.py     PF, Sharpe + poprawka Lo, Sortino, MDD, MAR, SQN, koncentracja
-  loader.py      GRANICA — wymaga danych w data/clean/
+  sessions.py       segmentacja doby w ET, DST, klasyfikacja luk
+  cme_calendar.py   kalendarz CME z opublikowanych REGUŁ, zweryfikowany na danych
+  costs.py          koszty i poślizg (baza 2.20 USD RT, skalowanie zmiennością)
+  backtest.py       rozstrzyganie wewnątrzbarowe (tabela 5.4), warstwa ryzyka
+  guards.py         HistoryView (blokada lookaheadu), zakres wartości, rozdzielenie serii
+  roll.py           rolowanie wolumenowe, back-adjust różnicowy, px_raw/px_adj
+  features.py       ATR, VWAP, percentyle, poziomy referencyjne (tylko na px_raw)
+  metrics.py        PF, Sharpe + poprawka Lo, Sortino, MDD, MAR, SQN, koncentracja
+  dataset.py        pipeline raw -> clean
+  loader.py         GRANICA — wymaga danych w data/clean/
+  databento_io.py   granica metadane/pobieranie; BRAK ponawiania pobrań jest celowy
+  mbo_events.py     kanoniczna jednostka D5-B2 (akcja agresywna per Trade)
+  paths.py          PROJECT_G_DATA_ROOT; clean_dir() zawsze w repo
+  macro.py, earnings.py, equities.py, ndx_sensitivity.py    warstwa zdarzeń i K6
 
 validation/
   dsr.py         Deflated Sharpe Ratio, SR₀ wg FST, N_eff przez ONC
@@ -229,24 +241,42 @@ validation/
   pbo.py         Probability of Backtest Overfitting (bramka < 0.20)
   spa.py         test SPA Hansena
   montecarlo.py  permutacja, bootstrap blokowy BCa, syntetyki
-  trial_counter.json   globalny licznik prób
+  trial_counter.json   globalny licznik prób — nadal 0
 
-scripts/build_dataset.py   pobranie danych (czeka na odblokowanie sieci)
-tests/                     233 testy, w tym regresja na liczbach z PLAN.pdf
+scripts/fetch_d5b2_month.py   NASTĘPNY KROK: zakup 21 sesji MBO
+scripts/check_all.sh          kanoniczna bramka lokalna = CI + golden baseline
+tests/                        531 testów, w tym regresja na liczbach z PLAN.pdf
 ```
 
 ---
 
-## 10. Jak zacząć następną sesję
+## 9. Jak zacząć następną sesję
 
 ```bash
-git pull
+git pull --ff-only
 cat HANDOFF.md                      # ten plik
 cat hypotheses/REGISTRY.md          # co żyje, co umarło, jakie wnioski
 cat validation/trial_counter.json   # budżet prób
-PYTHONPATH=. pytest -q              # czy wszystko nadal zielone
-
-# sprawdź bloker sieciowy (sekcja 2) i jeśli 200 — ruszaj z sekcją 4
+cat data/KOSZTY.md                  # ile już wydano i na co
+bash scripts/check_all.sh --szybko  # czy wszystko nadal zielone
 ```
 
-Opis PR #4 zawiera bieżący status projektu i jest aktualizowany po każdej sesji roboczej.
+Potem sekcja 4 — najbliższy krok. Opis PR #4 zawiera bieżący status projektu.
+
+---
+
+## 10. Czego świadomie NIE robimy
+
+Spisane, żeby kolejna sesja nie „ulepszała" rzeczy zamrożonych celowo:
+
+- **Nie rozbijamy `engine/backtest.py`.** Kolejność operacji w barze **jest** specyfikacją
+  (PLAN tabela 5.4); refaktor kosmetyczny grozi cichą zmianą wyników.
+- **Nie ruszamy zamrożonych skryptów Gen1.** Ich wyniki są w rejestrze i mają być odtwarzalne.
+- **Nie rozbudowujemy aparatu walidacyjnego.** DSR/PBO/CPCV/SPA są gotowe *przed* badaniami,
+  nie po — to była świadoma kolejność i jest zrealizowana.
+- **Nie optymalizujemy `mbo_events.py` przed testem miesięcznym.** Specyfikacja jest zamrożona,
+  dry run przeszedł. Gdyby kiedyś optymalizować — z wymogiem **bitowej identyczności** wyników
+  na 2026-07-30.
+- **Nie kupujemy danych na zapas.** Dane kupuje się dopiero, gdy zamrożona karta ich żąda.
+
+Wąskim gardłem projektu jest procedura i dane, nie kod.

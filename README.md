@@ -16,9 +16,13 @@ niezależnych audytach zewnętrznych.
 |------|--------|
 | Dokument założycielski v1.1 | ✅ zrobione |
 | Etap 0 — fundament repo | ✅ zrobione |
-| Etap 2 — silnik i aparat walidacyjny | ✅ kompletny: 233 testy, pokrycie 90% |
-| Etap 1 — pobranie danych | ⛔ **zablokowane**: host `hist.databento.com` odrzucany przez politykę egress. Procedura wznowienia: **[HANDOFF.md](HANDOFF.md)** |
-| Etap 3 — fabryka hipotez | oczekuje na dane |
+| Etap 1 — dane rynkowe | ✅ MNQ/NQ/ES, bary M1 2019–2026, w `data/clean/` |
+| Etap 2 — silnik i aparat walidacyjny | ✅ kompletny: **531 testów, pokrycie 92%**, bramka 5.6 zaliczona |
+| Gen1 — 16 hipotez na barach M1 | ✅ zamknięta: **wszystkie odrzucone w pre-flightach**. Wniosek: M1 przewiduje amplitudę, nie kierunek ([SYNTEZA_GEN1.md](docs/SYNTEZA_GEN1.md)) |
+| D5 — przepływ agresywny na danych MBO | 🔄 **w toku**: jednostka rozstrzygnięta (D5-C GO), dry run 8/8. Następny krok i bramka GO/NO-GO: **[HANDOFF.md](HANDOFF.md)** §4 |
+
+**Licznik prób: 0.** Ani jedna karta nie doszła do backtestu — każda upadła na tańszej
+bramce wstępnej. To jest wynik poprawny, a nie zaległość.
 
 ---
 
@@ -26,8 +30,12 @@ niezależnych audytach zewnętrznych.
 
 ```bash
 pip install -e '.[dev]'
-PYTHONPATH=. pytest -q
+bash scripts/check_all.sh --szybko   # linter, typy, testy, strażnicy
 ```
+
+`scripts/check_all.sh` jest **kanoniczną bramką** i odpowiada CI krok w krok. Pełny przebieg
+(bez `--szybko`) dokłada bramkę silnika na realnych danych i golden baseline — tych dwóch
+CI nie uruchamia, bo nie ma tam danych rynkowych.
 
 ### Klucz API Databento
 
@@ -35,11 +43,15 @@ Klucz czytany jest **wyłącznie ze zmiennej środowiskowej**. Nigdy nie trafia 
 
 ```bash
 export DATABENTO_API_KEY="db-..."
-python3 scripts/build_dataset.py --estimate-only   # najpierw szacunek kosztu
+python3 scripts/fetch_d5b2_month.py --wycena   # ZAWSZE najpierw wycena, nigdy zakup w ciemno
 ```
 
 `.gitignore` blokuje `.env*`, `data/raw/` i pliki `.dbn`. Skrypt failuje z czytelnym błędem,
-gdy zmiennej brak — nie ma wartości domyślnej.
+gdy zmiennej brak — nie ma wartości domyślnej. Metadane są darmowe, więc wycena nic nie
+kosztuje; pobranie obciąża konto i **nie jest nigdy ponawiane automatycznie**.
+
+Surowe pliki `.dbn.zst` żyją poza repozytorium — ścieżkę wskazuje `PROJECT_G_DATA_ROOT`
+(patrz [`docs/URUCHOMIENIE_LOKALNE.md`](docs/URUCHOMIENIE_LOKALNE.md)).
 
 ---
 
@@ -54,7 +66,13 @@ engine/          rdzeń silnika backtestowego
   roll.py        rolowanie wolumenowe, back-adjust różnicowy, px_raw/px_adj
   features.py    ATR, VWAP, percentyle, poziomy referencyjne (tylko px_raw)
   metrics.py     PF, Sharpe + poprawka Lo, Sortino, MDD, MAR, SQN, koncentracja
+  dataset.py     pipeline raw -> clean
   loader.py      GRANICA — wymaga danych w data/clean/
+  cme_calendar.py    kalendarz CME z opublikowanych reguł, zweryfikowany na danych
+  databento_io.py    granica metadane/pobieranie; brak ponawiania pobrań jest celowy
+  mbo_events.py      kanoniczna jednostka D5-B2 (akcja agresywna per Trade)
+  paths.py           PROJECT_G_DATA_ROOT; clean_dir() zawsze w repo
+  macro.py, earnings.py, equities.py, ndx_sensitivity.py   zdarzenia i warstwa K6
 
 validation/      aparat statystyczny
   dsr.py         Deflated Sharpe Ratio, SR₀ wg FST, N_eff przez klastrowanie ONC
@@ -70,10 +88,14 @@ hypotheses/
   REGISTRY.md    katalog hipotez: benchmarki, przeformułowane, kandydaci
 
 scripts/
-  build_dataset.py     pobranie danych (czeka na odblokowanie sieci)
+  check_all.sh           kanoniczna bramka lokalna = CI + golden baseline
+  fetch_d5b2_month.py    zakup 21 sesji MBO — bieżący krok
+  golden_baseline.py     zamrożenie wyników liczbowych projektu
 
+golden/          baseline v14 + ZMIANY.md z uzasadnieniem każdej zmiany
+data/KOSZTY.md   każdy wydany dolar, łącznie z ponownymi naliczeniami
 tests/           pytest — w tym regresja na liczbach opublikowanych w PLAN.pdf
-docs/            dokument założycielski (HTML + PDF)
+docs/            dokument założycielski (HTML + PDF) i specyfikacje etapów
 ```
 
 ---
