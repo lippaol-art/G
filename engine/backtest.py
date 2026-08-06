@@ -244,7 +244,8 @@ def is_ambiguous(pos: Position, bar: Bar) -> bool:
         return False
     long = pos.side == "long"
     sl_touched = (bar.low <= pos.sl) if long else (bar.high >= pos.sl)
-    tp_touched = (bar.high >= pos.tp + 0.25) if long else (bar.low <= pos.tp - 0.25)
+    tp_touched = ((bar.high >= pos.tp + TICK_SIZE) if long
+                  else (bar.low <= pos.tp - TICK_SIZE))
     return bool(sl_touched and tp_touched)
 
 

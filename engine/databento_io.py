@@ -116,12 +116,31 @@ def metadane_dzielone(
     `get_billable_size` (int) — wszystkie sa addytywne.
     """
     czesci = list(_kawalki(start, end, minut))
+    if not czesci:
+        raise ValueError(f"{opis}: pusty zakres {start}..{end} — nie ma czego "
+                         "wyceniac; sprawdz kolejnosc granic")
     suma: float = 0
     for i, (a, b) in enumerate(czesci, start=1):
         v = metadane_z_ponowieniem(fn, start=a, end=b, odstepy=odstepy,
                                    opis=f"{opis} [{i}/{len(czesci)}]", **kwargs)
+        # KAWALEK UJEMNY NIE ISTNIEJE. Liczba rekordow, bajtow i koszt sa
+        # nieujemne z definicji, wiec wartosc ujemna oznacza, ze `fn` nie jest
+        # tym, czym myslimy — sumowanie jej dalej ukryloby blad w totalu.
+        if v < 0:
+            raise ValueError(f"{opis}: kawalek {i}/{len(czesci)} ({a}..{b}) "
+                             f"zwrocil {v} — wartosc ujemna jest niemozliwa")
         suma += v
         if postep:
             print(f"  {opis} {a[11:]}-{b[11:]}: {v:,}" if isinstance(v, int)
                   else f"  {opis} {a[11:]}-{b[11:]}: {v:.4f}", flush=True)
+    # ZERO W SUMIE TO ALARM, NIE WYNIK. Wywolujemy to wylacznie dla sesji,
+    # o ktorych z gory wiadomo, ze sa handlowe — zero oznacza wiec zly symbol,
+    # zly zbior albo zakres poza dostepnoscia danych, a nie "tania sesja".
+    # Bez tej kontroli blad objawilby sie jako ZANIZONA wycena, czyli w strone,
+    # ktora przepuszcza zakup przez limit kosztu zamiast go zatrzymac.
+    if suma <= 0:
+        raise ValueError(f"{opis}: suma {len(czesci)} kawalkow wynosi {suma} "
+                         f"dla zakresu {start}..{end}. Sesja handlowa nie moze "
+                         "byc pusta — sprawdz symbol, zbior i dostepnosc danych "
+                         "ZANIM cokolwiek kupisz.")
     return suma

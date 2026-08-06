@@ -158,3 +158,46 @@ class TestDzielenie:
                                  end="2026-07-30T14:30", minut=30,
                                  odstepy=(0,))
         assert suma == 20, "dwa kawalki po 10, mimo jednej nieudanej proby"
+
+
+class TestKontrolaWyceny:
+    """Wycena moze sie mylic tylko W GORE.
+
+    Kazdy blad przepuszczony przez te funkcje objawia sie jako ZANIZONY koszt,
+    czyli w strone, ktora przepuszcza zakup przez limit zamiast go zatrzymac.
+    Dlatego zero i wartosc ujemna sa tu bledem, a nie wynikiem.
+    """
+
+    def test_suma_zero_jest_bledem_nie_wynikiem(self):
+        from engine.databento_io import metadane_dzielone
+
+        with pytest.raises(ValueError, match="nie moze"):
+            metadane_dzielone(lambda **kw: 0, start="2026-07-30T13:30",
+                              end="2026-07-30T14:30", minut=30)
+
+    def test_pojedynczy_kawalek_ujemny_przerywa(self):
+        from engine.databento_io import metadane_dzielone
+
+        # Suma wyszlaby dodatnia (10 - 5 + 10 = 15) i przeszlaby kontrole
+        # totalu — dlatego kazdy kawalek jest sprawdzany OSOBNO.
+        wartosci = iter([10, -5, 10])
+
+        with pytest.raises(ValueError, match="ujemna"):
+            metadane_dzielone(lambda **kw: next(wartosci),
+                              start="2026-07-30T13:30", end="2026-07-30T15:00",
+                              minut=30)
+
+    def test_pusty_zakres_przerywa(self):
+        from engine.databento_io import metadane_dzielone
+
+        with pytest.raises(ValueError, match="pusty zakres"):
+            metadane_dzielone(lambda **kw: 100, start="2026-07-30T14:00",
+                              end="2026-07-30T13:00", minut=30)
+
+    def test_poprawna_wycena_nadal_przechodzi(self):
+        from engine.databento_io import metadane_dzielone
+
+        # Straznik nie moze blokowac przypadku, dla ktorego funkcja istnieje.
+        suma = metadane_dzielone(lambda **kw: 0.2766, start="2026-07-30T13:30",
+                                 end="2026-07-30T20:00", minut=30)
+        assert suma == pytest.approx(3.5958, abs=1e-4)

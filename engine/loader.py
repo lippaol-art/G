@@ -2,11 +2,12 @@
 
 =========================================================================
 GRANICA PROJEKTU: ten modul jest jedynym, ktorego NIE DA SIE uruchomic bez
-realnych danych rynkowych w data/clean/. Kod jest gotowy; testy funkcjonalne
-sa oznaczone `@pytest.mark.needs_data` i pomijane do czasu pobrania danych.
+realnych danych rynkowych w data/clean/. Testy funkcjonalne sa oznaczone
+`@pytest.mark.needs_data` i odblokowuja sie same, gdy pliki sa na miejscu.
 
-Stan na 31.07.2026: host hist.databento.com odrzucany przez polityke egress
-srodowiska (403 na CONNECT). Procedura odblokowania: patrz HANDOFF.md.
+Dane sa w repozytorium od Etapu 1 — marker `needs_data` nie jest juz wiec
+pomijany w normalnym przebiegu. Zostaje, bo wyznacza prawdziwa granice
+zaleznosci modulu i nie zniknie razem z konkretnym kompletem plikow.
 =========================================================================
 
 Zasada niezmienniczosci: pliki w data/clean/ sa ARTEFAKTAMI WERSJONOWANYMI.
