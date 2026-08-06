@@ -199,13 +199,39 @@ Zakup może ruszyć **bez kolejnej decyzji**, gdy wszystkie są spełnione:
   SHA-256, wynik parsowania, status kompletności,
 - **żadnego ślepego automatycznego retry po błędzie 504** — najpierw sprawdzić,
   czy powstał plik kompletny czy częściowy, i ponawiać **wyłącznie** brakującą
-  lub uszkodzoną sesję. Inaczej ryzykujemy podwójne naliczenie kosztu,
-- downloader odmawia kontynuacji, gdy: suma wycen przekroczy 82 USD, zabraknie
-  miejsca, istniejący plik nie przejdzie kontroli kompletności, zakres różni
-  się od manifestu albo parser zgłosi brak oczekiwanych rekordów lub granic.
+  lub uszkodzoną sesję. Inaczej ryzykujemy podwójne naliczenie kosztu.
 
 **Istnienie pliku nie jest dowodem kompletności.** Ta reguła powstała po tym,
 jak przerwany transfer zostawił obciętą sesję, która parsowała się bez błędu.
+
+### Siedem warunków odmowy — ta sama numeracja co w skrypcie
+
+Lista poniżej odpowiada docstringowi `scripts/fetch_d5b2_month.py` i komunikatom
+`STOP (warunek N)` **co do numeru**. To jest inna lista niż §7: tam są warunki
+**zgody właściciela** na zakup, tu **odmowy skryptu** w trakcie pracy.
+
+| # | Skrypt przerywa, gdy |
+|---|---|
+| 1 | wolne miejsce na starcie < 100 GB |
+| 2 | suma wycen 22 sesji > 82,00 USD |
+| 3 | zapytanie lub okna sesji różnią się od manifestu poprzedniego uruchomienia |
+| 4 | `2026-07-30` trafiła na listę zakupową (bez `--kup-ponownie-d5c`) |
+| 5 | wolne miejsce spadło poniżej 20 GB w trakcie pobierania |
+| 6 | **pobrana** sesja nie przeszła kontroli kompletności |
+| 7 | `2026-07-30` ma SHA-256 inny niż `data/manifest_d5c.json` |
+
+**Czego skryptu na tej liście NIE ma — i to jest celowe.** Niekompletny plik
+**istniejący przed uruchomieniem** nie przerywa pracy: zostaje skasowany
+i pobrany raz jeszcze, co **kosztuje** cenę tej sesji. Gdyby przerywał, jedna
+obcięta sesja blokowałaby cały miesiąc. Odmowa nr 6 dotyczy sesji niekompletnej
+**po** pobraniu — to znaczy, że coś jest nie tak z zapytaniem i dalsze wydawanie
+pieniędzy nie ma sensu.
+
+**Wznowienie nie jest darmowe dla sesji przerwanej w locie.** Sesje już
+kompletne są pomijane bez kosztu, ale sesja, której pobieranie przerwano,
+zostanie naliczona ponownie — Databento liczy za zrealizowane zapytanie, nie za
+odebrane bajty. Precedens: D5-B, sesja 2026-07-07, pozycja „duplikacja"
+w `data/KOSZTY.md`.
 
 ### 8.1 Kopia zapasowa — obowiązkowa po KAŻDYM zakupie danych
 

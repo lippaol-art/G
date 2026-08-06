@@ -208,6 +208,28 @@ class TestDokumentacjaZgodnaZKodem:
             f"docstring deklaruje {sorted(zadeklarowane)}, kod implementuje "
             f"{sorted(zaimplementowane)}")
 
+    def test_dokumentacja_ma_te_sama_numeracje_co_kod(self):
+        """Trzecie zrodlo numeracji: URUCHOMIENIE_LOKALNE §8.
+
+        Rozjazd miedzy docstringiem a dokumentacja zglaszany dwa razy z rzedu
+        (raz odsylacz do zlej sekcji, raz nieaktualny opis warunku). Reczne
+        pilnowanie trzech list nie dziala.
+
+        UWAGA: §7 to inna lista — osiem WARUNKOW ZGODY wlasciciela, wlasna
+        numeracja. Test celowo czyta wylacznie tabele odmow z §8.
+        """
+        doc = (KORZEN / "docs" / "URUCHOMIENIE_LOKALNE.md").read_text(
+            encoding="utf-8")
+        poczatek = doc.find("Siedem warunków odmowy")
+        assert poczatek > 0, "brak tabeli odmow w URUCHOMIENIE_LOKALNE"
+        ogon = doc[poczatek:]
+        koniec = ogon.find("**Czego skryptu")
+        w_dok = set(re.findall(r"^\| (\d) \| ", ogon[:koniec], re.MULTILINE))
+        w_docstring = set(re.findall(r"^  (\d)\. ", f.__doc__ or "", re.MULTILINE))
+        assert w_dok == w_docstring, (
+            f"URUCHOMIENIE_LOKALNE §8 wymienia {sorted(w_dok)}, docstring "
+            f"{sorted(w_docstring)}")
+
     def test_jedna_numeracja_w_calym_pliku(self):
         """Komunikat o miejscu na dysku mowil kiedys 'Warunek 4 z listy zgody',
         a docstring numerowal go inaczej — dwie numeracje w jednym pliku."""

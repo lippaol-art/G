@@ -3,8 +3,9 @@
 
 DZIEN PO DNIU, ZE WZNOWIENIEM, DO `PROJECT_G_DATA_ROOT`.
 
-SZESC WARUNKOW ODMOWY, jedna numeracja — ta sama w docstringu, w komunikatach
-bledow i w `docs/URUCHOMIENIE_LOKALNE.md` §7. Skrypt PRZERYWA, gdy:
+SIEDEM WARUNKOW ODMOWY, jedna numeracja — ta sama w docstringu i w kazdym
+komunikacie `STOP (warunek N)`; jej odpowiednik w dokumentacji to
+`docs/URUCHOMIENIE_LOKALNE.md` §8. Skrypt PRZERYWA, gdy:
 
   1. wolne miejsce na starcie jest mniejsze niz `MIN_WOLNE_GB`,
   2. suma wycen 22 sesji przekroczy `LIMIT_USD`,
@@ -13,7 +14,15 @@ bledow i w `docs/URUCHOMIENIE_LOKALNE.md` §7. Skrypt PRZERYWA, gdy:
   4. sesja `SESJA_D5C` mialaby zostac kupiona ponownie — bez jawnego
      `--kup-ponownie-d5c`,
   5. wolne miejsce spadnie ponizej `REZERWA_GB` w trakcie pobierania,
-  6. pobrana sesja nie przejdzie kontroli kompletnosci.
+  6. pobrana sesja nie przejdzie kontroli kompletnosci,
+  7. plik `SESJA_D5C` ma SHA-256 inny niz `data/manifest_d5c.json` — czyli ma
+     poprawna liczbe rekordow, ale NIE jest tym plikiem, na ktorym policzono
+     audyt Etapu 3.
+
+UWAGA NA DWIE ROZNE LISTY. Powyzsza numeracja opisuje ODMOWY SKRYPTU. Lista
+w `URUCHOMIENIE_LOKALNE.md` §7 to co innego — osiem WARUNKOW ZGODY wlasciciela
+na zakup, z wlasna numeracja, spelnianych czesciowo poza skryptem (CI zielone,
+zgodnosc lokalnego D5-C). Nie mieszac ich ze soba.
 
 CZEGO SKRYPT NIE ROBI, CHOC MOZNA BY TAK PRZECZYTAC.
 Niekompletny plik ISTNIEJACY PRZED URUCHOMIENIEM **nie** przerywa pracy:
@@ -217,7 +226,7 @@ def sprawdz_sha_d5c(p: Path) -> str:
         return "SHA: manifest kanoniczny bez pola sha256 — pomijam"
     faktyczny = sha_pliku(p)
     if faktyczny != oczekiwany:
-        sys.exit(f"\nSTOP: {SESJA_D5C} ma SHA-256 inny niz kanoniczny.\n"
+        sys.exit(f"\nSTOP (warunek 7): {SESJA_D5C} ma SHA-256 inny niz kanoniczny.\n"
                  f"  plik      : {p}\n  faktyczny : {faktyczny}\n"
                  f"  kanoniczny: {oczekiwany}\n"
                  "Liczba rekordow sie zgadza, ale to NIE jest ten plik, na "
@@ -393,8 +402,11 @@ def main() -> int:
     udane = sum(1 for w in wyniki if w["kompletny"])
     print("\n" + "=" * 64)
     print(f"  pobrano kompletnych : {udane} z {len(do_pobrania)}")
+    # `koszt_dokladny`, nie `koszt_usd` — ta sama podstawa co naglowek
+    # `koszt do zaplaty teraz`. Dwie sumy tej samej rzeczy roznily sie
+    # o 0,0001 USD tylko dlatego, ze jedna sumowala pozycje zaokraglone.
     print(f"  wydano teraz        : "
-          f"{sum(w['koszt_usd'] for w in wyniki if w['kompletny']):.4f} USD")
+          f"{sum(w['koszt_dokladny'] for w in wyniki if w['kompletny']):.4f} USD")
     print(f"  wolne po            : {wolne_gb(kat):.1f} GB")
     print(f"-> {cel}")
     return 0 if udane == len(do_pobrania) else 1
