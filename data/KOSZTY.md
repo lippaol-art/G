@@ -62,7 +62,7 @@ z konta i dlatego stoi tu osobno.
 
 | Pozycja | Koszt | Status |
 |---|---|---|
-| MBO, pozostałe **21 sesji** RTH lipca 2026 | **75,0083 USD** | Test 1 i Test 2 ✅ zaliczone lokalnie. Został **ostatni warunek: ponowna wycena ≤ 82 USD** bezpośrednio przed zakupem. |
+| MBO, pozostałe **21 sesji** RTH lipca 2026 | **75,0083 USD** | ✅ Wycena z 06.08.2026: **78,6044 USD za 22 sesje** (limit 82,00). Po pominięciu kompletnej 2026-07-30 do zapłaty **75,0083 USD**. Wszystkie warunki zgody spełnione. |
 | Cała miesięczna próbka MBO (22 sesje) | 78,6044 USD | limit zamrożony: **82,00 USD** |
 
 Miesięczny downloader **musi wykryć 2026-07-30 jako kompletną i ją pominąć** —

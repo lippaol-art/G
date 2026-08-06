@@ -66,6 +66,11 @@ REZERWA_GB = 20.0
 MIN_WOLNE_GB = 100.0
 
 KATALOG = "d5b2_mbo"
+#: Sesja kupiona wczesniej w ramach D5-C — lezy W INNYM KATALOGU, pod ta sama
+#: nazwa pliku. Bez tego wpisu skrypt jej nie widzi i proponuje zakup 22 sesji
+#: zamiast 21, czyli TRZECIE naliczenie tej samej doby (3,5961 USD).
+#: Wykryte przy wycenie, zanim cokolwiek kupiono.
+KATALOG_D5C = "d5c_mbo"
 MANIFEST = "manifest_d5b2.json"
 
 
@@ -77,8 +82,32 @@ def okno(sesja: str) -> tuple[str, str]:
     return a.strftime("%Y-%m-%dT%H:%M"), b.strftime("%Y-%m-%dT%H:%M")
 
 
-def sciezka(sesja: str) -> Path:
-    return raw_dir(KATALOG, f"mnq_mbo_rth_{sesja}.dbn.zst")
+def nazwa_pliku(sesja: str) -> str:
+    return f"mnq_mbo_rth_{sesja}.dbn.zst"
+
+
+def sciezka_docelowa(sesja: str) -> Path:
+    """Dokad POBIERAMY. Zawsze wlasny katalog — nigdy cudzy.
+
+    Rozdzielenie od `sciezka_istniejaca` jest celowe i pilnuje go test.
+    Gdyby pobieranie moglo trafic do `d5c_mbo/`, niekompletne pobranie
+    skasowaloby kanoniczny plik D5-C, na ktorym opiera sie caly audyt Etapu 3.
+    """
+    return raw_dir(KATALOG, nazwa_pliku(sesja))
+
+
+def sciezka_istniejaca(sesja: str) -> Path:
+    """Gdzie plik LEZY, jesli w ogole lezy.
+
+    Sesja 2026-07-30 zostala kupiona w ramach D5-C i zapisana w `d5c_mbo/`
+    pod ta sama nazwa. Szukanie wylacznie we wlasnym katalogu znaczyloby, ze
+    skrypt jej nie widzi i proponuje ja kupic po raz trzeci.
+    """
+    for katalog in (KATALOG, KATALOG_D5C):
+        p = raw_dir(katalog, nazwa_pliku(sesja))
+        if p.exists():
+            return p
+    return sciezka_docelowa(sesja)
 
 
 def sciezka_manifestu() -> Path:
@@ -146,13 +175,16 @@ def main() -> int:
     # ------------------------------------------------ stan przed zakupem --
     juz_mamy, do_pobrania, koszt_do_zaplaty = [], [], 0.0
     for w in plan:
-        ok, powod = kompletny(sciezka(w["sesja"]), w["rekordow"])
+        p = sciezka_istniejaca(w["sesja"])
+        ok, powod = kompletny(p, w["rekordow"])
         if ok:
             juz_mamy.append(w["sesja"])
+            print(f"  MAM {w['sesja']}: {powod} ({p.parent.name}) — pomijam, "
+                  f"oszczednosc {w['koszt_usd']:.4f} USD")
         else:
             do_pobrania.append(w)
             koszt_do_zaplaty += w["koszt_usd"]
-            if sciezka(w["sesja"]).exists():
+            if p.exists():
                 print(f"  UWAGA {w['sesja']}: plik istnieje, ale {powod}")
 
     print(f"\nkompletnych juz na dysku : {len(juz_mamy)}")
@@ -171,7 +203,7 @@ def main() -> int:
     wyniki = []
     for i, w in enumerate(do_pobrania, start=1):
         s = w["sesja"]
-        out = sciezka(s)
+        out = sciezka_docelowa(s)
 
         wolne = wolne_gb(kat)
         if wolne < REZERWA_GB:
