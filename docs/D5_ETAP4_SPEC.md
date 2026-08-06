@@ -82,6 +82,40 @@ tych wariantów** — byłyby to warianty wybrane przed kartą.
 Obserwacja **brakująca**, nie zerowy zwrot. Łączenie przez `inner`, bez
 uzupełniania zerami.
 
+### 2.3 Sesja skrócona — 2026-07-03 (uzupełnienie *ex ante*, 06.08.2026)
+
+**Zapisane PRZED pobraniem miesiąca i przed jakąkolwiek analizą.** Powód
+zapisania teraz jest ten sam, dla którego istnieje cała ta specyfikacja: reguła
+ustalona po zobaczeniu wyniku nie jest regułą, tylko wyborem.
+
+**Fakt.** 4 lipca 2026 wypada w sobotę, więc 3 lipca jest dniem handlowym
+z zamknięciem **13:00 ET**. Potwierdzone dwustronnie: `cme_calendar(2026, 2026)`
+zwraca dla tej daty `short_day` i `close_time = 13:00`, a darmowa wycena
+Databento daje **2 660 629 rekordów** wobec ~35 mln typowych dla pełnej sesji.
+
+**Konsekwencja mechaniczna.** Okno RTH specyfikacji to 09:30–16:00, czyli
+390 okien 60-sekundowych. Dla 2026-07-03 około **180 z nich nie będzie miało
+ani jednej transakcji**, bo rynek jest zamknięty.
+
+**Rozstrzygnięcia, wszystkie bez zmiany progów z §5:**
+
+1. **Zapytanie pozostaje 09:30–16:00**, jak dla każdej innej sesji. Skracanie
+   okna dla wybranych dni wprowadziłoby drugą definicję RTH w jednym miesiącu.
+   Puste godziny nie kosztują — Databento liczy za rekordy.
+2. **Okna po 13:00 są obserwacjami BRAKUJĄCYMI** — dokładnie wg §2.2, bez
+   wyjątku dla tej sesji. Zero transakcji to nie `I_count = 0`; to brak danych.
+   Wpisanie tam zera przesunęłoby rozkład `I_count` w stronę zera dla ~180
+   punktów, czyli **zaniżyłoby** zmierzoną nierównowagę.
+3. **Sesja ZOSTAJE w próbie.** Jest legalnym dniem handlowym RTH, a wykluczanie
+   sesji dlatego, że wyglądają nietypowo, jest selekcją — i to selekcją
+   dokonaną po obejrzeniu danych.
+4. **Raport musi podać liczbę okien per sesja.** Bez tej kolumny sesja wnosząca
+   210 okien zamiast 390 zniknęłaby w sumie zbiorczej. Ma być widoczna.
+
+**Czego to uzupełnienie NIE zmienia:** żadnego z sześciu progów §5, definicji
+jednostki §1, zmiennej głównej §3 ani modelu §4. Rozstrzyga wyłącznie przypadek,
+którego specyfikacja nie nazwała po imieniu.
+
 ---
 
 ## 3. Zmienna główna

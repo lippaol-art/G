@@ -325,9 +325,13 @@ To jest najczystszy przymus w całym zestawieniu — termin jest kontraktowy.
 
 ---
 
-## 6. Rodzina F — pozycje odrzucone od razu, z podaniem powodu
+## 6. Rodzina F — pozycje zamknięte na kartce
 
 Zapisane, żeby nie wracały. Odrzucenie na kartce jest najtańszą formą odrzucenia.
+
+**Cztery odrzucone (F1–F4) i jedna przypomniana (F5).** F5 NIE jest odrzucona i nie
+liczy się do odrzuconych — stoi tu wyłącznie po to, żeby lista nie sugerowała, że
+o niej zapomniano.
 
 | # | Kandydat | Powód odrzucenia |
 |---|---|---|
@@ -340,6 +344,9 @@ Zapisane, żeby nie wracały. Odrzucenie na kartce jest najtańszą formą odrzu
 ---
 
 ## 7. Podsumowanie — co z tego wynika
+
+**Bilans listy:** 16 pozycji rozpatrzonych z rubryką, 4 odrzucone na kartce (F1–F4),
+1 przypomniana bez odrzucenia (F5) — razem 21 wpisów.
 
 **Najwyższe sumy:** B1 rolka (35), C2 zmiana OI (33), A1/A3 mikrostruktura (32).
 **Poza rankingiem, ale pilne:** D3 (test ważności próby) — bo jego wynik

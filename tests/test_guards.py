@@ -312,6 +312,36 @@ class TestDocConsistency:
         assert deflated_sharpe_annualized(1.5, 1500, 5).passes
         assert not deflated_sharpe_annualized(0.8, 1500, 10).passes
 
+    def test_handoff_podaje_aktualna_liczbe_testow(self):
+        """HANDOFF musi sie zgadzac z repo — inaczej lamie wlasna regule P1.
+
+        Liczba testow w HANDOFF zdezaktualizowala sie DWA RAZY w ciagu doby
+        (531 -> 562 -> 578 -> ...), za kazdym razem cicho. Reczna dyscyplina
+        tego nie utrzyma, bo liczba zmienia sie przy kazdym dodanym tescie.
+
+        Ten straznik zamienia regule "HANDOFF aktualizuje sie w tym samym
+        commicie" z deklaracji w mechanizm: dodanie testu bez poprawienia
+        HANDOFF jest czerwone.
+
+        Liczymy FUNKCJE testowe statycznie (AST), nie przypadki zebrane przez
+        pytest — liczba przypadkow zalezy od parametryzacji i liczenie jej
+        z wnetrza przebiegu byloby rekurencyjne.
+        """
+        n = 0
+        for path in sorted((ROOT / "tests").rglob("test_*.py")):
+            drzewo = ast.parse(path.read_text(encoding="utf-8"))
+            for node in ast.walk(drzewo):
+                if (isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef)
+                        and node.name.startswith("test_")):
+                    n += 1
+
+        handoff = (ROOT / "HANDOFF.md").read_text(encoding="utf-8")
+        m = re.search(r"\*\*(\d+) funkcji testowych", handoff)
+        assert m, "HANDOFF nie podaje liczby funkcji testowych"
+        assert int(m.group(1)) == n, (
+            f"HANDOFF mowi o {m.group(1)} funkcjach testowych, a jest ich {n}. "
+            "Popraw HANDOFF W TYM SAMYM COMMICIE (regula P1 z naglowka pliku).")
+
     def test_ci_instaluje_extras_potrzebne_testom(self):
         """CI musi instalowac kazdy extras, bez ktorego test sie nie zaimportuje.
 

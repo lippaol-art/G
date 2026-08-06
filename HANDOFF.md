@@ -26,7 +26,10 @@ niezależnych audytach zewnętrznych) jest **jedynym źródłem prawdy** — kod
 a nie odwrotnie.
 
 Gotowe: fundament repo, silnik backtestowy, komplet aparatu walidacyjnego, strażnicy
-niezmienników, CI, golden baseline. **531 testów zielonych, pokrycie 92%, ruff i mypy czyste.**
+niezmienników, CI, golden baseline. **526 funkcji testowych (592 przypadki po parametryzacji), pokrycie 92%, ruff i mypy czyste.**
+Liczbę pilnuje `tests/test_guards.py::test_handoff_podaje_aktualna_liczbe_testow` —
+bez tego rotowała dwa razy w ciągu doby, co jest dokładnie tym defektem, przed
+którym ostrzega reguła na górze tego pliku.
 Dane rynkowe są w repozytorium (MNQ/NQ/ES, bary M1, 2019–2026). Bramka silnika z PLAN
 rozdz. 5.6 zaliczona na pełnych 2 551 265 barach.
 
@@ -138,14 +141,24 @@ python scripts/fetch_d5b2_month.py --wycena
 python scripts/fetch_d5b2_month.py
 ```
 
-Oczekiwane: ~**75,01 USD** za 21 sesji. **2026-07-30 jest już kompletna i musi zostać
-pominięta** — inaczej naliczy się trzeci raz. Skrypt sprawdza to sam (`kompletny()`:
-obecność + niezerowy rozmiar + parsowalność + zgodność liczby rekordów).
+Zmierzona wycena (06.08.2026): **78,6044 USD za 22 sesje** wobec limitu 82,00. Nagłówek
+`koszt do zaplaty teraz` pokaże **75,0083 USD** za 21 sesji.
+
+**2026-07-30 musi zostać pominięta** — inaczej naliczy się trzeci raz. Skrypt ma na to
+warunek 4 (twarda odmowa, gdy ta sesja trafi na listę zakupową) i weryfikuje plik nie tylko
+liczbą rekordów, ale **SHA-256 wobec `data/manifest_d5c.json`**. Zgodna liczba rekordów
+mówi tylko, że plik ma właściwą długość; SHA mówi, że to ten sam plik, na którym policzono
+audyt Etapu 3.
 
 **Po błędzie pobierania skrypt NIE ponawia automatycznie i to jest celowe.** Pobieranie jest
 płatne i tworzy plik; ślepe ponowienie grozi podwójnym naliczeniem i cichym zostawieniem
-obciętej sesji, która parsuje się bez błędu. Sprawdź stan pliku i uruchom skrypt ponownie —
-sesje kompletne zostaną pominięte bez kosztu.
+obciętej sesji, która parsuje się bez błędu.
+
+> **Wznowienie NIE jest darmowe dla sesji przerwanej w locie.** Sesje już **kompletne**
+> są pomijane bez kosztu — ale sesja, której pobieranie przerwano, zostanie naliczona
+> ponownie, bo Databento liczy za zrealizowane zapytanie, nie za odebrane bajty.
+> Precedens: D5-B, sesja 2026-07-07, pozycja „duplikacja" w `data/KOSZTY.md`.
+> Nie przerywaj pobierania bez powodu.
 
 Po zakupie: kopia zapasowa surowego MBO na drugi dysk. Odtworzenie kosztuje ~78 USD,
 skopiowanie kosztuje nic.

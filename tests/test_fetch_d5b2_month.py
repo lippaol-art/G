@@ -13,6 +13,8 @@ zakupem; kosztowaloby 3,5961 USD trzeciego naliczenia tej samej doby.
 
 from __future__ import annotations
 
+import json
+import re
 import sys
 from pathlib import Path
 
@@ -94,6 +96,124 @@ class TestKompletnosc:
         p.write_bytes(b"to nie jest DBN")
         ok, powod = f.kompletny(p, 100)
         assert not ok and "parsuje" in powod
+
+
+class TestWarunek3Manifest:
+    """Wznowienie musi dotyczyc TEGO SAMEGO zakupu.
+
+    Miesiac zlozony z dwoch roznych definicji zapytania wyglada w danych
+    dokladnie jak miesiac poprawny — nic go nie zdradzi poza manifestem.
+    """
+
+    def _manifest(self, dane, tresc):
+        p = dane.parent / "manifests" / f.MANIFEST
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_text(json.dumps(tresc), encoding="utf-8")
+        return p
+
+    def test_brak_manifestu_to_pierwsze_uruchomienie(self, dane):
+        assert "brak" in f.sprawdz_manifest([])
+
+    def test_zgodny_manifest_przechodzi(self, dane):
+        plan = [{"sesja": "2026-07-01", "start_utc": "2026-07-01T13:30",
+                 "end_utc": "2026-07-01T20:00"}]
+        self._manifest(dane, {"zapytanie": f.ZAPYTANIE, "plan": plan})
+        assert "zgodny" in f.sprawdz_manifest(plan)
+
+    def test_zmiana_zapytania_przerywa(self, dane):
+        self._manifest(dane, {"zapytanie": {**f.ZAPYTANIE, "schema": "trades"},
+                              "plan": []})
+        with pytest.raises(SystemExit) as e:
+            f.sprawdz_manifest([])
+        assert "warunek 3" in str(e.value)
+
+    def test_zmiana_okna_rth_przerywa(self, dane):
+        stary = [{"sesja": "2026-07-01", "start_utc": "2026-07-01T14:30",
+                  "end_utc": "2026-07-01T20:00"}]
+        nowy = [{"sesja": "2026-07-01", "start_utc": "2026-07-01T13:30",
+                 "end_utc": "2026-07-01T20:00"}]
+        self._manifest(dane, {"zapytanie": f.ZAPYTANIE, "plan": stary})
+        with pytest.raises(SystemExit) as e:
+            f.sprawdz_manifest(nowy)
+        assert "warunek 3" in str(e.value)
+
+
+class TestWarunek4TrzecieNaliczenie:
+    """Doba 2026-07-30 byla juz naliczona DWA razy."""
+
+    def test_sesja_d5c_na_liscie_przerywa(self):
+        with pytest.raises(SystemExit) as e:
+            f.sprawdz_sesje_d5c([{"sesja": f.SESJA_D5C}], pozwol=False)
+        assert "warunek 4" in str(e.value)
+        assert "trzeci raz" in str(e.value)
+
+    def test_jawna_zgoda_pozwala_ale_ostrzega(self, capsys):
+        f.sprawdz_sesje_d5c([{"sesja": f.SESJA_D5C}], pozwol=True)
+        assert "TRZECIE naliczenie" in capsys.readouterr().out
+
+    def test_inne_sesje_nie_sa_blokowane(self, capsys):
+        """Straznik nie moze blokowac zakupu, dla ktorego skrypt istnieje."""
+        wynik = f.sprawdz_sesje_d5c([{"sesja": "2026-07-01"},
+                                     {"sesja": "2026-07-02"}], pozwol=False)
+        assert wynik is None, "brak odmowy i brak wyjatku"
+        assert capsys.readouterr().out == "", "zadnego ostrzezenia bez powodu"
+
+
+class TestSHAKanoniczny:
+    """Zgodna liczba rekordow mowi tylko, ze plik ma wlasciwa dlugosc."""
+
+    def test_niezgodny_sha_przerywa(self, dane, monkeypatch):
+        man = dane / "kanoniczny.json"
+        man.write_text(json.dumps({"sha256": "0" * 64}), encoding="utf-8")
+        monkeypatch.setattr(f, "KANONICZNY_D5C", man)
+        plik = dane / "x.dbn.zst"
+        plik.write_bytes(b"inna zawartosc, ta sama dlugosc")
+        with pytest.raises(SystemExit) as e:
+            f.sprawdz_sha_d5c(plik)
+        assert "SHA-256" in str(e.value)
+
+    def test_zgodny_sha_przechodzi(self, dane, monkeypatch):
+        plik = dane / "x.dbn.zst"
+        plik.write_bytes(b"tresc")
+        man = dane / "kanoniczny.json"
+        man.write_text(json.dumps({"sha256": f.sha_pliku(plik)}), encoding="utf-8")
+        monkeypatch.setattr(f, "KANONICZNY_D5C", man)
+        assert "zgodny" in f.sprawdz_sha_d5c(plik)
+
+    def test_brak_manifestu_nie_przerywa(self, dane, monkeypatch):
+        monkeypatch.setattr(f, "KANONICZNY_D5C", dane / "nie_ma.json")
+        assert "pomijam" in f.sprawdz_sha_d5c(dane)
+
+    def test_sha_zgodne_z_manifestem_w_repo(self):
+        """Manifest kanoniczny musi miec pole, na ktorym stoi kontrola."""
+        d = json.loads(f.KANONICZNY_D5C.read_text(encoding="utf-8"))
+        assert d["sesja"] == f.SESJA_D5C
+        assert len(d["sha256"]) == 64
+
+
+class TestDokumentacjaZgodnaZKodem:
+    """Docstring deklarowal SIEDEM warunkow, z ktorych dwa nie istnialy.
+
+    Przyszla sesja czytajaca plik zalozylaby ochrony, ktorych nie ma — ta sama
+    klasa defektu co nieaktualny HANDOFF, tylko na sciezce wydajacej pieniadze.
+    """
+
+    def test_kazdy_warunek_z_docstringu_ma_komunikat_w_kodzie(self):
+        zrodlo = (KORZEN / "scripts" / "fetch_d5b2_month.py").read_text(
+            encoding="utf-8")
+        doc = f.__doc__ or ""
+        zadeklarowane = set(re.findall(r"^  (\d)\. ", doc, re.MULTILINE))
+        zaimplementowane = set(re.findall(r"STOP \(warunek (\d)\)", zrodlo))
+        assert zadeklarowane == zaimplementowane, (
+            f"docstring deklaruje {sorted(zadeklarowane)}, kod implementuje "
+            f"{sorted(zaimplementowane)}")
+
+    def test_jedna_numeracja_w_calym_pliku(self):
+        """Komunikat o miejscu na dysku mowil kiedys 'Warunek 4 z listy zgody',
+        a docstring numerowal go inaczej — dwie numeracje w jednym pliku."""
+        zrodlo = (KORZEN / "scripts" / "fetch_d5b2_month.py").read_text(
+            encoding="utf-8")
+        assert "z listy zgody" not in zrodlo
 
 
 class TestZamrozoneStale:
