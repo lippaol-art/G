@@ -13,6 +13,7 @@ zakupem; kosztowaloby 3,5961 USD trzeciego naliczenia tej samej doby.
 
 from __future__ import annotations
 
+import datetime as dt
 import json
 import re
 import sys
@@ -236,6 +237,62 @@ class TestDokumentacjaZgodnaZKodem:
         zrodlo = (KORZEN / "scripts" / "fetch_d5b2_month.py").read_text(
             encoding="utf-8")
         assert "z listy zgody" not in zrodlo
+
+
+class TestCacheWyceny:
+    """Cache ratuje PRZERWANY przebieg, nie zastepuje wyceny.
+
+    Powstal po awarii: 503 na 6. kawalku PIERWSZEJ sesji skasowal cala wycene
+    22 sesji (572 wywolania metadanych). Ale nie moze obchodzic reguly
+    wlasciciela "wycena bezposrednio przed pobraniem" — stad limit wieku.
+    """
+
+    def _wpis(self, godzin_temu: float) -> dict:
+        t = dt.datetime.now(dt.UTC) - dt.timedelta(hours=godzin_temu)
+        return {"koszt": 3.5, "rekordow": 100,
+                "utc": t.isoformat(timespec="seconds")}
+
+    def test_swiezy_wpis_jest_uzywany(self, dane):
+        a, b = f.okno("2026-07-01")
+        f.zapisz_cache({f.klucz_wyceny(a, b): self._wpis(1.0)})
+        c = f.wczytaj_cache()
+        assert f.klucz_wyceny(a, b) in c
+        assert c[f.klucz_wyceny(a, b)]["wiek_h"] == pytest.approx(1.0, abs=0.1)
+
+    def test_stary_wpis_jest_odrzucany(self, dane):
+        a, b = f.okno("2026-07-01")
+        f.zapisz_cache({f.klucz_wyceny(a, b): self._wpis(f.WAZNOSC_WYCENY_H + 1)})
+        assert f.wczytaj_cache() == {}, "cache starszy niz limit to brak cache"
+
+    def test_zmiana_zapytania_uniewaznia_wpis(self, dane, monkeypatch):
+        """Klucz zawiera CALE zapytanie. Gdyby zawieral same daty, zmiana
+        schematu podstawilaby ceny z innego zapytania — bez sladu."""
+        a, b = f.okno("2026-07-01")
+        stary_klucz = f.klucz_wyceny(a, b)
+        f.zapisz_cache({stary_klucz: self._wpis(1.0)})
+        monkeypatch.setattr(f, "ZAPYTANIE", {**f.ZAPYTANIE, "schema": "trades"})
+        assert f.klucz_wyceny(a, b) != stary_klucz
+        assert f.klucz_wyceny(a, b) not in f.wczytaj_cache()
+
+    def test_uszkodzony_cache_to_brak_cache(self, dane):
+        p = f.sciezka_cache()
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_text("{to nie jest JSON", encoding="utf-8")
+        assert f.wczytaj_cache() == {}, "uszkodzony cache nie moze wywracac wyceny"
+
+    def test_wpis_z_przyszlosci_jest_odrzucany(self, dane):
+        """Zegar cofniety albo plik z innej maszyny — wiek ujemny nie jest
+        dowodem swiezosci."""
+        a, b = f.okno("2026-07-01")
+        f.zapisz_cache({f.klucz_wyceny(a, b): self._wpis(-5.0)})
+        assert f.wczytaj_cache() == {}
+
+    def test_zapis_nie_utrwala_pola_pomocniczego(self, dane):
+        a, b = f.okno("2026-07-01")
+        f.zapisz_cache({f.klucz_wyceny(a, b): self._wpis(1.0)})
+        f.zapisz_cache(f.wczytaj_cache())          # round-trip
+        surowe = json.loads(f.sciezka_cache().read_text(encoding="utf-8"))
+        assert "wiek_h" not in next(iter(surowe.values()))
 
 
 class TestZamrozoneStale:

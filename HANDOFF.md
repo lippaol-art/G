@@ -26,7 +26,7 @@ niezależnych audytach zewnętrznych) jest **jedynym źródłem prawdy** — kod
 a nie odwrotnie.
 
 Gotowe: fundament repo, silnik backtestowy, komplet aparatu walidacyjnego, strażnicy
-niezmienników, CI, golden baseline. **527 funkcji testowych (593 przypadki po parametryzacji), pokrycie 92%, ruff i mypy czyste.**
+niezmienników, CI, golden baseline. **533 funkcji testowych (599 przypadków po parametryzacji), pokrycie 92%, ruff i mypy czyste.**
 Liczbę pilnuje `tests/test_guards.py::test_handoff_podaje_aktualna_liczbe_testow` —
 bez tego rotowała dwa razy w ciągu doby, co jest dokładnie tym defektem, przed
 którym ostrzega reguła na górze tego pliku.

@@ -62,11 +62,32 @@ z konta i dlatego stoi tu osobno.
 
 | Pozycja | Koszt | Status |
 |---|---|---|
-| MBO, pozostałe **21 sesji** RTH lipca 2026 | **75,0083 USD** | ✅ Wycena z 06.08.2026: **78,6044 USD za 22 sesje** (limit 82,00). Po pominięciu kompletnej 2026-07-30 do zapłaty **75,0083 USD**. Wszystkie warunki zgody spełnione. |
+| MBO, pozostałe **21 sesji** RTH lipca 2026 | **75,0083 USD** | 🔄 **W TRAKCIE.** Wycena 06.08.2026: 78,6044 USD za 22 sesje (limit 82,00); 2026-07-30 pominięta (SHA zgodny). Pobrano **3 z 21**: 2026-07-01, 07-02, 07-03 — **9,6916 USD**. Przerwane na 2026-07-06 (`Response ended prematurely`, plik częściowy 215,2 MB). |
 | Cała miesięczna próbka MBO (22 sesje) | 78,6044 USD | limit zamrożony: **82,00 USD** |
 
 Miesięczny downloader **musi wykryć 2026-07-30 jako kompletną i ją pominąć** —
 inaczej naliczyłby ją trzeci raz.
+
+---
+
+## 3a. Pozycja do wyjaśnienia — 2026-07-06
+
+| Pozycja | Kwota | Status |
+|---|---|---|
+| MBO 2026-07-06, pobranie przerwane w locie | **3,0388 USD** | ⚠️ **NIEPOTWIERDZONA** |
+
+Transfer przerwał się po 215,2 MB z ~0,7 GB (`BentoError: Response ended
+prematurely`). Plik jest niekompletny i bezużyteczny; sesja zostanie pobrana
+ponownie, co naliczy 3,0388 USD **drugi raz**.
+
+**Nie wiem, czy pierwsze, przerwane pobranie zostało naliczone.** Precedens
+z D5-B (2026-07-07) sugeruje, że tak — Databento rozlicza zrealizowane
+zapytanie, nie odebrane bajty — ale tego nie zmierzyłem i nie wolno mi tego
+podawać jako faktu. **Do sprawdzenia na stronie zużycia konta Databento.**
+
+Zgodnie z zasadą 3 tego rejestru duplikacja dostaje własną pozycję i nie
+zostaje schowana w sumie zbiorczej. Po weryfikacji: albo wpis znika, albo
+zamienia się w potwierdzoną pozycję duplikacji.
 
 ---
 

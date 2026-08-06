@@ -66,7 +66,10 @@ import databento as db
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from engine.databento_io import metadane_dzielone  # noqa: E402
+from engine.databento_io import (  # noqa: E402
+    ODSTEPY_DLUGIE,
+    metadane_dzielone,
+)
 from engine.paths import raw_dir, wolne_gb  # noqa: E402
 
 ET = ZoneInfo("America/New_York")
@@ -99,6 +102,15 @@ KATALOG_D5C = "d5c_mbo"
 #: kontrole i literal w trzech miejscach rozjechalby sie przy pierwszej zmianie.
 SESJA_D5C = "2026-07-30"
 MANIFEST = "manifest_d5b2.json"
+#: Cache wyceny. Wycena to 572 wywolania metadanych (22 sesje x 13 kawalkow
+#: x 2 zapytania) i jedno nieudane kasowalo dotad CALA prace — realnie zdarzyl
+#: sie 503 na 6. kawalku PIERWSZEJ sesji. Cache sprawia, ze ponowne
+#: uruchomienie dopytuje tylko o to, czego jeszcze nie ma.
+CACHE_WYCENY = "wycena_cache.json"
+#: Po tylu godzinach wpis w cache jest ignorowany i wyceniany od nowa.
+#: Regula wlasciciela brzmi "wycena bezposrednio przed pobraniem, nie sprzed
+#: kilku dni" — cache ma ratowac PRZERWANY przebieg, nie zastepowac wyceny.
+WAZNOSC_WYCENY_H = 12
 #: Manifest kanoniczny D5-C — sledzony w repo, zrodlo SHA-256 pierwotnego zakupu.
 KANONICZNY_D5C = Path("data/manifest_d5c.json")
 
@@ -141,6 +153,55 @@ def sciezka_istniejaca(sesja: str) -> Path:
 
 def sciezka_manifestu() -> Path:
     return raw_dir().parent / "manifests" / MANIFEST
+
+
+def sciezka_cache() -> Path:
+    return raw_dir().parent / "manifests" / CACHE_WYCENY
+
+
+def klucz_wyceny(a: str, b: str) -> str:
+    """Klucz zawiera CALE zapytanie, nie samo okno.
+
+    Gdyby zawieral tylko daty, zmiana symbolu albo schematu podstawilaby
+    ceny z innego zapytania — i to bez sladu, bo liczby wygladalyby sensownie.
+    """
+    return (f"{ZAPYTANIE['dataset']}|{','.join(ZAPYTANIE['symbols'])}"
+            f"|{ZAPYTANIE['stype_in']}|{ZAPYTANIE['schema']}|{a}|{b}")
+
+
+def wczytaj_cache() -> dict[str, dict]:
+    """Wpisy MLODSZE niz `WAZNOSC_WYCENY_H`. Starsze sa po cichu odrzucane.
+
+    Cache ratuje PRZERWANY przebieg, nie zastepuje wyceny. Regula wlasciciela
+    brzmi "wycena bezposrednio przed pobraniem" i limit wieku jest po to,
+    zeby cache jej nie obchodzil.
+    """
+    p = sciezka_cache()
+    if not p.exists():
+        return {}
+    try:
+        dane = json.loads(p.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return {}                      # uszkodzony cache to brak cache
+    teraz = dt.datetime.now(dt.UTC)
+    swieze = {}
+    for k, v in dane.items():
+        try:
+            wiek = (teraz - dt.datetime.fromisoformat(v["utc"])).total_seconds()
+        except (KeyError, TypeError, ValueError):
+            continue
+        if 0 <= wiek < WAZNOSC_WYCENY_H * 3600:
+            v["wiek_h"] = wiek / 3600
+            swieze[k] = v
+    return swieze
+
+
+def zapisz_cache(cache: dict[str, dict]) -> None:
+    p = sciezka_cache()
+    p.parent.mkdir(parents=True, exist_ok=True)
+    czyste = {k: {i: j for i, j in v.items() if i != "wiek_h"}
+              for k, v in cache.items()}
+    p.write_text(json.dumps(czyste, indent=1), encoding="utf-8", newline="\n")
 
 
 def sha_pliku(p: Path) -> str:
@@ -275,21 +336,45 @@ def main() -> int:
     # ---------------------------------------------------------- wycena ----
     print("Wycena 22 sesji (metadane darmowe, dzielone na kawalki)...\n",
           flush=True)
+    cache = wczytaj_cache()
+    if cache:
+        print(f"  (cache wyceny: {len(cache)} sesji mlodszych niz "
+              f"{WAZNOSC_WYCENY_H} h — nie odpytuje ich ponownie)\n", flush=True)
+    z_cache = 0
+
     plan = []
     suma = 0.0          # suma DOKLADNA, przed zaokragleniem pozycji
     for s in SESJE:
         a, b = okno(s)
-        bez = {k: v for k, v in ZAPYTANIE.items()}
-        k = metadane_dzielone(c.metadata.get_cost, start=a, end=b,
-                              opis=f"koszt {s}", **bez)
-        n = int(metadane_dzielone(c.metadata.get_record_count, start=a, end=b,
-                                  opis=f"rekordy {s}", **bez))
+        wpis = cache.get(klucz_wyceny(a, b))
+        if wpis is not None:
+            k, n = float(wpis["koszt"]), int(wpis["rekordow"])
+            z_cache += 1
+            print(f"  {s}  {k:7.4f} USD  {n:>12,} rek.  "
+                  f"[cache {wpis['wiek_h']:.1f} h]", flush=True)
+        else:
+            bez = {k2: v for k2, v in ZAPYTANIE.items()}
+            k = metadane_dzielone(c.metadata.get_cost, start=a, end=b,
+                                  opis=f"koszt {s}",
+                                  odstepy=ODSTEPY_DLUGIE, **bez)
+            n = int(metadane_dzielone(c.metadata.get_record_count,
+                                      start=a, end=b, opis=f"rekordy {s}",
+                                      odstepy=ODSTEPY_DLUGIE, **bez))
+            cache[klucz_wyceny(a, b)] = {
+                "koszt": k, "rekordow": n,
+                "utc": dt.datetime.now(dt.UTC).isoformat(timespec="seconds")}
+            # Zapis po KAZDEJ sesji, nie na koncu. Awaria na 6. kawalku
+            # pierwszej sesji skasowala kiedys cala wycene 22 sesji.
+            zapisz_cache(cache)
+            print(f"  {s}  {k:7.4f} USD  {n:>12,} rek.", flush=True)
         plan.append(dict(sesja=s, start_utc=a, end_utc=b,
                          koszt_usd=round(k, 4), koszt_dokladny=k, rekordow=n))
         suma += k
-        print(f"  {s}  {k:7.4f} USD  {n:>12,} rek.", flush=True)
 
     print(f"\nRAZEM 22 sesje: {suma:.4f} USD   (limit {LIMIT_USD:.2f})")
+    if z_cache:
+        print(f"  z tego {z_cache} sesji z cache (maks. {WAZNOSC_WYCENY_H} h), "
+              f"{len(SESJE) - z_cache} wycenionych teraz")
     if suma > LIMIT_USD:
         sys.exit(f"STOP (warunek 2): {suma:.4f} > {LIMIT_USD:.2f} USD — zakup "
                  "NIEWYKONANY. Zakresu ani listy sesji NIE skracamy "

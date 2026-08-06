@@ -40,6 +40,20 @@ KAWALEK_MIN = 30
 #: ktora wlasnie zglosila przeciazenie.
 ODSTEPY = (2, 5, 12, 30)
 
+#: Drabinka DLUGA — dla zapytan, ktore sa czescia dlugiej serii i ktorych
+#: pojedyncza porazka kosztuje cala dotychczasowa prace.
+#:
+#: DLACZEGO WOLNO CZEKAC TAK DLUGO. Metadane sa DARMOWE i IDEMPOTENTNE: zaden
+#: plik nie powstaje, konto nie jest obciazane, a powtorzone zapytanie zwraca
+#: to samo. Jedynym kosztem czekania jest czas. Przy 572 wywolaniach jednej
+#: wyceny miesiaca alternatywa dla czekania nie jest "szybsza porazka", tylko
+#: ponowne przejscie calej serii od zera.
+#:
+#: Powstalo po realnej awarii: 503 na 6. kawalku pierwszej sesji wyczerpal
+#: drabinke 2+5+12+30 s (~49 s) i przerwal wycene 22 sesji.
+#: Suma ponizszej: ~8,5 minuty.
+ODSTEPY_DLUGIE = (2, 5, 12, 30, 60, 120, 180, 120)
+
 
 def metadane_z_ponowieniem(
     fn: Callable[..., T],
