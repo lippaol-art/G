@@ -70,40 +70,64 @@ inaczej naliczyłby ją trzeci raz.
 
 ---
 
-## 3b. ⛔ ZAKUP WSTRZYMANY 06.08.2026 — dryf metadanych
+## 3a. Pozycje do wyjaśnienia — przerwane pobrania
+
+| Pozycja | Kwota | Status |
+|---|---|---|
+| MBO 2026-07-06, pobranie przerwane w locie | **3,0388 USD** | ⚠️ **NIEPOTWIERDZONA** |
+| MBO 2026-07-07, pobranie przerwane w locie | **≤ 4,4529 USD** | ⚠️ **NIEPOTWIERDZONA** |
+
+**2026-07-07 zgłoszona przez recenzję P1** — na dysku leży plik obcięty
+(1 867 793 z 47 432 653 rekordów, `BentoWarning: DBN file is truncated`),
+pozostałość po przerwanym przebiegu. Kwota podana jako **granica górna**
+(wycena z przebiegu #1); po korekcie metadanych może wynieść ~4,45 USD.
+Bez tej pozycji największe niepotwierdzone naliczenie byłoby poza księgą.
+
+**2026-07-06:** transfer przerwał się po 215,2 MB z ~0,7 GB (`BentoError:
+Response ended prematurely`). Obie sesje wymagają ponownego pobrania, co
+naliczy je **drugi raz**.
+
+**Nie wiem, czy przerwane pobrania zostały naliczone.** Precedens
+z D5-B (2026-07-07) sugeruje, że tak — Databento rozlicza zrealizowane
+zapytanie, nie odebrane bajty — ale tego nie zmierzyłem i nie wolno mi tego
+podawać jako faktu. **Do sprawdzenia na stronie zużycia konta Databento — spisz WSZYSTKIE
+pozycje z 6–8.08, nie tylko te dwie.**
+
+Zgodnie z zasadą 3 tego rejestru duplikacja dostaje własną pozycję i nie
+zostaje schowana w sumie zbiorczej. Po weryfikacji: albo wpisy znikają, albo
+zamieniają się w potwierdzone pozycje duplikacji.
+
+**Stan pieniędzy, uczciwie:** potwierdzone wycenami **12,7304 USD**
+(9,6916 za trzy sesje + 3,0388 za 07-06). Niepotwierdzone: **do ~7,49 USD**.
+Liczba „12,7 USD wydane" z wcześniejszego meldunku była **dolną granicą
+podaną jak stan** — poprawka z recenzji P1 przyjęta.
+
+---
+
+## 3b. ⛔ ZAKUP WSTRZYMANY 08.08.2026 — rozjazd metadanych
 
 Wycena tych samych, zamrożonych zapytań wzrosła z **78,6044** na **80,6729 USD**
 (+2,63%), bo liczba rekordów wzrosła we **wszystkich 22 sesjach**. Analiza:
 `docs/D5_DRYF_METADANYCH.md`.
 
+**Uwaga: pierwsza diagnoza („dostawca zrewidował dane") została ODRZUCONA**
+jego własnym `get_dataset_condition` — żadna sesja lipca nie była modyfikowana
+w sierpniu. Obowiązująca hipoteza: wcześniejsze wyceny mogły być **zaniżone**,
+bo powstały w czasie awarii 503/504. Jeśli tak, **pobrane pliki mogą być
+niepełne** — rozstrzyga `scripts/diag_dryf.py`, lokalnie i za darmo.
+
 Skutek dla tego rejestru: **nie da się dziś podać kosztu dokończenia zakupu**,
 bo nie wiadomo, którą wersję danych kupujemy ani czy za tydzień nie będzie
 trzeciej. Zgodnie z zasadą 4 podaję więc granicę, nie liczbę: pozostałe
-18 sesji to **≤ 68 USD** przy wycenie z 06.08.
+18 sesji to **≤ 68 USD** przy wycenie z 08.08.
+
+**Zapas do limitu topnieje.** Zamrożony limit to 82,00 USD, dzisiejsza wycena
+22 sesji 80,6729 — zostaje **1,3271 USD**. Kolejny wzrost o ~1,65% i warunek 2
+zablokuje miesiąc. To argument, żeby po odpowiedzi Databento nie zwlekać
+z decyzją — a nie żeby podnosić limit.
 
 Pobrane i opłacone do tej pory: **4 z 22 sesji**. Plików **nie kasujemy** —
 zgadzają się z liczbami, za które zapłacono.
-
----
-
-## 3a. Pozycja do wyjaśnienia — 2026-07-06
-
-| Pozycja | Kwota | Status |
-|---|---|---|
-| MBO 2026-07-06, pobranie przerwane w locie | **3,0388 USD** | ⚠️ **NIEPOTWIERDZONA** |
-
-Transfer przerwał się po 215,2 MB z ~0,7 GB (`BentoError: Response ended
-prematurely`). Plik jest niekompletny i bezużyteczny; sesja zostanie pobrana
-ponownie, co naliczy 3,0388 USD **drugi raz**.
-
-**Nie wiem, czy pierwsze, przerwane pobranie zostało naliczone.** Precedens
-z D5-B (2026-07-07) sugeruje, że tak — Databento rozlicza zrealizowane
-zapytanie, nie odebrane bajty — ale tego nie zmierzyłem i nie wolno mi tego
-podawać jako faktu. **Do sprawdzenia na stronie zużycia konta Databento.**
-
-Zgodnie z zasadą 3 tego rejestru duplikacja dostaje własną pozycję i nie
-zostaje schowana w sumie zbiorczej. Po weryfikacji: albo wpis znika, albo
-zamienia się w potwierdzoną pozycję duplikacji.
 
 ---
 

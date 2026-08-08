@@ -19,8 +19,9 @@ komunikacie `STOP (warunek N)`; jej odpowiednik w dokumentacji to
      poprawna liczbe rekordow, ale NIE jest tym plikiem, na ktorym policzono
      audyt Etapu 3,
   8. liczba rekordow w metadanych rozjechala sie z zapisana w manifescie —
-     dostawca zrewidowal dane, wiec kazdy juz oplacony plik wyglada na
-     niekompletny i skrypt kupilby caly miesiac drugi raz.
+     kazdy juz oplacony plik wyglada wtedy na niekompletny i skrypt kupilby
+     caly miesiac drugi raz. Jawna furtka: `--akceptuj-rozjazd`, ktora
+     ARCHIWIZUJE stary manifest zamiast go nadpisywac.
 
 UWAGA NA DWIE ROZNE LISTY. Powyzsza numeracja opisuje ODMOWY SKRYPTU. Lista
 w `URUCHOMIENIE_LOKALNE.md` §7 to co innego — osiem WARUNKOW ZGODY wlasciciela
@@ -229,7 +230,16 @@ def sprawdz_manifest(plan: list[dict]) -> str:
     cel = sciezka_manifestu()
     if not cel.exists():
         return "manifest: brak (pierwsze uruchomienie)"
-    stary = json.loads(cel.read_text(encoding="utf-8"))
+    try:
+        stary = json.loads(cel.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError) as e:
+        # Bez tego leci traceback tuz przed zakupem za kilkadziesiat USD.
+        # Nie zgadujemy, ze "pewnie pierwsze uruchomienie" — manifest jest
+        # jedynym zapisem tego, za co juz zaplacono.
+        sys.exit(f"STOP (warunek 3): nie moge odczytac {cel} "
+                 f"({type(e).__name__}). Manifest jest jedynym zapisem "
+                 "poprzedniego zakupu — napraw go albo usun SWIADOMIE, "
+                 "wiedzac, ze tracisz historie tego, za co zaplacono.")
 
     if stary.get("zapytanie") != ZAPYTANIE:
         sys.exit(f"STOP (warunek 3): zapytanie rozni sie od zapisanego w "
@@ -288,7 +298,23 @@ def rekordy_z_manifestu() -> dict[str, int]:
             if "rekordow" in w}
 
 
-def sprawdz_dryf_rekordow(plan: list[dict], zapisane: dict[str, int]) -> str:
+def archiwizuj_manifest() -> Path | None:
+    """Odklada kopie manifestu ze znacznikiem czasu. NIE nadpisuje niczego.
+
+    Przyjecie nowych liczb rekordow kasuje jedyny zapis tego, za co juz
+    zaplacono. Archiwum sprawia, ze decyzja jest odwracalna i zostawia slad.
+    """
+    cel = sciezka_manifestu()
+    if not cel.exists():
+        return None
+    stempel = dt.datetime.now(dt.UTC).strftime("%Y%m%dT%H%M%SZ")
+    kopia = cel.with_name(f"{cel.stem}_przed_{stempel}{cel.suffix}")
+    kopia.write_bytes(cel.read_bytes())
+    return kopia
+
+
+def sprawdz_dryf_rekordow(plan: list[dict], zapisane: dict[str, int],
+                          akceptuj: bool = False) -> str:
     """WARUNEK 8 — dostawca nie moze zmienic danych w trakcie zakupu.
 
     DLACZEGO TO JEST ODMOWA, A NIE OSTRZEZENIE.
@@ -296,7 +322,7 @@ def sprawdz_dryf_rekordow(plan: list[dict], zapisane: dict[str, int]) -> str:
     `kompletny()` porownuje plik z liczba rekordow z BIEZACEJ wyceny. Jesli
     dostawca zrewiduje dane, kazdy JUZ OPLACONY plik zaczyna wygladac na
     niekompletny — i skrypt kupilby caly miesiac po raz drugi, nie mowiac
-    o tym ani slowa. Zdarzylo sie realnie 06.08.2026: wszystkie 22 sesje
+    o tym ani slowa. Zdarzylo sie realnie 08.08.2026: wszystkie 22 sesje
     urosly o 1,67-3,06% (mediana 2,66%) miedzy dwoma uruchomieniami,
     a laczna wycena z 78,6044 na 80,6729 USD.
 
@@ -312,6 +338,24 @@ def sprawdz_dryf_rekordow(plan: list[dict], zapisane: dict[str, int]) -> str:
 
     linie = [f"    {s}: manifest {a:>12,} -> teraz {b:>12,} "
              f"({100 * (b - a) / a:+.2f}%)" for s, a, b in rozne[:8]]
+
+    if akceptuj:
+        # JAWNA, ODNOTOWANA DROGA PRZYJECIA NOWYCH LICZB. Bez niej jedynym
+        # sposobem bylaby reczna edycja albo skasowanie manifestu — czyli
+        # obejscie straznika poza protokolem, bez sladu i bez testu.
+        kopia = archiwizuj_manifest()
+        stara = sum(zapisane.get(w["sesja"], 0) for w in plan)
+        nowa = sum(w["rekordow"] for w in plan)
+        print(f"\n  AKCEPTACJA ROZJAZDU (--akceptuj-rozjazd) dla {len(rozne)} "
+              f"z {len(plan)} sesji:")
+        print("\n".join(linie), flush=True)
+        print(f"  rekordow razem : {stara:,} -> {nowa:,} "
+              f"({100 * (nowa - stara) / stara:+.2f}%)")
+        print(f"  stary manifest : {kopia if kopia else 'brak — nie bylo czego archiwizowac'}")
+        print("  Dopisz powod tej decyzji do data/KOSZTY.md — przyjecie nowych "
+              "liczb zwykle oznacza ponowne naliczenie.", flush=True)
+        return f"rozjazd PRZYJETY jawnie dla {len(rozne)} sesji"
+
     sys.exit(
         f"\nSTOP (warunek 8): dostawca zmienil dane {len(rozne)} z "
         f"{len(plan)} sesji.\n" + "\n".join(linie)
@@ -372,6 +416,9 @@ def main() -> int:
     p.add_argument("--wycena", action="store_true", help="tylko wycena")
     p.add_argument("--kup-ponownie-d5c", action="store_true",
                    help=f"pozwol kupic {SESJA_D5C} TRZECI raz (warunek 4)")
+    p.add_argument("--akceptuj-rozjazd", action="store_true",
+                   help="przyjmij nowe liczby rekordow mimo rozjazdu "
+                        "z manifestem (warunek 8); archiwizuje stary manifest")
     args = p.parse_args()
 
     c = db.Historical(os.environ["DATABENTO_API_KEY"])
@@ -433,7 +480,8 @@ def main() -> int:
                  "(specyfikacja zamrozona).")
 
     print(sprawdz_manifest(plan))
-    print(sprawdz_dryf_rekordow(plan, rekordy_z_manifestu()))
+    print(sprawdz_dryf_rekordow(plan, rekordy_z_manifestu(),
+                                akceptuj=args.akceptuj_rozjazd))
 
     # ------------------------------------------------ stan przed zakupem --
     juz_mamy, do_pobrania, koszt_do_zaplaty = [], [], 0.0

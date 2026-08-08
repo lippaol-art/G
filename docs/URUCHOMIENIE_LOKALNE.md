@@ -219,7 +219,7 @@ Lista poniżej odpowiada docstringowi `scripts/fetch_d5b2_month.py` i komunikato
 | 5 | wolne miejsce spadło poniżej 20 GB w trakcie pobierania |
 | 6 | **pobrana** sesja nie przeszła kontroli kompletności |
 | 7 | `2026-07-30` ma SHA-256 inny niż `data/manifest_d5c.json` |
-| 8 | liczba rekordów w metadanych rozjechała się z manifestem (rewizja po stronie dostawcy) |
+| 8 | liczba rekordów w metadanych rozjechała się z manifestem (jawna furtka: `--akceptuj-rozjazd`) |
 
 **Czego skryptu na tej liście NIE ma — i to jest celowe.** Niekompletny plik
 **istniejący przed uruchomieniem** nie przerywa pracy: zostaje skasowany

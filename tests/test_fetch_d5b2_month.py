@@ -163,7 +163,7 @@ class TestWarunek4TrzecieNaliczenie:
 class TestWarunek8DryfMetadanych:
     """Dostawca nie moze zmienic danych w trakcie zakupu.
 
-    06.08.2026 wszystkie 22 sesje urosly o 1,67-3,06% miedzy dwoma
+    08.08.2026 wszystkie 22 sesje urosly o 1,67-3,06% miedzy dwoma
     uruchomieniami. Kazdy oplacony plik zaczal wygladac na niekompletny
     i skrypt zaproponowal zakup calego miesiaca DRUGI RAZ za 80,67 USD.
     Zatrzymal go warunek 4 — ale tylko dlatego, ze 2026-07-30 ma osobna
@@ -210,6 +210,39 @@ class TestWarunek8DryfMetadanych:
             {"sesja": "2026-07-02", "rekordow": 61279315}]}), encoding="utf-8")
         assert f.rekordy_z_manifestu() == {"2026-07-01": 39297265,
                                            "2026-07-02": 61279315}
+
+    def test_furtka_przyjmuje_rozjazd_i_archiwizuje(self, dane):
+        """Bez jawnej furtki jedyna droga przyjecia nowych liczb bylaby reczna
+        edycja manifestu — obejscie straznika bez sladu i bez testu."""
+        cel = dane.parent / "manifests" / f.MANIFEST
+        cel.parent.mkdir(parents=True, exist_ok=True)
+        cel.write_text(json.dumps({"plan": [
+            {"sesja": "2026-07-01", "rekordow": 39297265}]}), encoding="utf-8")
+
+        plan = [{"sesja": "2026-07-01", "rekordow": 40286094}]
+        wynik = f.sprawdz_dryf_rekordow(plan, {"2026-07-01": 39297265},
+                                        akceptuj=True)
+        assert "PRZYJETY" in wynik
+        kopie = list(cel.parent.glob("manifest_d5b2_przed_*.json"))
+        assert len(kopie) == 1, "stary manifest musi zostac ZARCHIWIZOWANY"
+        assert json.loads(kopie[0].read_text(encoding="utf-8"))["plan"][0][
+            "rekordow"] == 39297265
+        assert cel.exists(), "oryginal nie moze zniknac przy archiwizacji"
+
+    def test_furtka_domyslnie_wylaczona(self, dane):
+        """Straznik ma dzialac bez podawania flagi — inaczej nie jest strazą."""
+        plan = [{"sesja": "2026-07-01", "rekordow": 205}]
+        with pytest.raises(SystemExit):
+            f.sprawdz_dryf_rekordow(plan, {"2026-07-01": 200})
+
+    def test_uszkodzony_manifest_przerywa_czysto(self, dane):
+        """Traceback tuz przed zakupem za kilkadziesiat USD to zly komunikat."""
+        cel = dane.parent / "manifests" / f.MANIFEST
+        cel.parent.mkdir(parents=True, exist_ok=True)
+        cel.write_text("{nie JSON", encoding="utf-8")
+        with pytest.raises(SystemExit) as e:
+            f.sprawdz_manifest([])
+        assert "warunek 3" in str(e.value)
 
     def test_uszkodzony_manifest_nie_wywraca_zakupu(self, dane):
         p = dane.parent / "manifests" / f.MANIFEST
@@ -261,8 +294,8 @@ class TestDokumentacjaZgodnaZKodem:
         zrodlo = (KORZEN / "scripts" / "fetch_d5b2_month.py").read_text(
             encoding="utf-8")
         doc = f.__doc__ or ""
-        zadeklarowane = set(re.findall(r"^  (\d)\. ", doc, re.MULTILINE))
-        zaimplementowane = set(re.findall(r"STOP \(warunek (\d)\)", zrodlo))
+        zadeklarowane = set(re.findall(r"^  (\d+)\. ", doc, re.MULTILINE))
+        zaimplementowane = set(re.findall(r"STOP \(warunek (\d+)\)", zrodlo))
         assert zadeklarowane == zaimplementowane, (
             f"docstring deklaruje {sorted(zadeklarowane)}, kod implementuje "
             f"{sorted(zaimplementowane)}")
@@ -285,9 +318,14 @@ class TestDokumentacjaZgodnaZKodem:
         m = re.search(r"^### \w+ warunk\w+ odmowy", doc, re.MULTILINE)
         assert m, "brak tabeli odmow w URUCHOMIENIE_LOKALNE"
         ogon = doc[m.start():]
-        koniec = ogon.find("**Czego skryptu")
-        w_dok = set(re.findall(r"^\| (\d) \| ", ogon[:koniec], re.MULTILINE))
-        w_docstring = set(re.findall(r"^  (\d)\. ", f.__doc__ or "", re.MULTILINE))
+        # Koniec = nastepny naglowek sekcji, a nie konkretny akapit, ktory
+        # ktos moze przepisac. Pierwsza wersja kotwiczyla na "**Czego skryptu",
+        # druga cieła na pierwszym wierszu spoza tabeli — czyli na akapicie
+        # wstepnym, PRZED tabela. Naglowek jest jedyna stabilna granica.
+        m2 = re.search(r"^#{2,3} ", ogon[len(m.group(0)):], re.MULTILINE)
+        koniec = len(m.group(0)) + m2.start() if m2 else len(ogon)
+        w_dok = set(re.findall(r"^\| (\d+) \| ", ogon[:koniec], re.MULTILINE))
+        w_docstring = set(re.findall(r"^  (\d+)\. ", f.__doc__ or "", re.MULTILINE))
         assert w_dok == w_docstring, (
             f"URUCHOMIENIE_LOKALNE §8 wymienia {sorted(w_dok)}, docstring "
             f"{sorted(w_docstring)}")

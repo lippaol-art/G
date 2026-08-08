@@ -3,7 +3,7 @@
 **Ten dokument jest napisany dla sesji, która nie widziała poprzedniej rozmowy.**
 Kontener jest efemeryczny, więc wszystko potrzebne do kontynuacji jest tutaj i w repo.
 
-Data: 06.08.2026 · Branch: `claude/financial-market-strategy-8mb1y1` · PR #4
+Data: 08.08.2026 · Branch: `claude/financial-market-strategy-8mb1y1` · PR #4
 
 > **Reguła utrzymania tego pliku.** HANDOFF aktualizuje się w TYM SAMYM commicie, który
 > zmienia stan projektu. **Nieaktualny HANDOFF to defekt P1, jak czerwony test** — nie
@@ -26,7 +26,7 @@ niezależnych audytach zewnętrznych) jest **jedynym źródłem prawdy** — kod
 a nie odwrotnie.
 
 Gotowe: fundament repo, silnik backtestowy, komplet aparatu walidacyjnego, strażnicy
-niezmienników, CI, golden baseline. **540 funkcji testowych (606 przypadków po parametryzacji), pokrycie 92%, ruff i mypy czyste.**
+niezmienników, CI, golden baseline. **543 funkcji testowych (609 przypadków po parametryzacji), pokrycie 92%, ruff i mypy czyste.**
 Liczbę pilnuje `tests/test_guards.py::test_handoff_podaje_aktualna_liczbe_testow` —
 bez tego rotowała dwa razy w ciągu doby, co jest dokładnie tym defektem, przed
 którym ostrzega reguła na górze tego pliku.
@@ -141,26 +141,35 @@ python scripts/fetch_d5b2_month.py --wycena
 python scripts/fetch_d5b2_month.py
 ```
 
-> ## ⛔ ZAKUP WSTRZYMANY — dryf metadanych po stronie dostawcy
+> ## ⛔ ZAKUP WSTRZYMANY — rozjazd metadanych, przyczyna NIEUSTALONA
 >
-> **06.08.2026: te same zamrożone zapytania dały inne liczby rekordów niż dzień
-> wcześniej. Wszystkie 22 sesje w górę o 1,67–3,06% (mediana +2,66%), koszt
-> 78,6044 → 80,6729 USD.** Zapytanie identyczne (warunek 3 potwierdził), więc
-> zmieniły się dane u dostawcy, nie u nas.
+> **08.08.2026: te same zamrożone zapytania dały inne liczby rekordów niż przy
+> poprzednim przebiegu. Wszystkie 22 sesje w górę o 1,67–3,06% (mediana +2,66%),
+> koszt 78,6044 → 80,6729 USD.** Zapytanie identyczne (warunek 3 potwierdził).
 >
-> Skutek praktyczny: każdy **już opłacony** plik wygląda teraz na niekompletny,
-> więc skrypt zaproponował zakup całego miesiąca **drugi raz**. Zatrzymał go
-> warunek 4, a od tej pory blokuje to wprost **warunek 8**.
+> **Pierwsza diagnoza („dostawca zrewidował dane") została ODRZUCONA** jego
+> własnym `get_dataset_condition`: żadna sesja lipca nie była modyfikowana
+> w sierpniu. Obowiązująca hipoteza — wcześniejsze wyceny mogły być **zaniżone**,
+> bo powstały w czasie awarii 503/504. Jeśli tak, **pobrane pliki mogą być
+> niepełne**.
 >
-> Pełna analiza, odrzucone hipotezy alternatywne i pytanie wysłane do Databento:
+> Skutek praktyczny: każdy **już opłacony** plik wygląda na niekompletny, więc
+> skrypt zaproponował zakup całego miesiąca **drugi raz**. Zatrzymał go
+> warunek 4; od tej pory blokuje to wprost **warunek 8** (furtka:
+> `--akceptuj-rozjazd`, **nie używać przed odpowiedzią dostawcy**).
+>
+> Analiza, odrzucone hipotezy z rachunkiem i gotowy mail:
 > **[`docs/D5_DRYF_METADANYCH.md`](docs/D5_DRYF_METADANYCH.md)**.
 >
-> **Nie kupuj pozostałych 18 sesji do czasu odpowiedzi.** Stan: 4 z 22 sesji
-> pobrane, ~12,7 USD wydane, pliki zgodne z tym, za co zapłacono — **nie kasuj ich**.
+> **Najbliższy krok to `python scripts/diag_dryf.py`** — lokalnie, bez sieci,
+> za darmo; rozstrzyga, czy pobrane pliki obejmują całe okno RTH.
+>
+> **Nie kupuj i nie kasuj niczego.** Stan: 4 z 22 sesji pobrane, **12,7304 USD
+> potwierdzone wycenami**, do ~7,49 USD niepotwierdzone (przerwane 07-06 i 07-07).
 
-Zmierzona wycena (05.08.2026): **78,6044 USD za 22 sesje** wobec limitu 82,00. Nagłówek
-`koszt do zaplaty teraz` pokazał **75,0083 USD** za 21 sesji. Wycena z 06.08 to już
-**80,6729 USD** — patrz ostrzeżenie wyżej.
+Wycena z przebiegu, który pobrał sesje 07-01…07-06: **78,6044 USD za 22 sesje**
+wobec limitu 82,00; nagłówek pokazał **75,0083 USD** za 21 sesji. Wycena z 08.08 to już
+**80,6729 USD** — do zamrożonego limitu zostaje **1,3271 USD**.
 
 **2026-07-30 musi zostać pominięta** — inaczej naliczy się trzeci raz. Skrypt ma na to
 warunek 4 (twarda odmowa, gdy ta sesja trafi na listę zakupową) i weryfikuje plik nie tylko
