@@ -77,6 +77,9 @@ inaczej naliczyłby ją trzeci raz.
 | MBO 2026-07-06, pobranie przerwane w locie | **3,0388 USD** | ⚠️ **NIEPOTWIERDZONA** |
 | MBO 2026-07-07, pobranie przerwane w locie | **≤ 4,4529 USD** | ⚠️ **NIEPOTWIERDZONA** |
 
+Potwierdzone diagnostyką 08.08: plik 07-07 ma **1 867 793 rekordy** i kończy
+się o **13:37:57 UTC** — 7 minut z 6,5-godzinnego okna, czyli **4% sesji**.
+
 **2026-07-07 zgłoszona przez recenzję P1** — na dysku leży plik obcięty
 (1 867 793 z 47 432 653 rekordów, `BentoWarning: DBN file is truncated`),
 pozostałość po przerwanym przebiegu. Kwota podana jako **granica górna**
@@ -110,11 +113,19 @@ Wycena tych samych, zamrożonych zapytań wzrosła z **78,6044** na **80,6729 US
 (+2,63%), bo liczba rekordów wzrosła we **wszystkich 22 sesjach**. Analiza:
 `docs/D5_DRYF_METADANYCH.md`.
 
-**Uwaga: pierwsza diagnoza („dostawca zrewidował dane") została ODRZUCONA**
-jego własnym `get_dataset_condition` — żadna sesja lipca nie była modyfikowana
-w sierpniu. Obowiązująca hipoteza: wcześniejsze wyceny mogły być **zaniżone**,
-bo powstały w czasie awarii 503/504. Jeśli tak, **pobrane pliki mogą być
-niepełne** — rozstrzyga `scripts/diag_dryf.py`, lokalnie i za darmo.
+**Dwie diagnozy już upadły — obie moje, obie obalone pomiarem.**
+(1) „Dostawca zrewidował dane" — odrzucone przez `get_dataset_condition`.
+(2) „Wyceny zaniżone przez awarię 503/504" — odrzucone przez oś czasu:
+commit `299ca34` z **04.08 13:31Z**, dwa dni przed awarią, ma identyczne
+liczby, a pobrania z 04–05.08 fizycznie je zawierają.
+
+Obowiązuje **rama faktograficzna bez mechanizmu**: wartość stabilna ≥4 dni
+na dwóch maszynach, skok między wieczorem 06–07.08 a 08.08 12:15Z, brak
+modyfikacji wg dostawcy. Mechanizm ma nazwać dostawca.
+
+Diagnostyka lokalna (08.08): pięć plików bez uciętego ogona, 07-07 obcięty
+(znany wrak). **To nie dowodzi kompletności** — brak 2,6% rozsiany po sesji
+dałby ten sam wynik. Test gęstości w oknie jest w `scripts/diag_dryf.py`.
 
 Skutek dla tego rejestru: **nie da się dziś podać kosztu dokończenia zakupu**,
 bo nie wiadomo, którą wersję danych kupujemy ani czy za tydzień nie będzie

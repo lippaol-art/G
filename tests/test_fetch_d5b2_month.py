@@ -29,6 +29,16 @@ from scripts import fetch_d5b2_month as f  # noqa: E402
 SESJA_D5C = "2026-07-30"
 
 
+def _uruchom(argv):
+    import sys as _s
+    stare = _s.argv
+    try:
+        _s.argv = ["fetch_d5b2_month.py", *argv]
+        return f.main()
+    finally:
+        _s.argv = stare
+
+
 @pytest.fixture
 def dane(tmp_path, monkeypatch):
     """Podstawia korzen danych na katalog tymczasowy."""
@@ -228,6 +238,13 @@ class TestWarunek8DryfMetadanych:
         assert json.loads(kopie[0].read_text(encoding="utf-8"))["plan"][0][
             "rekordow"] == 39297265
         assert cel.exists(), "oryginal nie moze zniknac przy archiwizacji"
+
+    def test_furtka_z_wycena_jest_odrzucana(self):
+        """Archiwum manifestu w trybie, ktory nic nie kupuje, zostawia slad
+        decyzji, ktora nie zapadla."""
+        with pytest.raises(SystemExit) as e:
+            _uruchom(["--wycena", "--akceptuj-rozjazd"])
+        assert "nie ma sensu" in str(e.value)
 
     def test_furtka_domyslnie_wylaczona(self, dane):
         """Straznik ma dzialac bez podawania flagi — inaczej nie jest strazą."""

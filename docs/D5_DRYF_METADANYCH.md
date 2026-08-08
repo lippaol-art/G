@@ -136,51 +136,96 @@ co sugeruje nazwa, **dane się nie zmieniły — zmieniło się to, co o nich m�
 
 ---
 
-## 2a. Teza obowiązująca po korekcie
+## 2a. Rama faktograficzna — świadomie BEZ mechanizmu
 
-Wiemy na pewno:
+**Korekta v3, po recenzji P1.** Wersja v2 stawiała tezę „wcześniejsze wyceny
+zaniżone, bo powstały w czasie awarii 503/504". **Oś czasu ją obala** i teza
+zostaje wycofana. Podaję fakty; nazwanie mechanizmu należy do dostawcy.
 
-1. zapytanie identyczne (warunek 3),
-2. dzielenie na kawałki ściśle addytywne (różnica 0),
-3. nowa wartość stabilna w trzech pomiarach,
-4. cena za rekord **identyczna** przed i po (78,6044/837,3 mln ≈
-   80,6729/859,3 mln ≈ 9,388·10⁻⁸ USD/rek) — zmieniły się liczby rekordów,
-   nie cennik,
-5. `last_modified_date` **nie** wskazuje żadnej modyfikacji w sierpniu.
+### Stara wartość NIE powstała w czasie awarii
 
-Z (1)–(5) wynika, że jedna z dwóch wartości `get_record_count` była **błędna**,
-a nie „nieaktualna". Najbardziej prawdopodobne wyjaśnienie — i tego właśnie
-dotyczy pytanie do dostawcy:
+| Kiedy | Gdzie | Dowód w repo |
+|---|---|---|
+| **2026-08-04 13:31Z** | środowisko zdalne, **2 dni przed** obserwowaną awarią | commit `299ca34`, `data/wycena_d5b2_mbo.json`: **78,6045 USD / 837 310 143 rek.**; per sesja 07-01 3,6891 / 39 297 265, 07-03 0,2498 / 2 660 629, 07-30 3,5961 / 38 306 877 |
+| 2026-08-04 | pobranie D5-C — `get_range`, **nie** metadane | plik fizycznie ma **38 306 877** rekordów, SHA `3e6f023d…74ac42` |
+| ~2026-08-05 | ponowne pobranie D5-C, maszyna lokalna | **ten sam SHA**, znowu 38 306 877 |
+| wieczór 06–07.08 | przebiegi zakupowe, lokalnie | stare liczby; pobrane pliki zgodne co do rekordu |
+| **2026-08-08 ~12:15Z** | przebieg wyceny | **skok we wszystkich 22 sesjach** |
 
-> **Wcześniejsze wyceny mogły być ZANIŻONE, bo powstały w czasie awarii
-> serwisu metadanych.** Oba wcześniejsze przebiegi trafiały na `503` i `504`
-> (retry w logach), a odpowiedzi udzielane w trybie zdegradowanym mogły
-> pochodzić z niepełnego indeksu.
+**Stara wartość była stabilna przez ≥4 dni, na dwóch maszynach, i obejmowała
+nie tylko metadane, ale też ZAWARTOŚĆ dostarczonych plików.** Awaria 503/504
+z 06.08 jest wobec tego **datowaną koincydencją**, nie przyczyną — hipoteza
+wtórna, którą zostawiam do rozstrzygnięcia dostawcy.
 
-Recenzja P1 zwróciła uwagę na tę koincydencję jako okoliczność wartą
-zgłoszenia. Po odrzuceniu hipotezy rewizji staje się ona **główną hipotezą**,
-a nie tłem.
+### Co wiemy na pewno
 
-### Co z tego wynika dla naszych plików — pytanie warte więcej niż 65 USD
+1. zapytanie identyczne (warunek 3, 22/22 sesji),
+2. dzielenie na kawałki ściśle addytywne — 13:30–14:30 jednym wywołaniem
+   1 389 818, dwoma po 30 min 840 392 + 549 426 = **1 389 818, różnica 0**,
+3. nowa wartość stabilna: trzy pomiary 07-03 → 2 708 424,
+4. cena za rekord identyczna przed i po (~9,388·10⁻⁸ USD/rek) — zmieniły się
+   liczby rekordów, nie cennik,
+5. `get_dataset_condition` nie raportuje **żadnej** modyfikacji w sierpniu
+   (`last_modified_date` = D+1, najpóźniej `2026-08-01`),
+6. stara wartość poprzedza awarię o dwa dni i występuje też w plikach.
 
-Pobrane pliki mają liczby rekordów zgodne ze **starą, prawdopodobnie zaniżoną**
-wyceną. Możliwe są dwa światy:
+Z (1)–(6): **jedna z dwóch wartości `get_record_count` jest błędna**, przejście
+między nimi jest **skokowe** i nastąpiło między wieczorem 06–07.08 a 08.08
+12:15Z. **Nie mam mechanizmu i nie będę go zgadywał** — pytanie do dostawcy
+jest sformułowane neutralnie.
+
+### Trzy światy, nie dwa
 
 | | Co znaczy | Co robimy |
 |---|---|---|
-| **A. pliki niepełne** | pobrane w trybie zdegradowanym, `kompletny()` porównał je z tą samą złą liczbą i przepuścił | trzeba pobrać ponownie i zapłacić drugi raz |
-| **B. pliki pełne** | pobranie było poprawne, błędne są tylko metadane | nie kupujemy nic, pytamy dostawcę |
+| **A. pliki niepełne** | pobrania z okresu starej wartości są krótsze, niż powinny | pobrać ponownie, zapłacić drugi raz |
+| **B. pliki pełne, metadane błędne dziś** | nic nie kupujemy, czekamy na sprostowanie | nie kupujemy nic |
+| **B′. pliki pełne wg STAREJ wersji serwowania** | nowe pobranie tego samego zakresu da **inną treść** | nie kupujemy — ale **„PEŁNY" ≠ „mieszalny z nowymi zakupami"** |
 
-**Rozstrzyga to `scripts/diag_dryf.py` — lokalnie, bez sieci, za darmo.**
-Plik pełny obejmuje całe okno RTH; obcięty kończy się przed 20:00 UTC
-(przed 17:00 dla 2026-07-03). **Uruchom to przed wysłaniem maila** i wklej
-wynik do §3.
+**Wariant B′ dodany przez recenzję P1** i jest najważniejszy operacyjnie:
+oznacza, że nawet komplet plików „pełnych" **nie wolno mieszać** z sesjami
+pobranymi po skoku. Zakaz mieszania obowiązuje **niezależnie** od wyniku
+diagnostyki.
+
+## 3. Wynik diagnostyki lokalnej (08.08, `scripts/diag_dryf.py`)
+
+### Test 1 — zakres czasowy
+
+```
+sesja             rekordow   pierwszy UTC   ostatni UTC   ocena
+2026-07-01      39,297,265       13:30:00      19:59:59   PELNY
+2026-07-02      61,279,315       13:30:00      19:59:59   PELNY
+2026-07-03       2,660,629       13:30:00      17:00:00   PELNY   (zamkniecie 13:00 ET)
+2026-07-06      32,369,900       13:30:00      19:59:59   PELNY
+2026-07-07       1,867,793       13:30:00      13:37:57   OBCIETY o 382 min
+2026-07-30      38,306,877       13:30:00      19:59:59   PELNY
+```
+
+**Pięć plików bez uciętego ogona; 07-07 to znany wrak** (przerwany transfer,
+7 minut z 6,5 godziny — 4% sesji). Wzorzec dokładnie taki, jaki przewidziała
+recenzja.
+
+**Czego ten wynik NIE dowodzi.** Plik, któremu brakuje 2,6% rekordów
+rozsianych równomiernie, też zaczyna się o 13:30 i kończy o 19:59:59.
+**„PEŁNY" wyklucza obcięcie, nie przerzedzenie** — i dlatego doszedł test 2.
+
+### Test 2 — gęstość w oknie 13:30–14:30
+
+Do wykonania na maszynie lokalnej po `git pull`. Porównuje liczbę rekordów
+naszego pliku `2026-07-03` w tym oknie z **zmierzoną 08.08** wartością
+serwerową **1 389 818**:
+
+| Wynik | Znaczenie |
+|---|---|
+| ≈ **1 365 300** (stary udział) | brak jest **rozsiany** — „PEŁNY" nic nie dowodzi, natura nadwyżki staje się pytaniem głównym |
+| = **1 389 818** | plik zgadza się z dzisiejszym liczeniem w środku okna; zagadka przenosi się na definicję całego zakresu |
+| cokolwiek innego | wynik nieoczekiwany — opisać, nie interpretować |
 
 ---
 
-## 3. Dlaczego to jest poważne, a nie kosmetyczne
+## 4. Dlaczego to jest poważne, a nie kosmetyczne
 
-### 3.1 Ryzyko finansowe — realne i zmierzone
+### 4.1 Ryzyko finansowe — realne i zmierzone
 
 `kompletny()` porównuje plik na dysku z liczbą rekordów z **bieżącej** wyceny.
 Po rewizji **każdy już opłacony plik wygląda na niekompletny**:
@@ -202,7 +247,7 @@ sesje były już opłacone. Zatrzymał go warunek 4 — i to wyłącznie dlatego
 **To była wada projektowa, nie wada danych.** Naprawiona: warunek 8 porównuje
 bieżące metadane z manifestem i przerywa przy rozjeździe.
 
-### 3.2 Ryzyko naukowe — poważniejsze niż finansowe
+### 4.2 Ryzyko naukowe — poważniejsze niż finansowe
 
 **Audyt D5-C policzono na pliku, którego liczba rekordów nie zgadza się już
 z tym, co podaje API.**
@@ -229,41 +274,46 @@ scenariusz; to problem z warstwą metadanych, nie z normalizacją danych.
 
 ---
 
-## 4. Pytanie do Databento
+## 5. Pytanie do Databento
 
-**Wysłać dopiero po uruchomieniu `scripts/diag_dryf.py`** — jego wynik zmienia
-punkt 4 pytania. Wątek: kontynuacja rozmowy z Erikiem.
+**Wysłać dopiero po teście 2** — jego wynik zmienia punkt 4. Wątek: kontynuacja
+rozmowy z Erikiem.
 
-> **Subject: `metadata.get_record_count` for GLBX.MDP3 MBO returns ~2.6% higher
-> counts than a few days ago, while `get_dataset_condition` reports no
-> modification**
+> **Subject: `metadata.get_record_count` for GLBX.MDP3 MBO jumped ~2.6% for all
+> July 2026 sessions, while `get_dataset_condition` reports no modification**
 >
 > Hi Erik,
 >
-> Following up on our earlier thread. We have a reproducibility question that we
+> Following up on our earlier thread. We have a reproducibility question we
 > could not resolve ourselves, and we have paused a purchase because of it.
 >
 > **Setup.** Fixed research query: `GLBX.MDP3`, schema `mbo`, symbol `MNQU6`,
 > `stype_in=raw_symbol`, 22 RTH sessions of July 2026, each `13:30–20:00 UTC`
 > (09:30–16:00 America/New_York).
 >
-> **Observation.** We called `metadata.get_record_count` for exactly these
-> 22 ranges twice. Between the two runs, **every one of the 22 sessions returned
-> a higher count**, by +1.67% to +3.06% (median +2.66%). Aggregate went from
-> 837,310,143 to 859,343,842 records, and `get_cost` from 78.6044 to 80.6729 USD.
-> The implied price per record is unchanged (~9.388e-8 USD/record), so this is
+> **Dated history of our measurements** — the same query, four times:
+>
+> | When (UTC) | Where | Result |
+> |---|---|---|
+> | 2026-08-04 13:31 | our cloud environment | 837,310,143 records / 78.6045 USD |
+> | 2026-08-04 | `timeseries.get_range` for 2026-07-30 | file contains **38,306,877** records |
+> | ~2026-08-05 | re-download of the same session, different machine | identical SHA-256, again 38,306,877 |
+> | 2026-08-06–07 evening | purchase runs | same counts; downloaded files match them record-for-record |
+> | **2026-08-08 12:15** | pricing run | **859,343,842 records / 80.6729 USD** |
+>
+> Every one of the 22 sessions increased, by +1.67% to +3.06% (median +2.66%).
+> Implied price per record is unchanged (~9.388e-8 USD/record), so this is
 > purely a change in reported record counts.
 >
 > **What we ruled out ourselves:**
 >
 > * *Different query.* Identical dataset, symbol, stype, schema and UTC bounds —
->   we compare against a stored manifest and it matched on all 22 sessions.
-> * *Our 30-minute chunking.* We split metadata queries into 30-minute chunks
->   to stay under the gateway timeout. Verified additive: `13:30–14:30` as one
->   call returns 1,389,818; as `13:30–14:00` + `14:00–14:30` it returns
+>   compared against a stored manifest, matched on all 22 sessions.
+> * *Our 30-minute chunking.* Verified additive: `13:30–14:30` as one call
+>   returns 1,389,818; as `13:30–14:00` + `14:00–14:30` it returns
 >   840,392 + 549,426 = 1,389,818. **Difference exactly 0.**
-> * *A transient read.* The new value is stable — three consecutive calls for
->   2026-07-03 all return 2,708,424.
+> * *A transient read.* Three consecutive calls for 2026-07-03 all return
+>   2,708,424.
 > * *Synthetic book snapshots.* The increase is proportional to session size,
 >   whereas a per-request snapshot would add a roughly constant number of
 >   records and therefore affect a small session far more in percentage terms.
@@ -272,46 +322,42 @@ punkt 4 pytania. Wątek: kontynuacja rozmowy z Erikiem.
 > **What puzzles us most.** `metadata.get_dataset_condition("GLBX.MDP3",
 > "2026-07-01", "2026-07-31")` reports, for every July date, `condition:
 > available` and a `last_modified_date` of D+1 — the latest value anywhere in
-> the month is `2026-08-01`. So by your own metadata **nothing in July was
-> modified in August**, yet the reported record counts changed.
->
-> **Possibly relevant.** Both of our earlier runs hit repeated `503` and `504`
-> responses from the metadata endpoint (our client retried and eventually
-> succeeded). We are wondering whether counts served during that period could
-> have come from an incomplete index and been **understated**, rather than the
-> current ones being overstated.
+> the month is `2026-08-01`. So by your own metadata nothing in July was
+> modified in August, yet the reported counts changed. Note also that the older
+> counts were not confined to metadata: files we downloaded on Aug 4 and Aug 5
+> physically contain the older record counts.
 >
 > **Our questions:**
 >
-> 1. Which of the two counts is authoritative for these ranges, and can you tell
->    from your side whether the earlier, lower values were served during a
->    degraded window?
+> 1. Which of the two counts is authoritative for these ranges, and **what
+>    changed on your side between the evening of Aug 7 and Aug 8, 12:15 UTC**?
 > 2. Does `last_modified_date` in `get_dataset_condition` cover changes that
->    would affect `get_record_count`? If not, what is the right field to watch
->    for reproducibility?
+>    would affect `get_record_count`? If not, which field should we watch for
+>    reproducibility?
 > 3. **Is there a way to pin a dataset version**, so that a result computed today
->    can be reproduced byte-for-byte later? We record SHA-256 of every downloaded
->    file, but we need to know whether re-requesting an identical historical range
->    is expected to be deterministic over time.
+>    can be reproduced later? We record SHA-256 of every downloaded file, but we
+>    need to know whether re-requesting an identical historical range is expected
+>    to be deterministic over time.
 > 4. We downloaded 4 of these 22 sessions before the change; their record counts
->    match the earlier, lower values. **Are those files complete?** If they were
->    truncated by the same condition, we would need to re-request them — in which
->    case, is a re-request of a session affected by a service issue billed again?
->    Two further sessions (2026-07-06 and 2026-07-07) were interrupted mid-stream
->    with `Response ended prematurely`; we would like to know whether those
->    interrupted requests were billed.
+>    match the earlier, lower values, and each covers the full requested window
+>    (first record at 13:30:00, last at 19:59:59 UTC). **Are those files
+>    complete?** If a re-request would now return different content for the same
+>    range, we need to know before we mix old and new downloads in one dataset.
+> 5. Two sessions were interrupted mid-download — 2026-07-06 returned
+>    `Response ended prematurely`, and 2026-07-07 left a truncated file
+>    (1,867,793 records, ~7 minutes of a 6.5-hour window). **Were those
+>    interrupted requests billed?**
 >
-> Context: this is a single-instrument research project on a small budget, and
-> reproducibility is a hard requirement for us — a result we cannot recompute
-> later is not a result we can use. We stopped after 4 of 22 sessions
-> specifically because mixing data from two periods would be invisible in the
-> data itself.
+> For context: this is a single-instrument research project on a small budget,
+> and reproducibility is a hard requirement — a result we cannot recompute later
+> is not a result we can use. We stopped after 4 of 22 sessions specifically
+> because mixing data from two periods would be invisible in the data itself.
 >
 > Thanks,
 
 ---
 
-## 5. Co robimy do czasu odpowiedzi
+## 6. Co robimy do czasu odpowiedzi
 
 | | |
 |---|---|
@@ -330,7 +376,7 @@ projekcie warunkiem, nie ozdobą.
 
 ---
 
-## 6. Co ta sytuacja zmienia trwale
+## 7. Co ta sytuacja zmienia trwale
 
 1. **Liczba rekordów z metadanych nie jest niezmiennikiem.** Wszędzie, gdzie
    traktowaliśmy ją jako stałą cechę sesji, trzeba porównywać z **manifestem**,

@@ -421,6 +421,13 @@ def main() -> int:
                         "z manifestem (warunek 8); archiwizuje stary manifest")
     args = p.parse_args()
 
+    if args.wycena and args.akceptuj_rozjazd:
+        # Archiwizacja manifestu w trybie, ktory niczego nie kupuje, jest bez
+        # celu — a zostawia w katalogu kopie sugerujaca, ze decyzja zapadla.
+        sys.exit("STOP: --akceptuj-rozjazd nie ma sensu z --wycena. Tryb wyceny "
+                 "niczego nie kupuje, a flaga zarchiwizowalaby manifest bez "
+                 "powodu, zostawiajac slad nieistniejacej decyzji.")
+
     c = db.Historical(os.environ["DATABENTO_API_KEY"])
     kat = raw_dir(KATALOG)
     kat.mkdir(parents=True, exist_ok=True)

@@ -26,7 +26,7 @@ niezależnych audytach zewnętrznych) jest **jedynym źródłem prawdy** — kod
 a nie odwrotnie.
 
 Gotowe: fundament repo, silnik backtestowy, komplet aparatu walidacyjnego, strażnicy
-niezmienników, CI, golden baseline. **543 funkcji testowych (609 przypadków po parametryzacji), pokrycie 92%, ruff i mypy czyste.**
+niezmienników, CI, golden baseline. **544 funkcji testowych (610 przypadków po parametryzacji), pokrycie 92%, ruff i mypy czyste.**
 Liczbę pilnuje `tests/test_guards.py::test_handoff_podaje_aktualna_liczbe_testow` —
 bez tego rotowała dwa razy w ciągu doby, co jest dokładnie tym defektem, przed
 którym ostrzega reguła na górze tego pliku.
@@ -147,11 +147,15 @@ python scripts/fetch_d5b2_month.py
 > poprzednim przebiegu. Wszystkie 22 sesje w górę o 1,67–3,06% (mediana +2,66%),
 > koszt 78,6044 → 80,6729 USD.** Zapytanie identyczne (warunek 3 potwierdził).
 >
-> **Pierwsza diagnoza („dostawca zrewidował dane") została ODRZUCONA** jego
-> własnym `get_dataset_condition`: żadna sesja lipca nie była modyfikowana
-> w sierpniu. Obowiązująca hipoteza — wcześniejsze wyceny mogły być **zaniżone**,
-> bo powstały w czasie awarii 503/504. Jeśli tak, **pobrane pliki mogą być
-> niepełne**.
+> **Dwie diagnozy już upadły, obie obalone pomiarem.** (1) „Dostawca zrewidował
+> dane" — odrzucone przez `get_dataset_condition` (brak modyfikacji w sierpniu).
+> (2) „Wyceny zaniżone przez awarię 503/504" — odrzucone przez oś czasu: commit
+> `299ca34` z **04.08 13:31Z**, dwa dni przed awarią, ma identyczne liczby,
+> a pobrania z 04–05.08 fizycznie je zawierają.
+>
+> Obowiązuje **rama faktograficzna bez mechanizmu**: wartość stabilna ≥4 dni na
+> dwóch maszynach, skok między wieczorem 06–07.08 a 08.08 12:15Z, brak
+> modyfikacji wg dostawcy. **Mechanizm ma nazwać dostawca, nie my.**
 >
 > Skutek praktyczny: każdy **już opłacony** plik wygląda na niekompletny, więc
 > skrypt zaproponował zakup całego miesiąca **drugi raz**. Zatrzymał go
@@ -161,8 +165,10 @@ python scripts/fetch_d5b2_month.py
 > Analiza, odrzucone hipotezy z rachunkiem i gotowy mail:
 > **[`docs/D5_DRYF_METADANYCH.md`](docs/D5_DRYF_METADANYCH.md)**.
 >
-> **Najbliższy krok to `python scripts/diag_dryf.py`** — lokalnie, bez sieci,
-> za darmo; rozstrzyga, czy pobrane pliki obejmują całe okno RTH.
+> **Diagnostyka 08.08:** pięć plików bez uciętego ogona, 07-07 obcięty
+> (1 867 793 rek., koniec 13:37:57 — 4% sesji). **To nie dowodzi kompletności**:
+> brak 2,6% rozsiany po sesji dałby ten sam wynik. Test gęstości w oknie
+> dodany do `scripts/diag_dryf.py` — do uruchomienia po `git pull`.
 >
 > **Nie kupuj i nie kasuj niczego.** Stan: 4 z 22 sesji pobrane, **12,7304 USD
 > potwierdzone wycenami**, do ~7,49 USD niepotwierdzone (przerwane 07-06 i 07-07).
