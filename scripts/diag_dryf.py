@@ -5,12 +5,16 @@ PYTANIE, NA KTORE TO ODPOWIADA. Metadane Databento podaja dzis dla naszych
 sesji o ~2,6% wiecej rekordow, niz maja pobrane pliki. Sa dwie mozliwosci
 i roznia sie one WSZYSTKIM:
 
-  A. pliki sa NIEPELNE — pobrane w czasie awarii serwisu, ktora zaniżała
-     tez metadane, wiec `kompletny()` porownal je z ta sama zla liczba
-     i przepuscil. Wtedy trzeba je pobrac ponownie i zaplacic drugi raz.
+  A. pliki sa NIEPELNE — brakuje w nich realnych zdarzen rynkowych.
+     Wtedy trzeba je pobrac ponownie i zaplacic drugi raz.
 
-  B. pliki sa PELNE — pokrywaja cale okno RTH bez luk, a rozjazd dotyczy
-     wylacznie metadanych. Wtedy nie kupujemy nic, tylko pytamy dostawce.
+  B'. pliki sa PELNE WEDLUG STAREJ WERSJI SERWOWANIA — te same zdarzenia,
+     inna reprezentacja. Wtedy nie kupujemy nic, ale i tak NIE WOLNO mieszac
+     ich z sesjami pobranymi po skoku.
+
+Tych dwoch wariantow ten skrypt NIE rozroznia — na to potrzeba porownania
+TRESCI. Skrypt odpowiada na pytanie wczesniejsze i tansze: czy niedobor jest
+uciętym ogonem, czy siedzi w srodku sesji.
 
 DWA TESTY, BO JEDEN NIE WYSTARCZA.
 
@@ -25,9 +29,7 @@ DWA TESTY, BO JEDEN NIE WYSTARCZA.
      ROZSIANA w srodku sesji, a nie na koncu — i wtedy "PELNY" nie dowodzi
      niczego o kompletnosci.
 
-Oba testy sa LOKALNE i DARMOWE. Skrypt nie laczy sie z siecia.
-
-Skrypt NIE laczy sie z siecia i NIE kupuje niczego.
+Oba testy sa LOKALNE i DARMOWE. Skrypt nie laczy sie z siecia i nic nie kupuje.
 
 Uruchomienie:
     python scripts/diag_dryf.py
@@ -52,10 +54,11 @@ UTC = dt.UTC
 #: o 2026-07-03 13:30-14:30 zwrocilo 1 389 818 rekordow — zweryfikowane
 #: dwoma sposobami (jednym wywolaniem i dwoma po 30 min, roznica 0).
 OKNO_SESJA = "2026-07-03"
-OKNO_OD_H, OKNO_DO_H = 13.5, 14.5
 OKNO_SERWER_08_08 = 1_389_818
-#: Udzial starej wyceny w nowej dla tej sesji: 2 660 629 / 2 708 424.
-UDZIAL_STARY = 2_660_629 / 2_708_424
+#: Liczby rekordow CALEJ sesji 2026-07-03: nasz plik / serwer 08.08.
+#: Potrzebne, zeby porownac tempo niedoboru w oknie z tempem w calej sesji.
+NASZ_SESJA = 2_660_629
+SERW_SESJA = 2_708_424
 
 
 def skanuj(p: Path) -> dict:
@@ -129,24 +132,36 @@ def main() -> int:
     if okno_nasz is None:
         print(f"  brak pliku {OKNO_SESJA} — testu nie wykonano")
     else:
-        oczek_stary = round(OKNO_SERWER_08_08 * UDZIAL_STARY)
+        deficyt_okno = (OKNO_SERWER_08_08 - okno_nasz) / OKNO_SERWER_08_08
+        deficyt_sesja = (SERW_SESJA - NASZ_SESJA) / SERW_SESJA
         print(f"  serwer 08.08, to samo okno   : {OKNO_SERWER_08_08:>10,}")
         print(f"  nasz plik {OKNO_SESJA}         : {okno_nasz:>10,}")
-        print(f"  gdyby brak byl ROZSIANY      : {oczek_stary:>10,} (oczekiwane)")
-        roznica = okno_nasz - OKNO_SERWER_08_08
-        print(f"  roznica wobec serwera        : {roznica:>+10,} "
-              f"({100 * roznica / OKNO_SERWER_08_08:+.2f}%)")
-        if abs(okno_nasz - OKNO_SERWER_08_08) <= 2:
-            print("\n  -> WNIOSEK: w tym oknie plik zgadza sie z DZISIEJSZYM")
-            print("     liczeniem. Roznica calosci nie siedzi tutaj — pytanie")
-            print("     przenosi sie na definicje calego zakresu.")
-        elif abs(okno_nasz - oczek_stary) <= max(50, oczek_stary // 1000):
-            print("\n  -> WNIOSEK: brak jest ROZSIANY po sesji, nie na koncu.")
-            print("     Ocena PELNY z testu 1 NIE dowodzi kompletnosci pliku.")
-            print("     Natura nadwyzki staje sie pytaniem glownym.")
+        print(f"  NIEDOBOR w oknie             : {OKNO_SERWER_08_08 - okno_nasz:>10,}"
+              f"  ({100 * deficyt_okno:.4f}%)")
+        print(f"  NIEDOBOR w calej sesji       : {SERW_SESJA - NASZ_SESJA:>10,}"
+              f"  ({100 * deficyt_sesja:.4f}%)")
+        print(f"  stosunek stop okno/sesja     : {deficyt_okno / deficyt_sesja:>10.3f}")
+        print()
+        # BEZ PROGU. Pierwsza wersja miala tolerancje dobrana z gory i uznala
+        # realny wynik za "nieoczekiwany". Dostrajanie progu PO zobaczeniu
+        # danych jest dokladnie tym nawykiem, ktorego zakazuje regula R2,
+        # wiec zamiast tego raportujemy dwie liczby i ich stosunek.
+        if okno_nasz >= OKNO_SERWER_08_08:
+            print("  -> Plik ma w tym oknie tyle samo lub wiecej niz serwer.")
+            print("     Niedobor calosci NIE siedzi w tym oknie.")
         else:
-            print("\n  -> WNIOSEK: ani stary udzial, ani dzisiejsza wartosc.")
-            print("     Wynik nieoczekiwany — opisz go w §3, nie interpretuj.")
+            print("  -> BRAK JEST WEWNATRZ OKNA, nie na koncu sesji.")
+            print("     Ocena PELNY z testu 1 zostaje OBALONA empirycznie:")
+            print("     pokrycie czasowe jest pelne, a rekordow brakuje.")
+            print(f"     Stosunek stop {deficyt_okno / deficyt_sesja:.3f} —"
+                  " przy braku idealnie jednorodnym")
+            print("     wynosilby 1,000; odchylenie mowi, ze niedobor rozklada")
+            print("     sie NIERWNOMIERNIE w czasie sesji.")
+        print()
+        print("  Czego to NIE rozstrzyga: czy brakujace rekordy to zdarzenia")
+        print("  rynkowe nieobecne u nas (wariant A), czy inna reprezentacja")
+        print("  tych samych zdarzen (wariant B'). Na to odpowiada wylacznie")
+        print("  porownanie TRESCI — patrz D5_DRYF_METADANYCH §5.")
 
     print("\n" + "=" * 78)
     print("JAK CZYTAC CALOSC")

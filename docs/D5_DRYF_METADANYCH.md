@@ -209,17 +209,63 @@ recenzja.
 rozsianych równomiernie, też zaczyna się o 13:30 i kończy o 19:59:59.
 **„PEŁNY" wyklucza obcięcie, nie przerzedzenie** — i dlatego doszedł test 2.
 
-### Test 2 — gęstość w oknie 13:30–14:30
+### Test 2 — gęstość w oknie 13:30–14:30 · **WYKONANY 08.08**
 
-Do wykonania na maszynie lokalnej po `git pull`. Porównuje liczbę rekordów
-naszego pliku `2026-07-03` w tym oknie z **zmierzoną 08.08** wartością
-serwerową **1 389 818**:
+```
+serwer 08.08, to samo okno   :  1,389,818
+nasz plik 2026-07-03         :  1,362,037
+NIEDOBOR w oknie             :     27,781   (1,9989%)
+NIEDOBOR w calej sesji       :     47,795   (1,7647%)
+stosunek stop okno/sesja     :      1,133
+```
 
-| Wynik | Znaczenie |
+**To jest wynik rozstrzygający dla jednego pytania i otwierający drugie.**
+
+#### Co zostało rozstrzygnięte
+
+**Ocena `PELNY` z testu 1 jest obalona empirycznie.** W oknie 13:30–14:30
+pokrycie czasowe naszego pliku jest **pełne z obu stron** — a mimo to brakuje
+w nim **27 781 rekordów** wobec tego, co API zwraca dziś dla identycznego
+zakresu. Niedobór **nie jest uciętym ogonem**; siedzi w środku sesji.
+
+Konsekwencja praktyczna: **żaden z pięciu plików ocenionych jako `PELNY` nie
+jest dowodem kompletności.** Test zakresu wyklucza obcięcie i tylko tyle.
+
+#### Co się otworzyło
+
+Niedobór **nie jest jednorodny**. Gdyby był, tempo w oknie i w całej sesji
+byłoby równe; stosunek wynosi **1,133**, czyli w pierwszej godzinie brakuje
+o ~13% *względnie* więcej niż średnio. Udział pierwszej godziny w sesji:
+**51,192%** u nas wobec **51,315%** u dostawcy.
+
+To wyklucza najprostsze wyjaśnienie „stała frakcja rekordów zgubiona
+równomiernie" i wskazuje na coś **strukturalnego** — ale czego, tego z samych
+liczebności nie da się orzec.
+
+#### Czego test 2 nadal NIE rozstrzyga
+
+Czy brakujące 27 781 rekordów to:
+
+| | |
 |---|---|
-| ≈ **1 365 300** (stary udział) | brak jest **rozsiany** — „PEŁNY" nic nie dowodzi, natura nadwyżki staje się pytaniem głównym |
-| = **1 389 818** | plik zgadza się z dzisiejszym liczeniem w środku okna; zagadka przenosi się na definicję całego zakresu |
-| cokolwiek innego | wynik nieoczekiwany — opisać, nie interpretować |
+| **wariant A** | realne zdarzenia rynkowe, których w naszym pliku nie ma |
+| **wariant B′** | te same zdarzenia w innej reprezentacji (np. inaczej rozbite komunikaty) |
+
+**Na to odpowiada wyłącznie porównanie TREŚCI**, nie liczebności. Procedura
+i koszt: §5a. Do czasu rozstrzygnięcia obowiązuje zakaz mieszania plików
+z obu okresów — **niezależnie od tego, który wariant okaże się prawdziwy**.
+
+---
+
+## 3a. Bilans diagnostyki — co wiemy po obu testach
+
+| Pytanie | Odpowiedź | Na jakiej podstawie |
+|---|---|---|
+| Czy pliki są ucięte na końcu? | **Nie** (poza 07-07) | test 1, pokrycie 13:30–19:59:59 |
+| Czy pliki mają tyle rekordów, co dziś API? | **Nie, mniej o ~2%** | test 2, okno o pełnym pokryciu |
+| Czy niedobór jest jednorodny? | **Nie**, stosunek 1,133 | test 2 |
+| Czy brakuje realnych zdarzeń? | **NIEROZSTRZYGNIĘTE** | wymaga porównania treści (§5a) |
+| Czy wolno mieszać stare i nowe pliki? | **Nie** | niezależnie od powyższego |
 
 ---
 
@@ -338,11 +384,19 @@ rozmowy z Erikiem.
 >    can be reproduced later? We record SHA-256 of every downloaded file, but we
 >    need to know whether re-requesting an identical historical range is expected
 >    to be deterministic over time.
-> 4. We downloaded 4 of these 22 sessions before the change; their record counts
->    match the earlier, lower values, and each covers the full requested window
->    (first record at 13:30:00, last at 19:59:59 UTC). **Are those files
->    complete?** If a re-request would now return different content for the same
->    range, we need to know before we mix old and new downloads in one dataset.
+> 4. We downloaded 4 of these 22 sessions before the change. Each covers the
+>    full requested window (first record 13:30:00, last 19:59:59 UTC), yet each
+>    contains the older, lower record count. We checked one narrow window
+>    directly: for **2026-07-03, 13:30–14:30 UTC**, your API reports
+>    **1,389,818** records today, while our file — whose time coverage spans
+>    that window completely — contains **1,362,037**, i.e. **27,781 fewer
+>    (−2.00%)**. The shortfall is therefore inside the session, not a truncated
+>    tail, and it is not uniform (the first hour is short by 2.00% against 1.76%
+>    for the session as a whole).
+>
+>    **Are those files missing real market events, or is this a difference in
+>    how the same events are represented?** We need to know before mixing files
+>    downloaded before and after the change into one dataset.
 > 5. Two sessions were interrupted mid-download — 2026-07-06 returned
 >    `Response ended prematurely`, and 2026-07-07 left a truncated file
 >    (1,867,793 records, ~7 minutes of a 6.5-hour window). **Were those
@@ -354,6 +408,34 @@ rozmowy z Erikiem.
 > because mixing data from two periods would be invisible in the data itself.
 >
 > Thanks,
+
+---
+
+## 5a. Mikro-diff — jedyna droga do rozstrzygnięcia A vs B′
+
+**Wymaga jawnej zgody właściciela (reguła R1). Nie uruchomione.**
+
+Test 2 pokazał, że brakuje 27 781 rekordów w oknie o pełnym pokryciu
+czasowym. Liczebności powiedziały już wszystko, co mogły — **naturę nadwyżki
+rozstrzyga wyłącznie porównanie treści.**
+
+| | |
+|---|---|
+| Zakres | `2026-07-03`, **13:30–14:00 UTC** (pierwsze 30 min) |
+| Koszt | ~840 392 rek. × 9,388·10⁻⁸ ≈ **0,079 USD** · `get_cost` **przed** pobraniem |
+| Cel zapisu | **osobny katalog diagnostyczny**, nie `d5b2_mbo/`, bez dotykania manifestów |
+| Dlaczego ten start | identyczny z początkiem naszego pliku, więc syntetyczny snapshot księgi wypada w tym samym miejscu i **skraca się w porównaniu** |
+| Metoda | diff rekord po rekordzie z odpowiadającym wycinkiem naszego pliku |
+
+**Odczyt wyniku:**
+
+- realne zdarzenia obecne u dostawcy, nieobecne u nas → **wariant A**
+  (pliki niepełne, trzeba odkupić),
+- te same zdarzenia, inny podział/typy rekordów → **wariant B′**
+  (pliki pełne, ale niemieszalne).
+
+**Wpis do `data/KOSZTY.md` niezależnie od wyniku.** Alternatywa: poczekać na
+odpowiedź Databento i nie wydawać nic — decyzja właściciela.
 
 ---
 

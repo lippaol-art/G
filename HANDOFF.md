@@ -165,10 +165,17 @@ python scripts/fetch_d5b2_month.py
 > Analiza, odrzucone hipotezy z rachunkiem i gotowy mail:
 > **[`docs/D5_DRYF_METADANYCH.md`](docs/D5_DRYF_METADANYCH.md)**.
 >
-> **Diagnostyka 08.08:** pięć plików bez uciętego ogona, 07-07 obcięty
-> (1 867 793 rek., koniec 13:37:57 — 4% sesji). **To nie dowodzi kompletności**:
-> brak 2,6% rozsiany po sesji dałby ten sam wynik. Test gęstości w oknie
-> dodany do `scripts/diag_dryf.py` — do uruchomienia po `git pull`.
+> **Diagnostyka 08.08, oba testy wykonane.** Test 1: pięć plików bez uciętego
+> ogona, 07-07 obcięty (4% sesji). Test 2 — **rozstrzygający**: w oknie
+> 13:30–14:30 sesji 07-03 nasz plik ma **1 362 037** rekordów wobec **1 389 818**
+> u dostawcy. Brakuje **27 781 (−2,00%)** w oknie o **pełnym pokryciu czasowym**.
+>
+> **„PEŁNY" jest obalone empirycznie.** Pliki są krótsze o ~2%, a brak siedzi
+> w środku sesji, nie na końcu. Nie jest też jednorodny (stosunek stóp 1,133).
+>
+> **Otwarte:** czy brakuje realnych zdarzeń (wariant A — odkup), czy to inna
+> reprezentacja tych samych (B′ — nie kupujemy). Rozstrzyga tylko porównanie
+> treści: `D5_DRYF_METADANYCH` §5a, ~0,079 USD, **wymaga zgody właściciela**.
 >
 > **Nie kupuj i nie kasuj niczego.** Stan: 4 z 22 sesji pobrane, **12,7304 USD
 > potwierdzone wycenami**, do ~7,49 USD niepotwierdzone (przerwane 07-06 i 07-07).

@@ -123,9 +123,16 @@ Obowiązuje **rama faktograficzna bez mechanizmu**: wartość stabilna ≥4 dni
 na dwóch maszynach, skok między wieczorem 06–07.08 a 08.08 12:15Z, brak
 modyfikacji wg dostawcy. Mechanizm ma nazwać dostawca.
 
-Diagnostyka lokalna (08.08): pięć plików bez uciętego ogona, 07-07 obcięty
-(znany wrak). **To nie dowodzi kompletności** — brak 2,6% rozsiany po sesji
-dałby ten sam wynik. Test gęstości w oknie jest w `scripts/diag_dryf.py`.
+Diagnostyka lokalna (08.08), **oba testy wykonane**: pięć plików bez uciętego
+ogona, 07-07 obcięty. Test gęstości: w oknie 13:30–14:30 sesji 07-03 nasz plik
+ma **1 362 037** rekordów wobec **1 389 818** u dostawcy — brakuje **27 781
+(−2,00%)** w oknie o **pełnym pokryciu czasowym**.
+
+**„PEŁNY" jest więc obalone empirycznie: pliki są krótsze o ~2%, a brak siedzi
+w środku sesji.** Czy to realne zdarzenia (wariant A — trzeba odkupić), czy
+inna reprezentacja tych samych (B′ — nie kupujemy), rozstrzyga wyłącznie
+porównanie treści: `docs/D5_DRYF_METADANYCH.md` §5a, koszt ~**0,079 USD**,
+**wymaga jawnej zgody (R1), nieuruchomione**.
 
 Skutek dla tego rejestru: **nie da się dziś podać kosztu dokończenia zakupu**,
 bo nie wiadomo, którą wersję danych kupujemy ani czy za tydzień nie będzie
