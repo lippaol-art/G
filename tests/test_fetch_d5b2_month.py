@@ -160,6 +160,64 @@ class TestWarunek4TrzecieNaliczenie:
         assert capsys.readouterr().out == "", "zadnego ostrzezenia bez powodu"
 
 
+class TestWarunek8DryfMetadanych:
+    """Dostawca nie moze zmienic danych w trakcie zakupu.
+
+    06.08.2026 wszystkie 22 sesje urosly o 1,67-3,06% miedzy dwoma
+    uruchomieniami. Kazdy oplacony plik zaczal wygladac na niekompletny
+    i skrypt zaproponowal zakup calego miesiaca DRUGI RAZ za 80,67 USD.
+    Zatrzymal go warunek 4 — ale tylko dlatego, ze 2026-07-30 ma osobna
+    ochrone; pozostale 21 sesji przeszloby.
+    """
+
+    def test_zgodne_liczby_przechodza(self):
+        plan = [{"sesja": "2026-07-01", "rekordow": 100},
+                {"sesja": "2026-07-02", "rekordow": 200}]
+        wynik = f.sprawdz_dryf_rekordow(
+            plan, {"2026-07-01": 100, "2026-07-02": 200})
+        assert "zgodne" in wynik
+
+    def test_dryf_choc_jednej_sesji_przerywa(self):
+        plan = [{"sesja": "2026-07-01", "rekordow": 100},
+                {"sesja": "2026-07-02", "rekordow": 205}]
+        with pytest.raises(SystemExit) as e:
+            f.sprawdz_dryf_rekordow(plan, {"2026-07-01": 100, "2026-07-02": 200})
+        assert "warunek 8" in str(e.value)
+        assert "2026-07-02" in str(e.value)
+
+    def test_komunikat_podaje_skale_zmiany(self):
+        """Sam fakt rozjazdu nie mowi, czy to rewizja, czy blad — procent mowi."""
+        plan = [{"sesja": "2026-07-01", "rekordow": 40286094}]
+        with pytest.raises(SystemExit) as e:
+            f.sprawdz_dryf_rekordow(plan, {"2026-07-01": 39297265})
+        assert "+2.52%" in str(e.value)
+
+    def test_brak_manifestu_nie_blokuje_pierwszego_zakupu(self):
+        plan = [{"sesja": "2026-07-01", "rekordow": 100}]
+        assert "zgodne" in f.sprawdz_dryf_rekordow(plan, {})
+
+    def test_sesje_spoza_manifestu_sa_pomijane(self):
+        """Nowa sesja nie ma z czym sie rozjechac."""
+        plan = [{"sesja": "2026-07-01", "rekordow": 100},
+                {"sesja": "2026-07-02", "rekordow": 999}]
+        assert "zgodne" in f.sprawdz_dryf_rekordow(plan, {"2026-07-01": 100})
+
+    def test_odczyt_rekordow_z_manifestu(self, dane):
+        p = dane.parent / "manifests" / f.MANIFEST
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_text(json.dumps({"plan": [
+            {"sesja": "2026-07-01", "rekordow": 39297265},
+            {"sesja": "2026-07-02", "rekordow": 61279315}]}), encoding="utf-8")
+        assert f.rekordy_z_manifestu() == {"2026-07-01": 39297265,
+                                           "2026-07-02": 61279315}
+
+    def test_uszkodzony_manifest_nie_wywraca_zakupu(self, dane):
+        p = dane.parent / "manifests" / f.MANIFEST
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_text("{nie JSON", encoding="utf-8")
+        assert f.rekordy_z_manifestu() == {}
+
+
 class TestSHAKanoniczny:
     """Zgodna liczba rekordow mowi tylko, ze plik ma wlasciwa dlugosc."""
 
@@ -221,9 +279,12 @@ class TestDokumentacjaZgodnaZKodem:
         """
         doc = (KORZEN / "docs" / "URUCHOMIENIE_LOKALNE.md").read_text(
             encoding="utf-8")
-        poczatek = doc.find("Siedem warunków odmowy")
-        assert poczatek > 0, "brak tabeli odmow w URUCHOMIENIE_LOKALNE"
-        ogon = doc[poczatek:]
+        # Kotwica NIE zawiera liczebnika ("Siedem"/"Osiem") — pierwsza wersja
+        # tego testu go zawierala i zepsula sie przy dodaniu warunku 8, czyli
+        # przy dokladnie tej zmianie, ktorej miala pilnowac.
+        m = re.search(r"^### \w+ warunk\w+ odmowy", doc, re.MULTILINE)
+        assert m, "brak tabeli odmow w URUCHOMIENIE_LOKALNE"
+        ogon = doc[m.start():]
         koniec = ogon.find("**Czego skryptu")
         w_dok = set(re.findall(r"^\| (\d) \| ", ogon[:koniec], re.MULTILINE))
         w_docstring = set(re.findall(r"^  (\d)\. ", f.__doc__ or "", re.MULTILINE))

@@ -204,7 +204,7 @@ Zakup może ruszyć **bez kolejnej decyzji**, gdy wszystkie są spełnione:
 **Istnienie pliku nie jest dowodem kompletności.** Ta reguła powstała po tym,
 jak przerwany transfer zostawił obciętą sesję, która parsowała się bez błędu.
 
-### Siedem warunków odmowy — ta sama numeracja co w skrypcie
+### Osiem warunków odmowy — ta sama numeracja co w skrypcie
 
 Lista poniżej odpowiada docstringowi `scripts/fetch_d5b2_month.py` i komunikatom
 `STOP (warunek N)` **co do numeru**. To jest inna lista niż §7: tam są warunki
@@ -219,6 +219,7 @@ Lista poniżej odpowiada docstringowi `scripts/fetch_d5b2_month.py` i komunikato
 | 5 | wolne miejsce spadło poniżej 20 GB w trakcie pobierania |
 | 6 | **pobrana** sesja nie przeszła kontroli kompletności |
 | 7 | `2026-07-30` ma SHA-256 inny niż `data/manifest_d5c.json` |
+| 8 | liczba rekordów w metadanych rozjechała się z manifestem (rewizja po stronie dostawcy) |
 
 **Czego skryptu na tej liście NIE ma — i to jest celowe.** Niekompletny plik
 **istniejący przed uruchomieniem** nie przerywa pracy: zostaje skasowany

@@ -3,7 +3,7 @@
 
 DZIEN PO DNIU, ZE WZNOWIENIEM, DO `PROJECT_G_DATA_ROOT`.
 
-SIEDEM WARUNKOW ODMOWY, jedna numeracja — ta sama w docstringu i w kazdym
+OSIEM WARUNKOW ODMOWY, jedna numeracja — ta sama w docstringu i w kazdym
 komunikacie `STOP (warunek N)`; jej odpowiednik w dokumentacji to
 `docs/URUCHOMIENIE_LOKALNE.md` §8. Skrypt PRZERYWA, gdy:
 
@@ -17,7 +17,10 @@ komunikacie `STOP (warunek N)`; jej odpowiednik w dokumentacji to
   6. pobrana sesja nie przejdzie kontroli kompletnosci,
   7. plik `SESJA_D5C` ma SHA-256 inny niz `data/manifest_d5c.json` — czyli ma
      poprawna liczbe rekordow, ale NIE jest tym plikiem, na ktorym policzono
-     audyt Etapu 3.
+     audyt Etapu 3,
+  8. liczba rekordow w metadanych rozjechala sie z zapisana w manifescie —
+     dostawca zrewidowal dane, wiec kazdy juz oplacony plik wyglada na
+     niekompletny i skrypt kupilby caly miesiac drugi raz.
 
 UWAGA NA DWIE ROZNE LISTY. Powyzsza numeracja opisuje ODMOWY SKRYPTU. Lista
 w `URUCHOMIENIE_LOKALNE.md` §7 to co innego — osiem WARUNKOW ZGODY wlasciciela
@@ -272,6 +275,55 @@ def sprawdz_sesje_d5c(do_pobrania: list[dict], pozwol: bool) -> None:
         "chcesz zaplacic za nia trzeci raz, uruchom z --kup-ponownie-d5c.")
 
 
+def rekordy_z_manifestu() -> dict[str, int]:
+    """Liczby rekordow ZAPISANE przy poprzednim zakupie — to, za co zaplacono."""
+    cel = sciezka_manifestu()
+    if not cel.exists():
+        return {}
+    try:
+        stary = json.loads(cel.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return {}
+    return {w["sesja"]: int(w["rekordow"]) for w in stary.get("plan", [])
+            if "rekordow" in w}
+
+
+def sprawdz_dryf_rekordow(plan: list[dict], zapisane: dict[str, int]) -> str:
+    """WARUNEK 8 — dostawca nie moze zmienic danych w trakcie zakupu.
+
+    DLACZEGO TO JEST ODMOWA, A NIE OSTRZEZENIE.
+
+    `kompletny()` porownuje plik z liczba rekordow z BIEZACEJ wyceny. Jesli
+    dostawca zrewiduje dane, kazdy JUZ OPLACONY plik zaczyna wygladac na
+    niekompletny — i skrypt kupilby caly miesiac po raz drugi, nie mowiac
+    o tym ani slowa. Zdarzylo sie realnie 06.08.2026: wszystkie 22 sesje
+    urosly o 1,67-3,06% (mediana 2,66%) miedzy dwoma uruchomieniami,
+    a laczna wycena z 78,6044 na 80,6729 USD.
+
+    Kontynuowanie oznaczaloby tez zlozenie miesiaca z DWOCH WERSJI danych
+    dostawcy — czesc plikow sprzed rewizji, czesc po. W danych nie widac tego
+    w zaden sposob; wynik wygladalby normalnie.
+    """
+    rozne = [(w["sesja"], zapisane[w["sesja"]], w["rekordow"])
+             for w in plan
+             if w["sesja"] in zapisane and zapisane[w["sesja"]] != w["rekordow"]]
+    if not rozne:
+        return f"rekordy: zgodne z manifestem ({len(zapisane)} sesji)"
+
+    linie = [f"    {s}: manifest {a:>12,} -> teraz {b:>12,} "
+             f"({100 * (b - a) / a:+.2f}%)" for s, a, b in rozne[:8]]
+    sys.exit(
+        f"\nSTOP (warunek 8): dostawca zmienil dane {len(rozne)} z "
+        f"{len(plan)} sesji.\n" + "\n".join(linie)
+        + (f"\n    ... i {len(rozne) - 8} wiecej" if len(rozne) > 8 else "")
+        + "\n\n  To NIE jest uszkodzenie Twoich plikow — one zgadzaja sie"
+          "\n  z liczbami, za ktore zaplacono. Zmienily sie METADANE po stronie"
+          "\n  Databento, wiec kazdy oplacony plik wyglada teraz na niekompletny."
+          "\n\n  Bez tej odmowy skrypt kupilby caly miesiac PO RAZ DRUGI."
+          "\n  Nie kupuj, dopoki nie wiadomo, co dostawca zmienil:"
+          "\n  patrz docs/D5_DRYF_METADANYCH.md.")
+
+
 def sprawdz_sha_d5c(p: Path) -> str:
     """Kontrola MOCNIEJSZA niz liczba rekordow.
 
@@ -381,6 +433,7 @@ def main() -> int:
                  "(specyfikacja zamrozona).")
 
     print(sprawdz_manifest(plan))
+    print(sprawdz_dryf_rekordow(plan, rekordy_z_manifestu()))
 
     # ------------------------------------------------ stan przed zakupem --
     juz_mamy, do_pobrania, koszt_do_zaplaty = [], [], 0.0

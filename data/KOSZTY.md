@@ -70,6 +70,22 @@ inaczej naliczyłby ją trzeci raz.
 
 ---
 
+## 3b. ⛔ ZAKUP WSTRZYMANY 06.08.2026 — dryf metadanych
+
+Wycena tych samych, zamrożonych zapytań wzrosła z **78,6044** na **80,6729 USD**
+(+2,63%), bo liczba rekordów wzrosła we **wszystkich 22 sesjach**. Analiza:
+`docs/D5_DRYF_METADANYCH.md`.
+
+Skutek dla tego rejestru: **nie da się dziś podać kosztu dokończenia zakupu**,
+bo nie wiadomo, którą wersję danych kupujemy ani czy za tydzień nie będzie
+trzeciej. Zgodnie z zasadą 4 podaję więc granicę, nie liczbę: pozostałe
+18 sesji to **≤ 68 USD** przy wycenie z 06.08.
+
+Pobrane i opłacone do tej pory: **4 z 22 sesji**. Plików **nie kasujemy** —
+zgadzają się z liczbami, za które zapłacono.
+
+---
+
 ## 3a. Pozycja do wyjaśnienia — 2026-07-06
 
 | Pozycja | Kwota | Status |
