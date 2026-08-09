@@ -21,9 +21,15 @@ ROZSTRZYGNIĘTY 09.08. Zakup zablokowany warunkiem 8.**
 > `price=INT64_MAX` = UNDEF_PRICE).
 >
 > **Skutki:** ❌ nie ma podstawy do odkupu z tytułu kompletności ·
-> ✅ audyt D5-C nietknięty, jeśli rekordy `N` nie niosą `F_LAST` (§3b) ·
 > ⛔ **zakaz mieszania plików z obu okresów pozostaje w mocy** — liczebności
 > nadal się nie zgadzają, a mechanizm nie ma nazwy.
+>
+> **Test 4 (§3c) dołożył kawałek mechanizmu, którego dostawca jeszcze nie
+> nazwał:** wszystkie 18 152 rekordy `N` niosą `F_LAST`, ale **liczba kopert
+> jest identyczna** (698 358 po obu stronach), a nadwyżka `F_LAST` na
+> rekordach realnych sumuje się co do rekordu do liczby `N`. Bit został
+> **przeniesiony** na osobny wypełniacz, nie dodany. Czy to zmienia jednostkę
+> obserwacji, rozstrzyga **test 5** (§3d) — darmowy, jeszcze nieuruchomiony.
 
 > ## ⚠️ KOREKTA v2 — pierwsza wersja tego dokumentu stawiała błędną tezę
 >
@@ -340,20 +346,6 @@ okna wariant A jest wykluczony. Rozciągnięcie na pozostałe 21 sesji jest
 uogólnieniem — mocnym, bo tempo niedoboru jest podobne we wszystkich sesjach
 (§1), ale nadal uogólnieniem. Nie zamieniam go w twierdzenie o pomiarze.
 
-### Czego nie rozstrzyga i co jeszcze trzeba sprawdzić — **za darmo**
-
-Czy rekordy `N` niosą bit **`F_LAST`**. To jedyne otwarte pytanie o realnych
-konsekwencjach: audyt D5-C liczy koperty zdarzeń właśnie po tym bicie
-(842 757 kopert, 0 niewyjaśnionych). Gdyby część `N` je zamykała, audyt
-policzono by na niepełnym zbiorze kopert.
-
-```bash
-python scripts/diff_mikro.py --flagi   # lokalnie, bez sieci, bez kosztu
-```
-
-Tryb czyta **wyłącznie pliki już leżące na dysku** — nie wywołuje nawet
-`get_cost` i nie potrzebuje klucza API.
-
 ### Dlaczego klucz porównania celowo nie zawiera `sequence`
 
 Tożsamość rekordu to `ts_recv` + `order_id` + `action` + `side` + `price` +
@@ -364,15 +356,94 @@ wariant A. Test, który nie może dać drugiej odpowiedzi, nie jest testem.
 
 ---
 
-## 3a. Bilans diagnostyki — co wiemy po trzech testach
+## 3c. Test 4 — flagi rekordów `N` · **WYKONANY 09.08**, koszt 0
+
+`python scripts/diff_mikro.py --flagi`, to samo okno, oba pliki z dysku.
+
+| action | flags | dostawca | my |
+|---|---|---:|---:|
+| A | — | 7 580 | 74 |
+| A | `F_LAST` | 314 013 | **321 519** |
+| C | — | 41 311 | 32 974 |
+| C | `F_LAST` | 279 839 | **288 176** |
+| F | — | 57 862 | 57 862 |
+| M | — | 2 328 | 19 |
+| M | `F_LAST` | 86 354 | **88 663** |
+| **N** | **`F_LAST`** | **18 152** | **0** |
+| T | — | 32 953 | 32 953 |
+
+```
+kopert (F_LAST) razem u dostawcy  :    698,358
+kopert (F_LAST) razem u nas       :    698,358
+```
+
+### Pytanie było źle postawione — i to jest mój błąd
+
+Pytałem: *czy rekordy `N` niosą `F_LAST`*. Odpowiedź brzmi „wszystkie 18 152",
+a mój skrypt wydrukował na tej podstawie werdykt **„audyt WYMAGA
+POWTÓRZENIA"**. **Ten werdykt jest nieprawdziwy** — warunek sprawdzał
+`n_z_last == 0` przed porównaniem sum i nigdy nie dotarł do liczby, która ma
+znaczenie. Liczba kopert jest po obu stronach **identyczna**.
+
+Bilans domyka się co do rekordu:
+
+| nadwyżka `F_LAST` po naszej stronie | |
+|---|---:|
+| A | +7 506 |
+| C | +8 337 |
+| M | +2 309 |
+| **razem** | **18 152** = liczba rekordów `N` |
+
+**Bit nie został dodany, tylko przeniesiony.** W nowym serwowaniu kopertę
+zamyka osobny rekord-wypełniacz `N`, a nie ostatni rekord realny. Liczba
+kopert bez zmian, granice **w tym samym miejscu strumienia**.
+
+### Czego histogram nie może rozstrzygnąć — i dlaczego to nie koniec
+
+Histogram nie widzi **kolejności**. Dwa scenariusze dają w nim identyczne
+liczby, a skutki mają przeciwne:
+
+| scenariusz | skutek dla jednostki D5-B2 |
+|---|---|
+| granica **przeniesiona** na końcowy `N` | **żaden** — koperta zamyka się w tym samym miejscu |
+| granica **wstawiona** w środek ciągu `Trade` | **poważny** — akcja rozpada się na dwie |
+
+Na ręcznych fixture'ach oba są zmierzone i rozróżnione
+(`tests/test_mbo_events.py::TestRekordyNone`). Na realnym pliku rozstrzyga
+dopiero test 5.
+
+## 3d. Test 5 — rekonstrukcja akcji · **DO URUCHOMIENIA**, koszt 0
+
+```bash
+python scripts/diff_mikro.py --rekonstrukcja
+```
+
+Puszcza `engine/mbo_events.rekonstruuj` na **obu** plikach w tym samym oknie
+i porównuje **akcje agresywne**, pole po polu — czyli dokładnie tę jednostkę
+obserwacji, na której policzono audyt D5-C. Jedyny test w tej diagnostyce,
+który patrzy na kolejność rekordów, a nie na ich rozkład.
+
+| wynik | co znaczy |
+|---|---|
+| listy identyczne | **audyt D5-C stoi** — przeniesienie bitu nie zmienia jednostki |
+| jakakolwiek różnica | audyt opisuje wersję danych, której dostawca już nie serwuje → **powtórzyć** |
+
+Kryterium zapisane **przed** uruchomieniem. Numer koperty jest z porównania
+świadomie wyłączony: to indeks porządkowy, nie cecha zdarzenia.
+
+---
+
+## 3a. Bilans diagnostyki — co wiemy po pięciu testach
 
 | Pytanie | Odpowiedź | Na jakiej podstawie |
 |---|---|---|
 | Czy pliki są ucięte na końcu? | **Nie** (poza 07-07) | test 1, pokrycie 13:30–19:59:59 |
 | Czy pliki mają tyle rekordów, co dziś API? | **Nie, mniej o ~2%** | test 2, okno o pełnym pokryciu |
 | Czy niedobór jest jednorodny? | **Nie**, stosunek 1,133 | test 2 |
-| Czy brakuje realnych zdarzeń? | **NIE** — 0 rekordów tylko u dostawcy poza `action=N` | **test 3** (30 min sesji 07-03) |
-| Czy audyt D5-C stoi? | **do sprawdzenia** — zależy od `F_LAST` na rekordach `N` | `diff_mikro.py --flagi`, darmowe |
+| Czy brakuje realnych zdarzeń? | **NIE** — 0 rekordów tylko u dostawcy poza `action=N` | test 3 (30 min sesji 07-03) |
+| Czy rekordy `N` niosą `F_LAST`? | **Tak, wszystkie 18 152** | test 4 |
+| Czy zmieniła się liczba kopert? | **NIE** — 698 358 po obu stronach; bit **przeniesiony**, nie dodany | test 4, bilans domyka się co do rekordu |
+| Czy audyt D5-C stoi? | **do sprawdzenia** — histogram nie widzi kolejności | **test 5**, `--rekonstrukcja`, darmowy |
 | Czy trzeba odkupić pobrane sesje? | **Nie z tytułu kompletności** | test 3 |
 | Czy wolno mieszać stare i nowe pliki? | **Nie** | liczebności nadal rozjechane, mechanizm bez nazwy |
 
@@ -417,12 +488,14 @@ Konsekwencje — stan po trzech testach:
 1. ✅ **Czy plik D5-C obejmuje całe okno RTH** — tak (test 1), pokrycie
    13:30–19:59:59 UTC.
 2. ✅ **Czy brakuje realnych zdarzeń** — nie (test 3). Nadwyżka u dostawcy to
-   w całości rekordy `action=N` bez treści ekonomicznej. Audyt liczył zdarzenia
-   po `F_LAST`, więc *jeśli* rekordy `N` tego bitu nie niosą, wynik
-   `842 757 zdarzeń, 0 niewyjaśnionych` stoi bez zmian.
-3. ⏳ **Czy rekordy `N` niosą `F_LAST`** — jedyne otwarte pytanie o realnych
-   skutkach dla audytu. Sprawdzalne lokalnie i **za darmo**:
-   `python scripts/diff_mikro.py --flagi`.
+   w całości rekordy `action=N` bez treści ekonomicznej.
+3. ✅ **Czy zmieniła się liczba kopert** — nie (test 4). 698 358 po obu
+   stronach; wszystkie `N` niosą `F_LAST`, ale bit został przeniesiony
+   z ostatniego rekordu realnego na dołożony wypełniacz.
+3a. ⏳ **Czy jednostka obserwacji jest ta sama** — jedyne otwarte pytanie
+   o realnych skutkach dla audytu. Histogram tego nie rozstrzyga, bo nie widzi
+   kolejności. Sprawdzalne lokalnie i **za darmo**:
+   `python scripts/diff_mikro.py --rekonstrukcja`.
 4. ⛔ Czy miesiąc D5-B2 wolno policzyć na **mieszance** plików z obu okresów?
    **Nadal nie.** Test 3 pokazał, że treść zdarzeń jest ta sama, ale liczebności
    nadal się rozjeżdżają, a mechanizm nie ma nazwy. W danych nie widać, który
@@ -533,14 +606,31 @@ z panelu Databento z 6–8.08 (pytanie 5). Wątek: kontynuacja rozmowy z Erikiem
 >    (`INT64_MAX` / `UNDEF_PRICE`).
 >
 >    So our older files appear to contain **all real book events**, and the
->    entire difference consists of placeholder `None` records. **Two questions
->    follow:**
+>    entire difference consists of placeholder `None` records.
 >
->    a) **What are these `action=N` records and why do they now appear in
+>    We also compared the `flags` field. **Every one of the 18,152 `N` records
+>    carries `F_LAST`** — and the total number of `F_LAST` records is
+>    *identical* on both sides (**698,358**). The surplus of `F_LAST` on our
+>    side falls on real records and sums exactly to the number of `N` records:
+>
+>    | action | `F_LAST` ours − yours |
+>    |---|---:|
+>    | A | +7,506 |
+>    | C | +8,337 |
+>    | M | +2,309 |
+>    | **total** | **+18,152** |
+>
+>    Read together, this looks like the end-of-event marker moved: what used to
+>    be `F_LAST` on the last real record of an event is now a separate trailing
+>    `N` record carrying `F_LAST`. **Is that reading correct?** Specifically:
+>
+>    a) **What are these `action=N` records, and why do they now appear in
 >       historical ranges that previously returned without them?**
->    b) **Do any of them carry the `F_LAST` flag?** We reconstruct matching
->       events by that flag, so if they do, an event count computed on the
->       older file is not comparable with one computed today.
+>    b) **Is the event partition guaranteed unchanged** — i.e. does the
+>       trailing `N` always immediately follow the record that previously
+>       carried `F_LAST`, with no real record in between? We reconstruct
+>       aggressor actions by walking the stream in order, so the answer decides
+>       whether results computed on the older files remain valid.
 > 5. Two sessions were interrupted mid-download — 2026-07-06 returned
 >    `Response ended prematurely`, and 2026-07-07 left a truncated file
 >    (1,867,793 records, ~7 minutes of a 6.5-hour window). **Were those
@@ -632,6 +722,23 @@ projekcie warunkiem, nie ozdobą.
    wzorcem do powtórzenia, nie jednorazową sztuczką.
 5. **Filtr `action` należy do kontraktu wczytywania, nie do detali.**
    Rekordy `action=N` przechodzą przez każdy naiwny licznik rekordów i psują
-   porównania między pobraniami. `engine/mbo_events.py` liczy jednostkę
-   kanoniczną po `Trade`/`order_id`, więc jest na nie odporny — ale każdy nowy
-   kod czytający MBO musi je jawnie odrzucać albo jawnie uzasadnić, czemu nie.
+   porównania między pobraniami. Każdy nowy kod czytający MBO musi je jawnie
+   odrzucać albo jawnie uzasadnić, czemu nie.
+
+   **Korekta w tym samym dokumencie:** napisałem najpierw, że
+   `engine/mbo_events.py` „jest na nie odporny", bo liczy po `Trade`/`order_id`.
+   To było za mocne i sprzeczne z §4.2 tego samego pliku. Moduł czyta `flags`
+   z **każdego** rekordu, więc `F_LAST` na wypełniaczu zamyka kopertę tak samo
+   jak na rekordzie realnym — regułą 2 rządzi koperta, nie typ akcji.
+   Odporność jest **warunkowa** i granica jest teraz zmierzona testami
+   (`TestRekordyNone`): granica przeniesiona na końcowy `N` nie zmienia nic,
+   granica wstawiona w środek ciągu rozbija akcję na dwie.
+
+6. **Werdykt wypisany przez skrypt to nadal tylko wynik gałęzi `if`.**
+   Tryb `--flagi` wydrukował „audyt WYMAGA POWTÓRZENIA", bo sprawdzał
+   `n_z_last == 0` przed porównaniem sum kopert — a suma była identyczna.
+   Pytanie („czy `N` niosą `F_LAST`") było źle postawione, więc poprawna
+   odpowiedź na nie prowadziła do fałszywego wniosku. **Skrypt nie ma
+   uprawnienia do wydawania werdyktu o audycie; ma dostarczać liczby.**
+   Poprawka nie polegała na złagodzeniu progu, tylko na dołożeniu testu
+   **ostrzejszego** (§3d) — porównania samej jednostki obserwacji.

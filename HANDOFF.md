@@ -26,7 +26,7 @@ niezależnych audytach zewnętrznych) jest **jedynym źródłem prawdy** — kod
 a nie odwrotnie.
 
 Gotowe: fundament repo, silnik backtestowy, komplet aparatu walidacyjnego, strażnicy
-niezmienników, CI, golden baseline. **555 funkcji testowych (626 przypadków po parametryzacji), pokrycie 92%, ruff i mypy czyste.**
+niezmienników, CI, golden baseline. **561 funkcji testowych (632 przypadków po parametryzacji), pokrycie 92%, ruff i mypy czyste.**
 Liczbę pilnuje `tests/test_guards.py::test_handoff_podaje_aktualna_liczbe_testow` —
 bez tego rotowała dwa razy w ciągu doby, co jest dokładnie tym defektem, przed
 którym ostrzega reguła na górze tego pliku.
@@ -138,7 +138,8 @@ Aktualna kolejka to trzy rzeczy, żadna z nich nie kosztuje ani centa:
 git pull --ff-only
 
 # A. Rozstrzyga los audytu D5-C. Lokalnie, bez sieci, bez klucza API.
-python scripts/diff_mikro.py --flagi
+#    (--flagi juz wykonane; ten tryb patrzy na KOLEJNOSC, nie na rozklad)
+python scripts/diff_mikro.py --rekonstrukcja
 
 # B. Do maila (§5 D5_DRYF): pole `pobrano_utc` z lokalnego manifestu.
 #    Manifest lezy POZA repo (sekcja 3), wiec sciezke liczy sam skrypt.
@@ -207,9 +208,18 @@ python scripts/fetch_d5b2_month.py
 > **Odkup z tytułu kompletności odpada.** Zakaz mieszania plików z obu okresów
 > **zostaje w mocy** — liczebności nadal się rozjeżdżają, mechanizm bez nazwy.
 >
-> **Zostało jedno pytanie, darmowe:** czy rekordy `N` niosą `F_LAST`. Od tego
-> zależy, czy audyt D5-C (842 757 kopert) stoi.
-> `python scripts/diff_mikro.py --flagi` — lokalnie, bez sieci, bez klucza API.
+> **Test 4 (`--flagi`, 09.08, darmowy):** wszystkie 18 152 rekordy `N` niosą
+> `F_LAST` — **ale liczba kopert jest identyczna** (698 358 po obu stronach),
+> a nadwyżka `F_LAST` na A (+7 506), C (+8 337) i M (+2 309) sumuje się co do
+> rekordu do 18 152. **Bit został przeniesiony na osobny wypełniacz, nie
+> dodany.** Skrypt wydrukował wtedy werdykt „audyt WYMAGA POWTÓRZENIA" — jest
+> **nieprawdziwy**, gałąź `if` sprawdzała flagi przed sumami. Poprawione.
+>
+> **Zostało jedno pytanie, darmowe:** czy jednostka obserwacji jest ta sama.
+> Histogram tego nie rozstrzyga, bo nie widzi kolejności rekordów.
+> `python scripts/diff_mikro.py --rekonstrukcja` — puszcza `mbo_events` na obu
+> plikach i porównuje akcje agresywne pole po polu. Identyczne → audyt D5-C
+> stoi. Różnica → audyt do powtórzenia.
 >
 > **Nie kupuj i nie kasuj niczego.** Stan: 4 z 22 sesji pobrane, **12,8093 USD
 > potwierdzone wycenami**, do ~7,49 USD niepotwierdzone (przerwane 07-06 i 07-07).

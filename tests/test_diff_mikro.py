@@ -126,6 +126,28 @@ def test_flagi_pomijaja_rekordy_bez_ts_recv(monkeypatch):
 
 # --- 4. tryb --flagi ma byc DARMOWY ----------------------------------------
 
+def test_raport_rekonstrukcji_porownuje_akcje_a_nie_rekordy():
+    """Werdykt o audycie D5-C ma zapadac na JEDNOSTCE OBSERWACJI.
+
+    Histogram flag nie widzi kolejnosci rekordow, wiec granica koperty
+    przeniesiona na wypelniacz (skutek zerowy) i wstawiona w srodek ciagu
+    (skutek powazny) daja w nim te same liczby. Tryb --rekonstrukcja musi
+    wiec przechodzic przez `rekonstruuj`, nie przez liczniki.
+    """
+    import inspect
+    zrodlo = inspect.getsource(d.raport_rekonstrukcji)
+    assert "rekonstruuj(" in zrodlo and "z_dbn(" in zrodlo
+
+
+def test_raport_rekonstrukcji_nie_dotyka_sieci():
+    import inspect
+    zrodlo = inspect.getsource(d.raport_rekonstrukcji).replace(
+        d.raport_rekonstrukcji.__doc__, "")
+    for zakazane in ("Historical", "get_cost", "get_range", "DATABENTO_API_KEY"):
+        assert zakazane not in zrodlo, (
+            f"tryb --rekonstrukcja siega po {zakazane} — przestal byc darmowy")
+
+
 def test_raport_flag_nie_dotyka_sieci():
     """Ani `Historical`, ani `get_cost` nie moga sie pojawic w tej sciezce.
 

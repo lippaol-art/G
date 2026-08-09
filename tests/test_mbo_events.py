@@ -214,6 +214,98 @@ class TestKopertaFLast:
         assert len(a) == 1
 
 
+class TestRekordyNone:
+    """Rekordy `action=N` — dokladna GRANICA odpornosci tego modulu.
+
+    Mikro-diff z 09.08 (`docs/D5_DRYF_METADANYCH.md` §3b) pokazal, ze dostawca
+    serwuje dzis 18 152 rekordow `action=N` w 30 minutach sesji, ktorych nasze
+    starsze pliki nie maja: `order_id=0`, `side=N`, `size=0`, `price` rowne
+    UNDEF_PRICE. Zero tresci ekonomicznej.
+
+    Pomiar `--flagi` z 09.08 odpowiedzial na pytanie o flagi: **wszystkie
+    18 152 rekordow `N` niesie `F_LAST`** — ale laczna liczba kopert jest po
+    obu stronach IDENTYCZNA (698 358). Nadwyzka `F_LAST` po naszej stronie
+    rozklada sie na A (+7 506), C (+8 337) i M (+2 309), co sumuje sie dokladnie
+    do 18 152. Bit nie zostal DODANY, tylko PRZENIESIONY: koperte zamyka teraz
+    osobny rekord `N` na koncu zamiast ostatniego rekordu realnego.
+
+    Ponizsze testy rozdzielaja dwa scenariusze, ktore latwo pomylic, a maja
+    przeciwne skutki:
+
+      * granica PRZENIESIONA na koncowy `N` — akcje bez zmian,
+      * granica WSTAWIONA w srodek ciagu — akcje sie rozpadaja.
+
+    Dane mowia, ze zaszedl pierwszy. Drugi jest tu po to, zeby bylo widac,
+    ze test umie wykryc roznice, gdyby zaszedl.
+    """
+
+    #: Wypelniacz dokladnie taki, jak w probce od dostawcy.
+    @staticmethod
+    def pusty(ts: int = 0, last: bool = False) -> RekordMBO:
+        return RekordMBO(ts_recv=ts, action="N", side="N",
+                         price=9223372036854775807, size=0, order_id=0,
+                         flags=F_LAST if last else 0)
+
+    def test_bez_flag_nie_zmieniaja_niczego(self):
+        """Wstawione miedzy KAZDA pare rekordow — wynik bit w bit ten sam."""
+        rek = [
+            r("T", "B", sz=3, oid=10),
+            r("F", "A", sz=1, oid=20),
+            r("T", "A", sz=2, oid=30),
+            r("F", "B", sz=2, oid=40, last=True),
+        ]
+        zasmiecone: list[RekordMBO] = []
+        for x in rek:
+            zasmiecone += [self.pusty(), x]
+        zasmiecone.append(self.pusty())
+
+        assert [vars(x) for x in rekonstruuj(zasmiecone)] == [
+            vars(x) for x in rekonstruuj(rek)]
+
+    def test_granica_przeniesiona_na_koncowy_n_nie_zmienia_akcji(self):
+        """SCENARIUSZ ZMIERZONY — `F_LAST` zdjety z ostatniego rekordu realnego
+        i przeniesiony na dolozony za nim rekord `N`.
+
+        To jest dokladnie to, co pokazal pomiar `--flagi`, i to jest powod,
+        dla ktorego audyt D5-C nie wymaga powtorzenia: koperta zamyka sie
+        w tym samym miejscu STRUMIENIA, tylko innym rekordem.
+        """
+        po_staremu = akcje(
+            r("T", "B", sz=1, oid=10),
+            r("T", "B", sz=1, oid=10),
+            r("F", "A", sz=2, oid=20, last=True),
+        )
+        po_nowemu = akcje(
+            r("T", "B", sz=1, oid=10),
+            r("T", "B", sz=1, oid=10),
+            r("F", "A", sz=2, oid=20),          # juz BEZ F_LAST
+            self.pusty(last=True),              # koperte zamyka wypelniacz
+        )
+        assert [vars(x) for x in po_staremu] == [vars(x) for x in po_nowemu]
+
+    def test_granica_wstawiona_w_srodek_ciagu_rozbija_akcje(self):
+        """SCENARIUSZ KONTROLNY — gdyby `N` z `F_LAST` trafil w srodek ciagu.
+
+        Nie zaszedl, ale bez tego testu poprzedni niczego by nie dowodzil:
+        pokazywalby tylko, ze porownanie jest slepe na wszystko.
+        """
+        bez = akcje(
+            r("T", "B", sz=1, oid=10),
+            r("T", "B", sz=1, oid=10, last=True),
+        )
+        z_flaga = akcje(
+            r("T", "B", sz=1, oid=10),
+            self.pusty(last=True),
+            r("T", "B", sz=1, oid=10, last=True),
+        )
+        assert len(bez) == 1 and bez[0].n_trade == 2
+        assert len(z_flaga) == 2
+        assert [x.koperta for x in z_flaga] == [0, 1]
+
+    def test_same_wypelniacze_nie_tworza_akcji(self):
+        assert akcje(self.pusty(), self.pusty(), self.pusty(last=True)) == []
+
+
 class TestNiezmiennikiOgolne:
     def test_fill_bez_poprzedzajacego_trade_jest_ignorowany(self):
         """Rekordy `Fill` na poczatku koperty, bez `Trade`, nie tworza akcji."""

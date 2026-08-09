@@ -45,6 +45,7 @@ import databento as db
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+from engine.mbo_events import rekonstruuj, z_dbn  # noqa: E402
 from engine.paths import raw_dir  # noqa: E402
 
 UTC = dt.UTC
@@ -109,10 +110,15 @@ def wczytaj(p: Path, od_ns: int, do_ns: int) -> tuple[Counter, Counter]:
 def flagi_wg_akcji(p: Path, od_ns: int, do_ns: int) -> dict[str, Counter]:
     """Rozklad pola `flags` w rozbiciu na typ akcji, w oknie [od_ns, do_ns).
 
-    Potrzebne do JEDNEGO pytania: czy rekordy `action=N`, ktore ma dostawca,
-    a ktorych nie ma nasz plik, niosa bit **F_LAST**. Jesli tak, to koperty
-    zdarzen z audytu D5-C sa liczone z niepelnego zbioru i audyt trzeba
-    powtorzyc. Jesli nie — audyt stoi nienaruszony.
+    Pierwotnie pytanie brzmialo: czy rekordy `action=N` niosa `F_LAST`.
+    Pomiar 09.08 odpowiedzial "wszystkie" — i pokazal, ze **to pytanie bylo
+    zle postawione**. Laczna liczba kopert jest po obu stronach identyczna
+    (698 358), a nadwyzka `F_LAST` po naszej stronie na A, C i M sumuje sie
+    dokladnie do liczby rekordow `N`. Bit zostal PRZENIESIONY, nie dodany.
+
+    Histogram nie potrafi odroznic granicy przeniesionej (skutek zerowy) od
+    wstawionej w srodek ciagu (skutek powazny), bo nie widzi KOLEJNOSCI.
+    Rozstrzyga to dopiero `--rekonstrukcja`.
     """
     wynik: dict[str, Counter] = {}
     for r in db.DBNStore.from_file(p):
@@ -164,7 +170,7 @@ def raport_flag() -> int:
                   f"dostawca {s.get(w, 0):>9,}   my {n.get(w, 0):>9,}")
 
     print("\n" + "=" * 70)
-    print("PYTANIE ROZSTRZYGAJACE: czy rekordy N niosa F_LAST?")
+    print("LICZBA KOPERT — czy granice zdarzen w ogole sie zmienily?")
     n_z_last = sum(ile for w, ile in serw.get("N", Counter()).items()
                    if w & 128)
     n_ogolem = sum(serw.get("N", Counter()).values())
@@ -174,19 +180,103 @@ def raport_flag() -> int:
     print(f"  z nich z bitem F_LAST             : {n_z_last:>10,}")
     print(f"  kopert (F_LAST) razem u dostawcy  : {last_serw:>10,}")
     print(f"  kopert (F_LAST) razem u nas       : {last_nasz:>10,}")
+
+    # Bilans przeniesienia: o ile WIECEJ F_LAST niosa u nas rekordy realne.
+    nadwyzka = {a: sum(i for w, i in nasz.get(a, Counter()).items() if w & 128)
+                - sum(i for w, i in serw.get(a, Counter()).items() if w & 128)
+                for a in sorted(set(serw) | set(nasz)) if a != "N"}
+    razem = sum(v for v in nadwyzka.values() if v > 0)
+    print("\n  nadwyzka F_LAST po NASZEJ stronie, wg akcji:")
+    for a, v in nadwyzka.items():
+        if v:
+            print(f"    {a} : {v:>+10,}")
+    print(f"    {'razem':<2}: {razem:>+10,}   (rekordow N: {n_ogolem:,})")
     print()
-    if n_z_last == 0 and last_serw == last_nasz:
-        print("  -> AUDYT D5-C NIENARUSZONY. Rekordy N nie zamykaja kopert,")
-        print("     a liczba kopert jest po obu stronach identyczna.")
-    elif n_z_last == 0:
-        print("  -> Rekordy N nie niosa F_LAST, ale liczba kopert i tak sie")
-        print(f"     rozni o {last_serw - last_nasz:+,}. Powod inny niz N —")
-        print("     audytu D5-C nie wolno uznac za potwierdzony bez analizy.")
+
+    if last_serw != last_nasz:
+        print(f"  -> LICZBA KOPERT SIE ROZNI o {last_serw - last_nasz:+,}.")
+        print("     Granice zdarzen NIE sa te same — audyt D5-C wymaga")
+        print("     powtorzenia niezaleznie od reszty tej diagnostyki.")
+    elif n_z_last and razem == n_ogolem:
+        print("  -> Bit F_LAST zostal PRZENIESIONY, nie dodany: liczba kopert")
+        print("     identyczna, a nadwyzka na rekordach realnych sumuje sie")
+        print("     dokladnie do liczby rekordow N. Koperta zamyka sie teraz")
+        print("     osobnym wypelniaczem zamiast ostatniego rekordu realnego.")
+        print()
+        print("     TO NIE JEST JESZCZE WERDYKT. Histogram nie widzi KOLEJNOSCI,")
+        print("     a granica przeniesiona (skutek zerowy) i wstawiona w srodek")
+        print("     ciagu (skutek powazny) daja tu te same liczby. Rozstrzyga:")
+        print("         python scripts/diff_mikro.py --rekonstrukcja")
     else:
-        print(f"  -> UWAGA: {n_z_last:,} rekordow N niesie F_LAST. Koperty")
-        print("     zdarzen z audytu D5-C liczone sa z niepelnego zbioru")
-        print("     i audyt (842 757 kopert) WYMAGA POWTORZENIA.")
+        print("  -> Liczba kopert zgodna, ale bilans przeniesienia sie NIE")
+        print(f"     domyka ({razem:,} vs {n_ogolem:,} rekordow N). Nie zgaduj")
+        print("     mechanizmu — uruchom --rekonstrukcja i porownaj akcje.")
     return 0
+
+
+def raport_rekonstrukcji() -> int:
+    """Test KONCOWY: te same akcje agresywne z obu plikow, czy nie?
+
+    Histogramy odpowiadaja na pytania o liczebnosc. To pytanie jest inne:
+    czy **jednostka obserwacji D5-B2** — akcja agresywna per Trade — wychodzi
+    z obu wersji danych identyczna. Jesli tak, audyt D5-C stoi, bo policzono go
+    dokladnie na tej jednostce. Jesli nie, wynik `842 757 zdarzen` opisuje
+    wersje danych, ktorej dostawca juz nie serwuje.
+
+    To jest jedyny test, ktory patrzy na KOLEJNOSC rekordow, a nie na ich
+    rozklad. Lokalny i darmowy.
+    """
+    plik_mikro = raw_dir(KATALOG_DIAG, f"mikro_{SESJA}_1330_1400.dbn.zst")
+    if not plik_mikro.exists():
+        sys.exit(f"STOP: brak {plik_mikro}. Ten tryb NIE pobiera danych.")
+    plik_nasz = nasz_plik()
+
+    y, m, d = map(int, SESJA.split("-"))
+    od_ns = int(dt.datetime(y, m, d, 13, 30, tzinfo=UTC).timestamp() * 1e9)
+    do_ns = int(dt.datetime(y, m, d, 14, 0, tzinfo=UTC).timestamp() * 1e9)
+    okno = (od_ns, do_ns)
+
+    def akcje(p: Path) -> list[tuple]:
+        store = db.DBNStore.from_file(p)
+        return [(a.order_id, a.side, a.n_trade, a.rozmiar, a.n_pasywnych,
+                 a.rozmiar_pasywnych, a.n_wlasnych, a.ts_recv_pierwszy,
+                 a.ts_recv_ostatni, a.poziomy, a.minuta)
+                for a in rekonstruuj(z_dbn(store, tylko_rth=okno))]
+
+    print(f"zakres : {START_UTC} .. {END_UTC} UTC")
+    print("rekonstruuje ze swiezego wycinka...", flush=True)
+    a_serw = akcje(plik_mikro)
+    print("rekonstruuje z naszego pliku (kilka minut)...", flush=True)
+    a_nasz = akcje(plik_nasz)
+
+    print("\n" + "=" * 70)
+    print("AKCJE AGRESYWNE — JEDNOSTKA OBSERWACJI D5-B2")
+    print(f"  akcji ze swiezego wycinka : {len(a_serw):>10,}")
+    print(f"  akcji z naszego pliku     : {len(a_nasz):>10,}")
+    print(f"  suma Trade  swiezy / nasz : {sum(x[2] for x in a_serw):>10,}"
+          f" / {sum(x[2] for x in a_nasz):,}")
+    print(f"  suma rozmiaru swiezy/nasz : {sum(x[3] for x in a_serw):>10,}"
+          f" / {sum(x[3] for x in a_nasz):,}")
+    print()
+
+    # Celowo POMIJAMY pole `koperta`: numer koperty to indeks porzadkowy,
+    # a nie cecha zdarzenia. Rownosc pozostalych jedenastu pol znaczy, ze
+    # jednostka obserwacji jest ta sama — i tylko to jest tu pytaniem.
+    if a_serw == a_nasz:
+        print("  -> IDENTYCZNE, akcja po akcji, we wszystkich polach.")
+        print("     AUDYT D5-C STOI. Przeniesienie bitu F_LAST na wypelniacz")
+        print("     nie zmienia jednostki obserwacji.")
+        return 0
+
+    rozne = [i for i, (x, z) in enumerate(zip(a_serw, a_nasz, strict=False))
+             if x != z]
+    print(f"  -> ROZNICA. Pierwsza na pozycji {rozne[0] if rozne else len(a_serw)}"
+          f", roznych pozycji: {len(rozne):,}")
+    for i in (rozne or [0])[:3]:
+        print(f"     [{i}] swiezy: {a_serw[i]}")
+        print(f"     [{i}] nasz  : {a_nasz[i]}")
+    print("     AUDYT D5-C WYMAGA POWTORZENIA.")
+    return 1
 
 
 def main() -> int:
@@ -196,10 +286,15 @@ def main() -> int:
     ap.add_argument("--flagi", action="store_true",
                     help="histogram flag na juz pobranych plikach — "
                          "lokalnie, bez sieci, bez kosztu")
+    ap.add_argument("--rekonstrukcja", action="store_true",
+                    help="porownanie akcji agresywnych z obu plikow — "
+                         "rozstrzyga los audytu D5-C, lokalnie i darmo")
     args = ap.parse_args()
 
     if args.flagi:
         return raport_flag()
+    if args.rekonstrukcja:
+        return raport_rekonstrukcji()
 
     plik_nasz = nasz_plik()
     print(f"nasz plik   : {plik_nasz}")
