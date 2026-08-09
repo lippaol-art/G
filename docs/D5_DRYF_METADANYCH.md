@@ -146,7 +146,7 @@ zostaje wycofana. Podaję fakty; nazwanie mechanizmu należy do dostawcy.
 
 | Kiedy | Gdzie | Dowód w repo |
 |---|---|---|
-| **2026-08-04 13:31Z** | środowisko zdalne, **2 dni przed** obserwowaną awarią | commit `299ca34`, `data/wycena_d5b2_mbo.json`: **78,6045 USD / 837 310 143 rek.**; per sesja 07-01 3,6891 / 39 297 265, 07-03 0,2498 / 2 660 629, 07-30 3,5961 / 38 306 877 |
+| **2026-08-04 13:31Z** | środowisko zdalne, **2 dni przed** obserwowaną awarią | commit `299ca34`, `data/wycena_d5b2_mbo.json`, pole `koszt_usd`: **78,6044 USD / 837 310 143 rek.** (78,6045 to suma 22 zaokrąglonych pozycji); per sesja 07-01 3,6891 / 39 297 265, 07-03 0,2498 / 2 660 629, 07-30 3,5961 / 38 306 877 |
 | 2026-08-04 | pobranie D5-C — `get_range`, **nie** metadane | plik fizycznie ma **38 306 877** rekordów, SHA `3e6f023d…74ac42` |
 | ~2026-08-05 | ponowne pobranie D5-C, maszyna lokalna | **ten sam SHA**, znowu 38 306 877 |
 | wieczór 06–07.08 | przebiegi zakupowe, lokalnie | stare liczby; pobrane pliki zgodne co do rekordu |
@@ -202,7 +202,7 @@ sesja             rekordow   pierwszy UTC   ostatni UTC   ocena
 ```
 
 **Pięć plików bez uciętego ogona; 07-07 to znany wrak** (przerwany transfer,
-7 minut z 6,5 godziny — 4% sesji). Wzorzec dokładnie taki, jaki przewidziała
+7 minut z 6,5 godziny czasu — **3,94% rekordów**, ~2% czasu). Wzorzec dokładnie taki, jaki przewidziała
 recenzja.
 
 **Czego ten wynik NIE dowodzi.** Plik, któremu brakuje 2,6% rekordów
@@ -235,7 +235,19 @@ jest dowodem kompletności.** Test zakresu wyklucza obcięcie i tylko tyle.
 
 Niedobór **nie jest jednorodny**. Gdyby był, tempo w oknie i w całej sesji
 byłoby równe; stosunek wynosi **1,133**, czyli w pierwszej godzinie brakuje
-o ~13% *względnie* więcej niż średnio. Udział pierwszej godziny w sesji:
+o ~13% *względnie* więcej niż średnio.
+
+**Kontrast wyostrzony rachunkiem recenzji P1** — porównanie okna z **resztą
+sesji**, nie ze średnią:
+
+| | rekordów u nas | niedobór | stopa |
+|---|---:|---:|---:|
+| okno 13:30–14:30 | 1 362 037 | 27 781 | **1,999%** |
+| reszta sesji | 1 298 592 | 20 014 | **1,518%** |
+
+Okno ma stopę **1,32×** wyższą niż reszta. Pierwsza godzina niesie **58,1%**
+całego niedoboru, mając **51,3%** rekordów. Nadwyżka serwera jest więc
+**skoncentrowana na otwarciu**. Udział pierwszej godziny w sesji:
 **51,192%** u nas wobec **51,315%** u dostawcy.
 
 To wyklucza najprostsze wyjaśnienie „stała frakcja rekordów zgubiona
@@ -341,7 +353,7 @@ rozmowy z Erikiem.
 >
 > | When (UTC) | Where | Result |
 > |---|---|---|
-> | 2026-08-04 13:31 | our cloud environment | 837,310,143 records / 78.6045 USD |
+> | 2026-08-04 13:31 | our cloud environment | 837,310,143 records / 78.6044 USD |
 > | 2026-08-04 | `timeseries.get_range` for 2026-07-30 | file contains **38,306,877** records |
 > | ~2026-08-05 | re-download of the same session, different machine | identical SHA-256, again 38,306,877 |
 > | 2026-08-06–07 evening | purchase runs | same counts; downloaded files match them record-for-record |
@@ -384,8 +396,10 @@ rozmowy z Erikiem.
 >    can be reproduced later? We record SHA-256 of every downloaded file, but we
 >    need to know whether re-requesting an identical historical range is expected
 >    to be deterministic over time.
-> 4. We downloaded 4 of these 22 sessions before the change. Each covers the
->    full requested window (first record 13:30:00, last 19:59:59 UTC), yet each
+> 4. We hold **five** of these sessions downloaded before the change
+>    (2026-07-01, 07-02, 07-03, 07-06 and 07-30). Each covers its full requested
+>    window — first record at 13:30:00 UTC, last at 19:59:59 UTC, except
+>    2026-07-03 which ends at 17:00:00 UTC because of the early close — yet each
 >    contains the older, lower record count. We checked one narrow window
 >    directly: for **2026-07-03, 13:30–14:30 UTC**, your API reports
 >    **1,389,818** records today, while our file — whose time coverage spans

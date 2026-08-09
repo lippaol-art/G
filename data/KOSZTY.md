@@ -78,7 +78,8 @@ inaczej naliczyłby ją trzeci raz.
 | MBO 2026-07-07, pobranie przerwane w locie | **≤ 4,4529 USD** | ⚠️ **NIEPOTWIERDZONA** |
 
 Potwierdzone diagnostyką 08.08: plik 07-07 ma **1 867 793 rekordy** i kończy
-się o **13:37:57 UTC** — 7 minut z 6,5-godzinnego okna, czyli **4% sesji**.
+się o **13:37:57 UTC** — 7 minut z 6,5-godzinnego okna, czyli **3,94%
+rekordów** (1 867 793 / 47 432 653) i ~2% czasu.
 
 **2026-07-07 zgłoszona przez recenzję P1** — na dysku leży plik obcięty
 (1 867 793 z 47 432 653 rekordów, `BentoWarning: DBN file is truncated`),

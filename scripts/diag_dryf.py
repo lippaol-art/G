@@ -169,10 +169,10 @@ def main() -> int:
     print("                           wpis do data/KOSZTY.md (wariant A),")
     print("  test 1 PELNY          -> brak UCIETEGO OGONA. To NIE jest dowod")
     print("                           kompletnosci — patrz test 2,")
-    print("  test 2 rozsiany brak  -> wariant B': pliki pelne wg STAREJ wersji")
-    print("                           serwowania, ale nowe pobrania roznia sie")
-    print("                           trescia. Zakaz mieszania obowiazuje")
-    print("                           NIEZALEZNIE od wyniku.")
+    print("  test 2 brak w oknie   -> A ALBO B'. Ten skrypt ich NIE rozroznia;")
+    print("                           rozstrzyga mikro-diff (D5_DRYF §5a) albo")
+    print("                           odpowiedz dostawcy. Zakaz mieszania plikow")
+    print("                           z obu okresow obowiazuje NIEZALEZNIE.")
     print("\nWynik wklej do docs/D5_DRYF_METADANYCH.md §3 przed wyslaniem maila.")
     return 0
 

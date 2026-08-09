@@ -166,7 +166,7 @@ python scripts/fetch_d5b2_month.py
 > **[`docs/D5_DRYF_METADANYCH.md`](docs/D5_DRYF_METADANYCH.md)**.
 >
 > **Diagnostyka 08.08, oba testy wykonane.** Test 1: pięć plików bez uciętego
-> ogona, 07-07 obcięty (4% sesji). Test 2 — **rozstrzygający**: w oknie
+> ogona, 07-07 obcięty (3,94% rekordów). Test 2 — **rozstrzygający**: w oknie
 > 13:30–14:30 sesji 07-03 nasz plik ma **1 362 037** rekordów wobec **1 389 818**
 > u dostawcy. Brakuje **27 781 (−2,00%)** w oknie o **pełnym pokryciu czasowym**.
 >
