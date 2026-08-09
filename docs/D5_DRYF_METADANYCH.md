@@ -1,6 +1,29 @@
 # Dryf metadanych GLBX.MDP3 — zakup miesiąca WSTRZYMANY
 
-**Wykryte: 08.08.2026. Status: OTWARTE. Zakup zablokowany warunkiem 8.**
+**Wykryte: 08.08.2026. Status: mechanizm NADAL NIEZNANY, ale skutek dla danych
+ROZSTRZYGNIĘTY 09.08. Zakup zablokowany warunkiem 8.**
+
+> ## ✅ ROZSTRZYGNIĘCIE 09.08 — wariant **B′**, pomiar na treści
+>
+> Mikro-diff (§3b, §5a, koszt 0,0789 USD) porównał **treść** 30 minut sesji
+> 2026-07-03 rekord po rekordzie. Wynik jest jednoznaczny i domyka się
+> arytmetycznie:
+>
+> | | |
+> |---|---|
+> | wspólnych rekordów | **822 240** |
+> | tylko u dostawcy | **18 152** — wszystkie `action=N` |
+> | **tylko u nas** | **0** |
+> | pięć realnych typów akcji (A, C, F, M, T) | różnica **+0 w każdym** |
+>
+> **Nasze pliki zawierają 100% realnych zdarzeń rynkowych.** Cała nadwyżka to
+> rekordy-wypełniacze bez treści ekonomicznej (`order_id=0`, `side=N`, `size=0`,
+> `price=INT64_MAX` = UNDEF_PRICE).
+>
+> **Skutki:** ❌ nie ma podstawy do odkupu z tytułu kompletności ·
+> ✅ audyt D5-C nietknięty, jeśli rekordy `N` nie niosą `F_LAST` (§3b) ·
+> ⛔ **zakaz mieszania plików z obu okresów pozostaje w mocy** — liczebności
+> nadal się nie zgadzają, a mechanizm nie ma nazwy.
 
 > ## ⚠️ KOREKTA v2 — pierwsza wersja tego dokumentu stawiała błędną tezę
 >
@@ -269,15 +292,89 @@ z obu okresów — **niezależnie od tego, który wariant okaże się prawdziwy*
 
 ---
 
-## 3a. Bilans diagnostyki — co wiemy po obu testach
+## 3b. Test 3 — mikro-diff treści · **WYKONANY 09.08**, koszt 0,0789 USD
+
+Procedura i warunki zgody: §5a. Zapytanie `GLBX.MDP3` / `mbo` / `MNQU6`,
+**2026-07-03 13:30–14:00 UTC**, zapis do osobnego katalogu `diag_mikro/`
+(14,7 MB). `d5b2_mbo/`, `d5c_mbo/` i manifesty nietknięte.
+
+```
+rekordow u dostawcy (dzis)  :    840,392
+rekordow u nas              :    822,240
+WSPOLNYCH (ten sam klucz)   :    822,240
+TYLKO u dostawcy            :     18,152
+TYLKO u nas                 :          0
+```
+
+| action | dostawca | my | różnica |
+|---|---:|---:|---:|
+| A (Add) | 321 593 | 321 593 | **+0** |
+| C (Cancel) | 321 150 | 321 150 | **+0** |
+| F (Fill) | 57 862 | 57 862 | **+0** |
+| M (Modify) | 88 682 | 88 682 | **+0** |
+| T (Trade) | 32 953 | 32 953 | **+0** |
+| **N (None)** | **18 152** | **0** | **+18 152** |
+
+Arytmetyka domyka się co do rekordu: 822 240 + 18 152 = 840 392.
+
+Przykład rekordu obecnego wyłącznie u dostawcy:
+
+```
+ts=2026-07-03 13:30:00.014424+00:00 order_id=0 action=N side=N
+px=9223372036854775807 sz=0
+```
+
+`price = 9223372036854775807` to `INT64_MAX`, czyli **UNDEF_PRICE** w DBN.
+Komplet `order_id=0` + `side=N` + `size=0` + brak ceny oznacza, że rekord
+**nie opisuje żadnego zdarzenia księgi**.
+
+### Co to rozstrzyga
+
+**Wariant B′ — potwierdzony pomiarem, nie wnioskowaniem.** Zero rekordów
+obecnych tylko u nas i zerowa różnica w każdym z pięciu realnych typów akcji
+znaczą, że nasz plik zawiera **komplet zdarzeń rynkowych** tego okna. Różnica
+2,16% (18 152 / 840 392) to wyłącznie rekordy `N`.
+
+Uwaga na kierunek dowodu: mikro-diff mierzy **30 minut jednej sesji**. Dla tego
+okna wariant A jest wykluczony. Rozciągnięcie na pozostałe 21 sesji jest
+uogólnieniem — mocnym, bo tempo niedoboru jest podobne we wszystkich sesjach
+(§1), ale nadal uogólnieniem. Nie zamieniam go w twierdzenie o pomiarze.
+
+### Czego nie rozstrzyga i co jeszcze trzeba sprawdzić — **za darmo**
+
+Czy rekordy `N` niosą bit **`F_LAST`**. To jedyne otwarte pytanie o realnych
+konsekwencjach: audyt D5-C liczy koperty zdarzeń właśnie po tym bicie
+(842 757 kopert, 0 niewyjaśnionych). Gdyby część `N` je zamykała, audyt
+policzono by na niepełnym zbiorze kopert.
+
+```bash
+python scripts/diff_mikro.py --flagi   # lokalnie, bez sieci, bez kosztu
+```
+
+Tryb czyta **wyłącznie pliki już leżące na dysku** — nie wywołuje nawet
+`get_cost` i nie potrzebuje klucza API.
+
+### Dlaczego klucz porównania celowo nie zawiera `sequence`
+
+Tożsamość rekordu to `ts_recv` + `order_id` + `action` + `side` + `price` +
+`size`. `sequence` to numer **wiadomości CME**, nie identyfikator zdarzenia —
+potwierdzone oficjalnie przez dostawcę. Gdyby wszedł do klucza, każda zmiana
+pakowania komunikatów wyglądałaby jak inne zdarzenie i test **z góry** dawałby
+wariant A. Test, który nie może dać drugiej odpowiedzi, nie jest testem.
+
+---
+
+## 3a. Bilans diagnostyki — co wiemy po trzech testach
 
 | Pytanie | Odpowiedź | Na jakiej podstawie |
 |---|---|---|
 | Czy pliki są ucięte na końcu? | **Nie** (poza 07-07) | test 1, pokrycie 13:30–19:59:59 |
 | Czy pliki mają tyle rekordów, co dziś API? | **Nie, mniej o ~2%** | test 2, okno o pełnym pokryciu |
 | Czy niedobór jest jednorodny? | **Nie**, stosunek 1,133 | test 2 |
-| Czy brakuje realnych zdarzeń? | **NIEROZSTRZYGNIĘTE** | wymaga porównania treści (§5a) |
-| Czy wolno mieszać stare i nowe pliki? | **Nie** | niezależnie od powyższego |
+| Czy brakuje realnych zdarzeń? | **NIE** — 0 rekordów tylko u dostawcy poza `action=N` | **test 3** (30 min sesji 07-03) |
+| Czy audyt D5-C stoi? | **do sprawdzenia** — zależy od `F_LAST` na rekordach `N` | `diff_mikro.py --flagi`, darmowe |
+| Czy trzeba odkupić pobrane sesje? | **Nie z tytułu kompletności** | test 3 |
+| Czy wolno mieszać stare i nowe pliki? | **Nie** | liczebności nadal rozjechane, mechanizm bez nazwy |
 
 ---
 
@@ -315,16 +412,24 @@ Wynik `842 757 zdarzeń, 0 niewyjaśnionych` powstał na pliku o SHA-256
 **39 437 696**. Dopóki nie wiemy, która liczba jest prawdziwa, nie wiemy też,
 czy audyt policzono na komplecie danych.
 
-Konsekwencje do rozstrzygnięcia — **kolejność ma znaczenie**:
+Konsekwencje — stan po trzech testach:
 
-1. **Najpierw**: czy plik D5-C obejmuje całe okno RTH (`scripts/diag_dryf.py`).
-   Jeśli tak, audyt liczono na sesji ciągłej od 13:30 do 20:00 UTC i brak
-   ~1,1 mln rekordów musiałby oznaczać braki rozsiane, nie ucięty ogon.
-2. Czy miesiąc D5-B2 wolno policzyć na **mieszance** plików z obu okresów?
-   **Nie** — dopóki nie wiadomo, czy różnią się zawartością, a nie tylko
-   metadanymi. W danych nie widać, który plik z którego okresu pochodzi.
-3. Czy trzeba pobrać ponownie i kto pokrywa koszt — **pytanie do dostawcy**,
-   nie do nas, jeśli przyczyną była awaria po ich stronie.
+1. ✅ **Czy plik D5-C obejmuje całe okno RTH** — tak (test 1), pokrycie
+   13:30–19:59:59 UTC.
+2. ✅ **Czy brakuje realnych zdarzeń** — nie (test 3). Nadwyżka u dostawcy to
+   w całości rekordy `action=N` bez treści ekonomicznej. Audyt liczył zdarzenia
+   po `F_LAST`, więc *jeśli* rekordy `N` tego bitu nie niosą, wynik
+   `842 757 zdarzeń, 0 niewyjaśnionych` stoi bez zmian.
+3. ⏳ **Czy rekordy `N` niosą `F_LAST`** — jedyne otwarte pytanie o realnych
+   skutkach dla audytu. Sprawdzalne lokalnie i **za darmo**:
+   `python scripts/diff_mikro.py --flagi`.
+4. ⛔ Czy miesiąc D5-B2 wolno policzyć na **mieszance** plików z obu okresów?
+   **Nadal nie.** Test 3 pokazał, że treść zdarzeń jest ta sama, ale liczebności
+   nadal się rozjeżdżają, a mechanizm nie ma nazwy. W danych nie widać, który
+   plik z którego okresu pochodzi — a to jest właśnie powód zakazu.
+5. ✅ Czy trzeba odkupić już pobrane sesje — **nie z tytułu kompletności**.
+   Pytanie o rozliczenie przerwanych pobrań (07-06, 07-07) pozostaje otwarte
+   i jest pytaniem do dostawcy.
 
 Powiązanie z ryzykiem A4-11 z audytu 4 (*„zmiana normalizacji GLBX.MDP3,
 VII 2026"*) **wycofuję** — `last_modified_date` mu przeczy. To nie jest ten
@@ -334,8 +439,10 @@ scenariusz; to problem z warstwą metadanych, nie z normalizacją danych.
 
 ## 5. Pytanie do Databento
 
-**Wysłać dopiero po teście 2** — jego wynik zmienia punkt 4. Wątek: kontynuacja
-rozmowy z Erikiem.
+**Testy 1–3 wykonane, punkt 4 przepisany na ich wynik.** Do wysłania brakuje
+dwóch rzeczy, obie po stronie właściciela: pola `pobrano_utc` z lokalnego
+`manifest_d5b2.json` (dokładny lewy kraniec okna w pytaniu 1) i spisu pozycji
+z panelu Databento z 6–8.08 (pytanie 5). Wątek: kontynuacja rozmowy z Erikiem.
 
 > **Subject: `metadata.get_record_count` for GLBX.MDP3 MBO jumped ~2.6% for all
 > July 2026 sessions, while `get_dataset_condition` reports no modification**
@@ -408,9 +515,32 @@ rozmowy z Erikiem.
 >    tail, and it is not uniform (the first hour is short by 2.00% against 1.76%
 >    for the session as a whole).
 >
->    **Are those files missing real market events, or is this a difference in
->    how the same events are represented?** We need to know before mixing files
->    downloaded before and after the change into one dataset.
+>    We then compared the **content** of one 30-minute slice
+>    (2026-07-03, 13:30–14:00 UTC), matching records on
+>    `ts_recv + order_id + action + side + price + size`:
+>
+>    | | |
+>    |---|---:|
+>    | records in a freshly downloaded slice | 840,392 |
+>    | records in our pre-change file | 822,240 |
+>    | matching on both sides | **822,240** |
+>    | present only in the fresh slice | **18,152** — **all `action=N`** |
+>    | **present only in our file** | **0** |
+>
+>    Counts per action type are identical for A, C, F, M and T (difference
+>    exactly 0 in each). Every extra record looks like
+>    `order_id=0, action=N, side=N, size=0, price=9223372036854775807`
+>    (`INT64_MAX` / `UNDEF_PRICE`).
+>
+>    So our older files appear to contain **all real book events**, and the
+>    entire difference consists of placeholder `None` records. **Two questions
+>    follow:**
+>
+>    a) **What are these `action=N` records and why do they now appear in
+>       historical ranges that previously returned without them?**
+>    b) **Do any of them carry the `F_LAST` flag?** We reconstruct matching
+>       events by that flag, so if they do, an event count computed on the
+>       older file is not comparable with one computed today.
 > 5. Two sessions were interrupted mid-download — 2026-07-06 returned
 >    `Response ended prematurely`, and 2026-07-07 left a truncated file
 >    (1,867,793 records, ~7 minutes of a 6.5-hour window). **Were those
@@ -427,7 +557,17 @@ rozmowy z Erikiem.
 
 ## 5a. Mikro-diff — jedyna droga do rozstrzygnięcia A vs B′
 
-**Wymaga jawnej zgody właściciela (reguła R1). Nie uruchomione.**
+**Zgoda właściciela (R1) udzielona 09.08 z pięcioma warunkami. WYKONANY —
+wynik w §3b.** Wszystkie pięć warunków egzekwuje kod `scripts/diff_mikro.py`,
+nie dyscyplina:
+
+| # | Warunek zgody | Jak egzekwowany |
+|---|---|---|
+| 1 | `get_cost` przed pobraniem, STOP > 0,10 USD | `sys.exit` przed `get_range`; zmierzono **0,0789 USD** |
+| 2 | zakres wyłącznie 07-03 13:30–14:00 UTC | stałe `START_UTC`/`END_UTC`, brak argumentu CLI |
+| 3 | osobny katalog, manifesty nietknięte | `raw_dir("diag_mikro")`; skrypt nie zapisuje manifestów |
+| 4 | wpis do `data/KOSZTY.md` niezależnie od wyniku | wykonany — `data/KOSZTY.md` §1 poz. 5 |
+| 5 | meldunek z liczbami, zanim cokolwiek dalej | §3b powyżej, przed jakąkolwiek decyzją zakupową |
 
 Test 2 pokazał, że brakuje 27 781 rekordów w oknie o pełnym pokryciu
 czasowym. Liczebności powiedziały już wszystko, co mogły — **naturę nadwyżki
@@ -441,15 +581,16 @@ rozstrzyga wyłącznie porównanie treści.**
 | Dlaczego ten start | identyczny z początkiem naszego pliku, więc syntetyczny snapshot księgi wypada w tym samym miejscu i **skraca się w porównaniu** |
 | Metoda | diff rekord po rekordzie z odpowiadającym wycinkiem naszego pliku |
 
-**Odczyt wyniku:**
+**Odczyt wyniku** (kryterium zapisane **przed** pobraniem):
 
 - realne zdarzenia obecne u dostawcy, nieobecne u nas → **wariant A**
   (pliki niepełne, trzeba odkupić),
 - te same zdarzenia, inny podział/typy rekordów → **wariant B′**
   (pliki pełne, ale niemieszalne).
 
-**Wpis do `data/KOSZTY.md` niezależnie od wyniku.** Alternatywa: poczekać na
-odpowiedź Databento i nie wydawać nic — decyzja właściciela.
+**Zapadł wariant B′** — 0 realnych zdarzeń brakujących, 18 152 rekordów `N`.
+Kryterium nie było dostrajane po zobaczeniu liczb (reguła R2): jest w docstringu
+skryptu w commicie `85d9e73`, sprzed pobrania.
 
 ---
 
@@ -458,7 +599,7 @@ odpowiedź Databento i nie wydawać nic — decyzja właściciela.
 | | |
 |---|---|
 | **Zakup miesiąca** | **WSTRZYMANY.** Warunek 8 blokuje automatycznie. |
-| **Diagnostyka lokalna** | `python scripts/diag_dryf.py` — **uruchom przed mailem** |
+| **Diagnostyka lokalna** | testy 1–3 wykonane. Zostało `python scripts/diff_mikro.py --flagi` — darmowe, rozstrzyga los audytu D5-C |
 | **Furtka na później** | `--akceptuj-rozjazd` archiwizuje stary manifest; **nie używać przed odpowiedzią** |
 | Pliki już pobrane | **NIE kasujemy.** Zgadzają się z liczbami, za które zapłacono. |
 | `2026-07-30` z D5-C | **NIE ruszamy.** SHA zamrożony, kopia zapasowa priorytetowa. |
@@ -483,3 +624,14 @@ projekcie warunkiem, nie ozdobą.
    policzono wynik.
 3. **Każdy wynik na danych MBO musi podawać SHA plików wejściowych.**
    Bez tego „powtórzyliśmy i wyszło inaczej" jest nierozstrzygalne.
+4. **Różnica liczebności nie jest różnicą danych.** Trzy testy na
+   liczebnościach (§1, test 1, test 2) doprowadziły do pytania, ale żaden nie
+   umiał na nie odpowiedzieć. Odpowiedział dopiero pomiar **treści** — za
+   0,0789 USD i po tym, jak liczebności wyczerpały swoje możliwości. Kolejność
+   „najpierw wyciśnij darmowe, potem kup najmniejszy możliwy pomiar" jest
+   wzorcem do powtórzenia, nie jednorazową sztuczką.
+5. **Filtr `action` należy do kontraktu wczytywania, nie do detali.**
+   Rekordy `action=N` przechodzą przez każdy naiwny licznik rekordów i psują
+   porównania między pobraniami. `engine/mbo_events.py` liczy jednostkę
+   kanoniczną po `Trade`/`order_id`, więc jest na nie odporny — ale każdy nowy
+   kod czytający MBO musi je jawnie odrzucać albo jawnie uzasadnić, czemu nie.

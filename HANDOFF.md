@@ -26,7 +26,7 @@ niezależnych audytach zewnętrznych) jest **jedynym źródłem prawdy** — kod
 a nie odwrotnie.
 
 Gotowe: fundament repo, silnik backtestowy, komplet aparatu walidacyjnego, strażnicy
-niezmienników, CI, golden baseline. **544 funkcji testowych (610 przypadków po parametryzacji), pokrycie 92%, ruff i mypy czyste.**
+niezmienników, CI, golden baseline. **555 funkcji testowych (626 przypadków po parametryzacji), pokrycie 92%, ruff i mypy czyste.**
 Liczbę pilnuje `tests/test_guards.py::test_handoff_podaje_aktualna_liczbe_testow` —
 bez tego rotowała dwa razy w ciągu doby, co jest dokładnie tym defektem, przed
 którym ostrzega reguła na górze tego pliku.
@@ -131,9 +131,26 @@ w `docs/D5_ETAP4_SPEC.md` §1 i zaimplementowane w `engine/mbo_events.py`.
 
 ### Co zrobić teraz — dokładnie
 
+**Zakup jest wstrzymany (niżej), więc kroki 1–2 poniżej NIE są teraz aktualne.**
+Aktualna kolejka to trzy rzeczy, żadna z nich nie kosztuje ani centa:
+
 ```powershell
 git pull --ff-only
 
+# A. Rozstrzyga los audytu D5-C. Lokalnie, bez sieci, bez klucza API.
+python scripts/diff_mikro.py --flagi
+
+# B. Do maila (§5 D5_DRYF): pole `pobrano_utc` z lokalnego manifestu.
+#    Manifest lezy POZA repo (sekcja 3), wiec sciezke liczy sam skrypt.
+python -c "import json,sys;sys.path.insert(0,'.');from scripts.fetch_d5b2_month import sciezka_manifestu as s;print(json.loads(s().read_text())['pobrano_utc'])"
+
+# C. Panel Databento -> spisz WSZYSTKIE pozycje z 6-8.08 z kwotami.
+#    Zamyka §3a w data/KOSZTY.md (przerwane 07-06 i 07-07).
+```
+
+Dopiero po odpowiedzi dostawcy wracają kroki zakupowe:
+
+```powershell
 # 1. Wycena bez zakupu. Metadane są darmowe.
 python scripts/fetch_d5b2_month.py --wycena
 
@@ -173,11 +190,28 @@ python scripts/fetch_d5b2_month.py
 > **„PEŁNY" jest obalone empirycznie.** Pliki są krótsze o ~2%, a brak siedzi
 > w środku sesji, nie na końcu. Nie jest też jednorodny (stosunek stóp 1,133).
 >
-> **Otwarte:** czy brakuje realnych zdarzeń (wariant A — odkup), czy to inna
-> reprezentacja tych samych (B′ — nie kupujemy). Rozstrzyga tylko porównanie
-> treści: `D5_DRYF_METADANYCH` §5a, ~0,079 USD, **wymaga zgody właściciela**.
+> ### ✅ ROZSTRZYGNIĘTE 09.08 — wariant B′, mikro-diff za 0,0789 USD
 >
-> **Nie kupuj i nie kasuj niczego.** Stan: 4 z 22 sesji pobrane, **12,7304 USD
+> Porównanie **treści** 30 minut sesji 07-03 (`scripts/diff_mikro.py`, zgoda R1
+> z pięcioma warunkami, wszystkie egzekwowane w kodzie):
+>
+> | | |
+> |---|---:|
+> | wspólnych rekordów | **822 240** |
+> | tylko u dostawcy | **18 152** — wszystkie `action=N` |
+> | **tylko u nas** | **0** |
+> | A, C, F, M, T | różnica **+0 w każdym** |
+>
+> **Nasze pliki mają komplet realnych zdarzeń.** Nadwyżka to wypełniacze
+> `order_id=0, side=N, size=0, price=INT64_MAX` — bez treści ekonomicznej.
+> **Odkup z tytułu kompletności odpada.** Zakaz mieszania plików z obu okresów
+> **zostaje w mocy** — liczebności nadal się rozjeżdżają, mechanizm bez nazwy.
+>
+> **Zostało jedno pytanie, darmowe:** czy rekordy `N` niosą `F_LAST`. Od tego
+> zależy, czy audyt D5-C (842 757 kopert) stoi.
+> `python scripts/diff_mikro.py --flagi` — lokalnie, bez sieci, bez klucza API.
+>
+> **Nie kupuj i nie kasuj niczego.** Stan: 4 z 22 sesji pobrane, **12,8093 USD
 > potwierdzone wycenami**, do ~7,49 USD niepotwierdzone (przerwane 07-06 i 07-07).
 
 Wycena z przebiegu, który pobrał sesje 07-01…07-06: **78,6044 USD za 22 sesje**

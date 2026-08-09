@@ -21,9 +21,22 @@ kredytu należy weryfikować w panelu Databento.
 | 2 | D5 Etap 1 | `trades` MNQU6, **pełna doba** 2026-07-30 | **2,1240 USD** | limit 2,15 — dotrzymany |
 | 3 | D5-B | `trades` MNQU6, 21 sesji RTH lipca 2026 | **26,4060 USD** | wycena; górna granica **27,9160** |
 | 4 | D5-C | `mbo` MNQU6, RTH 2026-07-30 | **3,5961 USD** | limit 4,00 — dotrzymany |
+| 5 | D5 diagnostyka | `mbo` MNQU6, **30 min** 2026-07-03 13:30–14:00 | **0,0789 USD** | mikro-diff, limit 0,10 — dotrzymany |
 
-**Suma zakupów unikalnych: 39,9461 USD** (przy górnej granicy pozycji 3:
-41,4561 USD).
+**Suma zakupów unikalnych: 40,0250 USD** (przy górnej granicy pozycji 3:
+41,5350 USD).
+
+### Pozycja 5 — jedyny zakup diagnostyczny w projekcie
+
+Zgoda właściciela wg reguły R1, udzielona 09.08 z pięcioma warunkami
+(wyliczone i odhaczone w `docs/D5_DRYF_METADANYCH.md` §5a). Cel: rozstrzygnąć,
+czy pliki kupione przed 08.08 są niekompletne — bo od tego zależało, czy trzeba
+je **odkupić za ~13 USD**.
+
+**Zwrot z tego wydatku:** wynik (§3b tamże) wykluczył odkup. 0,0789 USD kupiło
+odpowiedź na pytanie warte dwa rzędy wielkości więcej. Zapisuję to nie jako
+pochwałę, tylko jako wzorzec: **najmniejszy możliwy płatny pomiar zamiast
+decyzji podjętej w niepewności**.
 
 ### Dlaczego pozycja 3 ma dwie liczby
 
@@ -101,8 +114,9 @@ Zgodnie z zasadą 3 tego rejestru duplikacja dostaje własną pozycję i nie
 zostaje schowana w sumie zbiorczej. Po weryfikacji: albo wpisy znikają, albo
 zamieniają się w potwierdzone pozycje duplikacji.
 
-**Stan pieniędzy, uczciwie:** potwierdzone wycenami **12,7304 USD**
-(9,6916 za trzy sesje + 3,0388 za 07-06). Niepotwierdzone: **do ~7,49 USD**.
+**Stan pieniędzy, uczciwie:** potwierdzone wycenami **12,8093 USD**
+(9,6916 za trzy sesje + 3,0388 za 07-06 + 0,0789 za mikro-diff).
+Niepotwierdzone: **do ~7,49 USD**.
 Liczba „12,7 USD wydane" z wcześniejszego meldunku była **dolną granicą
 podaną jak stan** — poprawka z recenzji P1 przyjęta.
 
@@ -130,15 +144,20 @@ ma **1 362 037** rekordów wobec **1 389 818** u dostawcy — brakuje **27 781
 (−2,00%)** w oknie o **pełnym pokryciu czasowym**.
 
 **„PEŁNY" jest więc obalone empirycznie: pliki są krótsze o ~2%, a brak siedzi
-w środku sesji.** Czy to realne zdarzenia (wariant A — trzeba odkupić), czy
-inna reprezentacja tych samych (B′ — nie kupujemy), rozstrzyga wyłącznie
-porównanie treści: `docs/D5_DRYF_METADANYCH.md` §5a, koszt ~**0,079 USD**,
-**wymaga jawnej zgody (R1), nieuruchomione**.
+w środku sesji.**
+
+**Rozstrzygnięte 09.08 mikro-diffem (pozycja 5, 0,0789 USD): wariant B′.**
+W oknie 30 minut sesji 07-03 rekordów wspólnych **822 240**, tylko u dostawcy
+**18 152** (wszystkie `action=N`, bez ceny i wolumenu), **tylko u nas 0**,
+a pięć realnych typów akcji zgadza się co do rekordu. **Nasze pliki mają
+komplet zdarzeń rynkowych — odkup z tytułu kompletności odpada.**
 
 Skutek dla tego rejestru: **nie da się dziś podać kosztu dokończenia zakupu**,
 bo nie wiadomo, którą wersję danych kupujemy ani czy za tydzień nie będzie
-trzeciej. Zgodnie z zasadą 4 podaję więc granicę, nie liczbę: pozostałe
-18 sesji to **≤ 68 USD** przy wycenie z 08.08.
+trzeciej. To, że treść zdarzeń jest ta sama, **nie znosi** tego problemu —
+znosi tylko groźbę zapłacenia drugi raz za to samo. Zgodnie z zasadą 4 podaję
+więc granicę, nie liczbę: pozostałe 18 sesji to **≤ 68 USD** przy wycenie
+z 08.08.
 
 **Zapas do limitu topnieje.** Zamrożony limit to 82,00 USD, dzisiejsza wycena
 22 sesji 80,6729 — zostaje **1,3271 USD**. Kolejny wzrost o ~1,65% i warunek 2
