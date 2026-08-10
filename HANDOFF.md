@@ -131,22 +131,18 @@ w `docs/D5_ETAP4_SPEC.md` §1 i zaimplementowane w `engine/mbo_events.py`.
 
 ### Co zrobić teraz — dokładnie
 
-**Zakup jest wstrzymany (niżej), więc kroki 1–2 poniżej NIE są teraz aktualne.**
-Aktualna kolejka to trzy rzeczy, żadna z nich nie kosztuje ani centa:
+**Zakup jest wstrzymany (niżej), a diagnostyka ZAMKNIĘTA** — testy 1–5
+wykonane, `pobrano_utc` odczytane, panel Databento odczytany. Nic więcej nie
+da się ustalić po naszej stronie.
+
+**Jedyny otwarty krok: wysłać mail do Databento** (`docs/D5_DRYF_METADANYCH.md`
+§5 — tekst gotowy, wszystkie blokery zniesione). Potem czekamy.
+
+Jedna rzecz do zacommitowania z maszyny lokalnej — plik z wynikiem mikro-diffu
+powstał podczas płatnego przebiegu i leży poza tym repo-klonem:
 
 ```powershell
-git pull --ff-only
-
-# A. Rozstrzyga los audytu D5-C. Lokalnie, bez sieci, bez klucza API.
-#    (--flagi juz wykonane; ten tryb patrzy na KOLEJNOSC, nie na rozklad)
-python scripts/diff_mikro.py --rekonstrukcja
-
-# B. Do maila (§5 D5_DRYF): pole `pobrano_utc` z lokalnego manifestu.
-#    Manifest lezy POZA repo (sekcja 3), wiec sciezke liczy sam skrypt.
-python -c "import json,sys;sys.path.insert(0,'.');from scripts.fetch_d5b2_month import sciezka_manifestu as s;print(json.loads(s().read_text())['pobrano_utc'])"
-
-# C. Panel Databento -> spisz WSZYSTKIE pozycje z 6-8.08 z kwotami.
-#    Zamyka §3a w data/KOSZTY.md (przerwane 07-06 i 07-07).
+git add reports/D5_mikro_diff.json && git commit -m "reports: wynik mikro-diffu 09.08"
 ```
 
 Dopiero po odpowiedzi dostawcy wracają kroki zakupowe:
@@ -172,7 +168,7 @@ python scripts/fetch_d5b2_month.py
 > a pobrania z 04–05.08 fizycznie je zawierają.
 >
 > Obowiązuje **rama faktograficzna bez mechanizmu**: wartość stabilna ≥4 dni na
-> dwóch maszynach, skok między wieczorem 06–07.08 a 08.08 12:15Z, brak
+> dwóch maszynach, skok między **06.08 22:05:38Z** a 08.08 12:15Z, brak
 > modyfikacji wg dostawcy. **Mechanizm ma nazwać dostawca, nie my.**
 >
 > Skutek praktyczny: każdy **już opłacony** plik wygląda na niekompletny, więc
@@ -215,14 +211,27 @@ python scripts/fetch_d5b2_month.py
 > dodany.** Skrypt wydrukował wtedy werdykt „audyt WYMAGA POWTÓRZENIA" — jest
 > **nieprawdziwy**, gałąź `if` sprawdzała flagi przed sumami. Poprawione.
 >
-> **Zostało jedno pytanie, darmowe:** czy jednostka obserwacji jest ta sama.
-> Histogram tego nie rozstrzyga, bo nie widzi kolejności rekordów.
-> `python scripts/diff_mikro.py --rekonstrukcja` — puszcza `mbo_events` na obu
-> plikach i porównuje akcje agresywne pole po polu. Identyczne → audyt D5-C
-> stoi. Różnica → audyt do powtórzenia.
+> **Test 5 (`--rekonstrukcja`, 09.08, darmowy) — DOMKNIĘCIE.** Rekonstrukcja
+> jednostki obserwacji z obu plików: **29 734 akcje identyczne we wszystkich
+> polach**, suma `n_trade` 32 953, suma rozmiaru 63 394 — po obu stronach ta
+> sama. Cross-check: 32 953 zgadza się z licznikiem `action=T` z testu 3.
 >
-> **Nie kupuj i nie kasuj niczego.** Stan: 4 z 22 sesji pobrane, **12,8093 USD
-> potwierdzone wycenami**, do ~7,49 USD niepotwierdzone (przerwane 07-06 i 07-07).
+> ### ✅ AUDYT D5-C STOI. Diagnostyka ZAMKNIĘTA (testy 1–5)
+>
+> Wynik `842 757 zdarzeń, 0 niewyjaśnionych` opisuje **rynek**, a nie wersję
+> serwowania danych. Przeniesienie `F_LAST` na wypełniacz jest dla naszej
+> jednostki nieodróżnialne. Zmierzono 30 minut jednej sesji — dla pozostałych
+> 21 równoważność pozostaje **uogólnieniem**.
+>
+> **Zakaz mieszania plików z obu okresów obowiązuje nadal.** Propozycja jego
+> zawężenia (mieszać wolno dla analiz idącej przez `rekonstruuj`, nie wolno dla
+> liczników surowych rekordów) czeka na decyzję właściciela — `D5_DRYF` §4 pkt 4.
+>
+> **Nie kupuj i nie kasuj niczego.** Stan: 4 z 22 sesji pobrane. Panel Databento
+> odczytany 09.08: **obciążono 20,65 USD, z karty 0,00** (pokryte kredytami),
+> kredyt pozostały **104,35 / 125**. Przerwane pobrania **zostały naliczone
+> w pełnym zakresie** — to już pomiar, nie hipoteza. Szczegóły i residuum
+> 0,3490 USD: `data/KOSZTY.md` §3a.
 
 Wycena z przebiegu, który pobrał sesje 07-01…07-06: **78,6044 USD za 22 sesje**
 wobec limitu 82,00; nagłówek pokazał **75,0083 USD** za 21 sesji. Wycena z 08.08 to już

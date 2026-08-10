@@ -22,14 +22,19 @@ ROZSTRZYGNIĘTY 09.08. Zakup zablokowany warunkiem 8.**
 >
 > **Skutki:** ❌ nie ma podstawy do odkupu z tytułu kompletności ·
 > ⛔ **zakaz mieszania plików z obu okresów pozostaje w mocy** — liczebności
-> nadal się nie zgadzają, a mechanizm nie ma nazwy.
+> nadal się nie zgadzają, a mechanizm nie ma nazwy. Propozycja zawężenia
+> zakazu (nie decyzja Wykonawcy) leży w §4 pkt 4.
 >
 > **Test 4 (§3c) dołożył kawałek mechanizmu, którego dostawca jeszcze nie
 > nazwał:** wszystkie 18 152 rekordy `N` niosą `F_LAST`, ale **liczba kopert
 > jest identyczna** (698 358 po obu stronach), a nadwyżka `F_LAST` na
 > rekordach realnych sumuje się co do rekordu do liczby `N`. Bit został
-> **przeniesiony** na osobny wypełniacz, nie dodany. Czy to zmienia jednostkę
-> obserwacji, rozstrzyga **test 5** (§3d) — darmowy, jeszcze nieuruchomiony.
+> **przeniesiony** na osobny wypełniacz, nie dodany.
+>
+> **Test 5 (§3d) domknął diagnostykę:** rekonstrukcja jednostki obserwacji
+> daje po obu stronach **29 734 akcje identyczne we wszystkich polach**.
+> **Audyt D5-C STOI** — wynik `842 757 zdarzeń` opisuje rynek, nie wersję
+> serwowania. Testy 1–5 zamknięte; **nic więcej nie da się ustalić lokalnie.**
 
 > ## ⚠️ KOREKTA v2 — pierwsza wersja tego dokumentu stawiała błędną tezę
 >
@@ -45,10 +50,12 @@ ROZSTRZYGNIĘTY 09.08. Zakup zablokowany warunkiem 8.**
 > Wnioski liczbowe (tabela §1, proporcjonalność, stała cena za rekord) **stoją
 > bez zmian**. Upadła wyłącznie ich interpretacja. Nowa teza i nowe pytanie: §2a.
 
-**Poprawka dat wniesiona przez recenzję P1:** wcześniejsza wersja mówiła
-o „05.08 vs 06.08". Faktyczne okno to **przebieg, który pobrał 2026-07-06
-(serwer zwracał wtedy jeszcze stare liczby) → 2026-08-08T12:15Z**. Dokładny
-lewy kraniec: pole `pobrano_utc` w lokalnym `manifest_d5b2.json`.
+**Okno skoku — domknięte odczytem manifestu (09.08).** Wcześniejsze wersje
+mówiły najpierw o „05.08 vs 06.08", potem o „wieczorze 06–07.08". Obie były
+nieprecyzyjne. `pobrano_utc` z `manifest_d5b2.json` = **2026-08-06T22:05:38Z**
+(lokalnie 00:05 w nocy 6/7.08) — to ostatni przebieg, o którym **wiadomo
+z pobranych plików**, że serwer zwracał wtedy stare liczby. Skok jest więc
+zamknięty w przedziale **2026-08-06 22:05:38Z → 2026-08-08 12:15Z**.
 
 ---
 
@@ -178,7 +185,8 @@ zostaje wycofana. Podaję fakty; nazwanie mechanizmu należy do dostawcy.
 | **2026-08-04 13:31Z** | środowisko zdalne, **2 dni przed** obserwowaną awarią | commit `299ca34`, `data/wycena_d5b2_mbo.json`, pole `koszt_usd`: **78,6044 USD / 837 310 143 rek.** (78,6045 to suma 22 zaokrąglonych pozycji); per sesja 07-01 3,6891 / 39 297 265, 07-03 0,2498 / 2 660 629, 07-30 3,5961 / 38 306 877 |
 | 2026-08-04 | pobranie D5-C — `get_range`, **nie** metadane | plik fizycznie ma **38 306 877** rekordów, SHA `3e6f023d…74ac42` |
 | ~2026-08-05 | ponowne pobranie D5-C, maszyna lokalna | **ten sam SHA**, znowu 38 306 877 |
-| wieczór 06–07.08 | przebiegi zakupowe, lokalnie | stare liczby; pobrane pliki zgodne co do rekordu |
+| **06.08 22:05:38** | przebieg zakupowy, lokalnie (`pobrano_utc`) | stare liczby; pobrane pliki zgodne co do rekordu |
+| wieczór 07.08 | dalsze wyceny | **wciąż stare liczby** |
 | **2026-08-08 ~12:15Z** | przebieg wyceny | **skok we wszystkich 22 sesjach** |
 
 **Stara wartość była stabilna przez ≥4 dni, na dwóch maszynach, i obejmowała
@@ -199,7 +207,7 @@ wtórna, którą zostawiam do rozstrzygnięcia dostawcy.
 6. stara wartość poprzedza awarię o dwa dni i występuje też w plikach.
 
 Z (1)–(6): **jedna z dwóch wartości `get_record_count` jest błędna**, przejście
-między nimi jest **skokowe** i nastąpiło między wieczorem 06–07.08 a 08.08
+między nimi jest **skokowe** i nastąpiło między **06.08 22:05:38Z** a 08.08
 12:15Z. **Nie mam mechanizmu i nie będę go zgadywał** — pytanie do dostawcy
 jest sformułowane neutralnie.
 
@@ -269,10 +277,21 @@ o ~13% *względnie* więcej niż średnio.
 **Kontrast wyostrzony rachunkiem recenzji P1** — porównanie okna z **resztą
 sesji**, nie ze średnią:
 
-| | rekordów u nas | niedobór | stopa |
-|---|---:|---:|---:|
-| okno 13:30–14:30 | 1 362 037 | 27 781 | **1,999%** |
-| reszta sesji | 1 298 592 | 20 014 | **1,518%** |
+| | rekordów u nas | rekordów u dostawcy | niedobór | stopa |
+|---|---:|---:|---:|---:|
+| okno 13:30–14:30 | 1 362 037 | 1 389 818 | 27 781 | **1,999%** |
+| reszta sesji | 1 298 592 | 1 318 606 | 20 014 | **1,518%** |
+
+**Mianownikiem stopy jest liczba u DOSTAWCY** — niedobór odnosimy do zbioru
+większego, bo to on jest tu punktem odniesienia. Zarzut recenzji P1 przyjęty:
+poprzednia wersja tabeli pokazywała tylko kolumnę „u nas" i sugerowała, że to
+z niej liczona jest stopa. Przy naszym mianowniku wyszłoby **2,040%**
+i **1,541%** — stosunek **1,32×** jest identyczny w obu ujęciach, więc wniosek
+się nie zmienia, ale liczby w tabeli muszą dać się odtworzyć bez zgadywania.
+
+Ta sama dwuznaczność siedzi w opisach wcześniejszych commitów. **Komunikatu
+commita nie da się poprawić bez przepisania historii**, więc go nie ruszam —
+w razie rozbieżności **rozstrzyga ten dokument**, nie opis commita.
 
 Okno ma stopę **1,32×** wyższą niż reszta. Pierwsza godzina niesie **58,1%**
 całego niedoboru, mając **51,3%** rekordów. Nadwyżka serwera jest więc
@@ -412,24 +431,47 @@ Na ręcznych fixture'ach oba są zmierzone i rozróżnione
 (`tests/test_mbo_events.py::TestRekordyNone`). Na realnym pliku rozstrzyga
 dopiero test 5.
 
-## 3d. Test 5 — rekonstrukcja akcji · **DO URUCHOMIENIA**, koszt 0
+## 3d. Test 5 — rekonstrukcja akcji · **WYKONANY 09.08**, koszt 0
 
-```bash
-python scripts/diff_mikro.py --rekonstrukcja
-```
-
-Puszcza `engine/mbo_events.rekonstruuj` na **obu** plikach w tym samym oknie
-i porównuje **akcje agresywne**, pole po polu — czyli dokładnie tę jednostkę
+`python scripts/diff_mikro.py --rekonstrukcja` — puszcza
+`engine/mbo_events.rekonstruuj` na **obu** plikach w tym samym oknie
+i porównuje **akcje agresywne** pole po polu, czyli dokładnie tę jednostkę
 obserwacji, na której policzono audyt D5-C. Jedyny test w tej diagnostyce,
 który patrzy na kolejność rekordów, a nie na ich rozkład.
 
-| wynik | co znaczy |
-|---|---|
-| listy identyczne | **audyt D5-C stoi** — przeniesienie bitu nie zmienia jednostki |
-| jakakolwiek różnica | audyt opisuje wersję danych, której dostawca już nie serwuje → **powtórzyć** |
+| | świeży wycinek | nasz plik |
+|---|---:|---:|
+| akcji agresywnych | **29 734** | **29 734** |
+| suma `n_trade` | **32 953** | **32 953** |
+| suma rozmiaru | **63 394** | **63 394** |
+| pozycja pierwszej różnicy | **n/d** | **n/d** |
 
-Kryterium zapisane **przed** uruchomieniem. Numer koperty jest z porównania
-świadomie wyłączony: to indeks porządkowy, nie cecha zdarzenia.
+```
+-> IDENTYCZNE, akcja po akcji, we wszystkich polach.
+```
+
+### Werdykt: **audyt D5-C STOI**
+
+Kryterium odczytu było zapisane **przed** uruchomieniem (commit `4ee8708`):
+listy identyczne → audyt stoi; jakakolwiek różnica → do powtórzenia. Zapadło
+pierwsze, i to bez ani jednej różnicy — więc pytanie o zachowanie na granicy
+okna w ogóle nie powstaje.
+
+**Cross-check, który się domyka:** suma `n_trade` = **32 953** zgadza się co
+do rekordu z licznikiem `action=T` z testu 3 (32 953 po obu stronach). Dwie
+niezależne ścieżki liczenia — surowy histogram akcji i pełna rekonstrukcja
+jednostki — dają tę samą liczbę.
+
+Numer koperty jest z porównania świadomie wyłączony: to indeks porządkowy,
+a nie cecha zdarzenia.
+
+**Co to znaczy praktycznie:** przeniesienie bitu `F_LAST` na wypełniacz `N`
+jest dla naszej jednostki obserwacji **nieodróżnialne**. Wynik
+`842 757 zdarzeń, 0 niewyjaśnionych` opisuje więc rynek, a nie wersję
+serwowania danych.
+
+**Czego nadal nie obejmuje:** zmierzono 30 minut jednej sesji. Dla tego okna
+równoważność jest pomiarem; dla pozostałych 21 sesji pozostaje uogólnieniem.
 
 ---
 
@@ -443,7 +485,8 @@ Kryterium zapisane **przed** uruchomieniem. Numer koperty jest z porównania
 | Czy brakuje realnych zdarzeń? | **NIE** — 0 rekordów tylko u dostawcy poza `action=N` | test 3 (30 min sesji 07-03) |
 | Czy rekordy `N` niosą `F_LAST`? | **Tak, wszystkie 18 152** | test 4 |
 | Czy zmieniła się liczba kopert? | **NIE** — 698 358 po obu stronach; bit **przeniesiony**, nie dodany | test 4, bilans domyka się co do rekordu |
-| Czy audyt D5-C stoi? | **do sprawdzenia** — histogram nie widzi kolejności | **test 5**, `--rekonstrukcja`, darmowy |
+| Czy jednostka obserwacji jest ta sama? | **TAK** — 29 734 akcje identyczne we wszystkich polach | test 5 |
+| **Czy audyt D5-C stoi?** | **TAK** | test 5; cross-check: suma `n_trade` 32 953 = licznik `action=T` z testu 3 |
 | Czy trzeba odkupić pobrane sesje? | **Nie z tytułu kompletności** | test 3 |
 | Czy wolno mieszać stare i nowe pliki? | **Nie** | liczebności nadal rozjechane, mechanizm bez nazwy |
 
@@ -492,14 +535,29 @@ Konsekwencje — stan po trzech testach:
 3. ✅ **Czy zmieniła się liczba kopert** — nie (test 4). 698 358 po obu
    stronach; wszystkie `N` niosą `F_LAST`, ale bit został przeniesiony
    z ostatniego rekordu realnego na dołożony wypełniacz.
-3a. ⏳ **Czy jednostka obserwacji jest ta sama** — jedyne otwarte pytanie
-   o realnych skutkach dla audytu. Histogram tego nie rozstrzyga, bo nie widzi
-   kolejności. Sprawdzalne lokalnie i **za darmo**:
-   `python scripts/diff_mikro.py --rekonstrukcja`.
+3a. ✅ **Czy jednostka obserwacji jest ta sama** — **tak** (test 5). 29 734
+   akcje identyczne we wszystkich polach. Wynik `842 757 zdarzeń,
+   0 niewyjaśnionych` **stoi**.
 4. ⛔ Czy miesiąc D5-B2 wolno policzyć na **mieszance** plików z obu okresów?
-   **Nadal nie.** Test 3 pokazał, że treść zdarzeń jest ta sama, ale liczebności
-   nadal się rozjeżdżają, a mechanizm nie ma nazwy. W danych nie widać, który
-   plik z którego okresu pochodzi — a to jest właśnie powód zakazu.
+   **Zakaz obowiązuje nadal — ale jego uzasadnienie się zmieniło i wymaga
+   decyzji właściciela, nie mojej.** Stan wiedzy:
+
+   | | |
+   |---|---|
+   | co zmierzono | na oknie 30 min jednostka obserwacji jest **identyczna** po obu stronach |
+   | co z tego wynika | analiza idąca przez `rekonstruuj` daje ten sam wynik niezależnie od okresu pobrania |
+   | co nadal różne | **surowa liczba rekordów** — każdy licznik nieprzechodzący przez jednostkę kanoniczną policzy inaczej |
+   | czego nie zmierzono | pozostałych 21 sesji; równoważność jest tam **uogólnieniem** |
+   | czego nie wiemy | czy za tydzień nie pojawi się trzecia wersja — mechanizmu nadal nikt nie nazwał |
+
+   **Propozycja do rozstrzygnięcia (Wykonawca nie wydaje tu werdyktu):**
+   zawęzić zakaz z „nie mieszać plików" do „nie mieszać **liczników surowych
+   rekordów**", dopuszczając mieszanie dla analiz przechodzących przez
+   `engine/mbo_events.rekonstruuj`. Warunek minimalny: powtórzyć test 5 na
+   drugiej sesji z innego dnia, żeby równoważność przestała stać na jednym
+   oknie. **Decyzja należy do właściciela i najlepiej zapada po odpowiedzi
+   dostawcy** — bo jeśli mechanizm okaże się niestabilny, zawężenie trzeba
+   będzie cofnąć.
 5. ✅ Czy trzeba odkupić już pobrane sesje — **nie z tytułu kompletności**.
    Pytanie o rozliczenie przerwanych pobrań (07-06, 07-07) pozostaje otwarte
    i jest pytaniem do dostawcy.
@@ -512,10 +570,9 @@ scenariusz; to problem z warstwą metadanych, nie z normalizacją danych.
 
 ## 5. Pytanie do Databento
 
-**Testy 1–3 wykonane, punkt 4 przepisany na ich wynik.** Do wysłania brakuje
-dwóch rzeczy, obie po stronie właściciela: pola `pobrano_utc` z lokalnego
-`manifest_d5b2.json` (dokładny lewy kraniec okna w pytaniu 1) i spisu pozycji
-z panelu Databento z 6–8.08 (pytanie 5). Wątek: kontynuacja rozmowy z Erikiem.
+**GOTOWY DO WYSŁANIA.** Wszystkie blokery zniesione: testy 1–5 wykonane,
+`pobrano_utc` odczytane (**2026-08-06T22:05:38+00:00**), panel Databento
+odczytany (§3a `data/KOSZTY.md`). Wątek: kontynuacja rozmowy z Erikiem.
 
 > **Subject: `metadata.get_record_count` for GLBX.MDP3 MBO jumped ~2.6% for all
 > July 2026 sessions, while `get_dataset_condition` reports no modification**
@@ -529,15 +586,20 @@ z panelu Databento z 6–8.08 (pytanie 5). Wątek: kontynuacja rozmowy z Erikiem
 > `stype_in=raw_symbol`, 22 RTH sessions of July 2026, each `13:30–20:00 UTC`
 > (09:30–16:00 America/New_York).
 >
-> **Dated history of our measurements** — the same query, four times:
+> **Dated history of our measurements** — the same query, repeatedly:
 >
 > | When (UTC) | Where | Result |
 > |---|---|---|
 > | 2026-08-04 13:31 | our cloud environment | 837,310,143 records / 78.6044 USD |
 > | 2026-08-04 | `timeseries.get_range` for 2026-07-30 | file contains **38,306,877** records |
 > | ~2026-08-05 | re-download of the same session, different machine | identical SHA-256, again 38,306,877 |
-> | 2026-08-06–07 evening | purchase runs | same counts; downloaded files match them record-for-record |
+> | **2026-08-06 22:05:38** | purchase run (manifest `pobrano_utc`) | same counts; downloaded files match them record-for-record |
+> | 2026-08-07 evening | further pricing | still the old counts |
 > | **2026-08-08 12:15** | pricing run | **859,343,842 records / 80.6729 USD** |
+>
+> So the change happened somewhere between **2026-08-06 22:05:38 UTC** —
+> the last download that provably returned the old counts — and
+> **2026-08-08 12:15 UTC**.
 >
 > Every one of the 22 sessions increased, by +1.67% to +3.06% (median +2.66%).
 > Implied price per record is unchanged (~9.388e-8 USD/record), so this is
@@ -568,7 +630,8 @@ z panelu Databento z 6–8.08 (pytanie 5). Wątek: kontynuacja rozmowy z Erikiem
 > **Our questions:**
 >
 > 1. Which of the two counts is authoritative for these ranges, and **what
->    changed on your side between the evening of Aug 7 and Aug 8, 12:15 UTC**?
+>    changed on your side between 2026-08-06 22:05:38 UTC and 2026-08-08
+>    12:15 UTC**?
 > 2. Does `last_modified_date` in `get_dataset_condition` cover changes that
 >    would affect `get_record_count`? If not, which field should we watch for
 >    reproducibility?
@@ -628,13 +691,31 @@ z panelu Databento z 6–8.08 (pytanie 5). Wątek: kontynuacja rozmowy z Erikiem
 >       historical ranges that previously returned without them?**
 >    b) **Is the event partition guaranteed unchanged** — i.e. does the
 >       trailing `N` always immediately follow the record that previously
->       carried `F_LAST`, with no real record in between? We reconstruct
->       aggressor actions by walking the stream in order, so the answer decides
->       whether results computed on the older files remain valid.
+>       carried `F_LAST`, with no real record in between?
+>
+>       On this window it evidently is: we reconstructed our unit of
+>       observation (aggressor action per `Trade`, keyed by `order_id`) from
+>       both files and got **29,734 actions identical in every field**, with
+>       matching `Trade` counts (32,953) and sizes (63,394). We would like to
+>       know whether that is **guaranteed by the format** or merely true of
+>       the slice we happened to check — we can only measure 30 minutes,
+>       you can answer for the dataset.
 > 5. Two sessions were interrupted mid-download — 2026-07-06 returned
 >    `Response ended prematurely`, and 2026-07-07 left a truncated file
->    (1,867,793 records, ~7 minutes of a 6.5-hour window). **Were those
->    interrupted requests billed?**
+>    (1,867,793 records, ~7 minutes of a 6.5-hour window).
+>
+>    Our usage page shows **11.47 GB of MBO historical streaming at 1.80
+>    USD/GB = 20.65 USD** for the period, which is more than the 12.81 USD our
+>    own per-query estimates account for — consistent with both interrupted
+>    requests having been billed **in full**, not by bytes delivered. That
+>    leaves roughly **0.35 USD** we cannot attribute to any query we know we
+>    made.
+>
+>    a) Could you provide a **per-request breakdown for 2026-08-06 to 08-09**?
+>       The usage page aggregates, so we cannot reconcile it ourselves.
+>    b) **Does a retry of a truncated response get billed again in full?**
+>       That is our working hypothesis for the ~0.35 USD residue, but it is a
+>       hypothesis, not something we measured.
 >
 > For context: this is a single-instrument research project on a small budget,
 > and reproducibility is a hard requirement — a result we cannot recompute later
@@ -689,7 +770,7 @@ skryptu w commicie `85d9e73`, sprzed pobrania.
 | | |
 |---|---|
 | **Zakup miesiąca** | **WSTRZYMANY.** Warunek 8 blokuje automatycznie. |
-| **Diagnostyka lokalna** | testy 1–3 wykonane. Zostało `python scripts/diff_mikro.py --flagi` — darmowe, rozstrzyga los audytu D5-C |
+| **Diagnostyka lokalna** | **ZAMKNIĘTA — testy 1–5 wykonane.** Dryf scharakteryzowany w całości; nic więcej nie da się ustalić bez dostawcy |
 | **Furtka na później** | `--akceptuj-rozjazd` archiwizuje stary manifest; **nie używać przed odpowiedzią** |
 | Pliki już pobrane | **NIE kasujemy.** Zgadzają się z liczbami, za które zapłacono. |
 | `2026-07-30` z D5-C | **NIE ruszamy.** SHA zamrożony, kopia zapasowa priorytetowa. |

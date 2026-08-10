@@ -83,12 +83,40 @@ inaczej naliczyłby ją trzeci raz.
 
 ---
 
-## 3a. Pozycje do wyjaśnienia — przerwane pobrania
+## 3a. Przerwane pobrania — ROZSTRZYGNIĘTE panelem 09.08
 
-| Pozycja | Kwota | Status |
-|---|---|---|
-| MBO 2026-07-06, pobranie przerwane w locie | **3,0388 USD** | ⚠️ **NIEPOTWIERDZONA** |
-| MBO 2026-07-07, pobranie przerwane w locie | **≤ 4,4529 USD** | ⚠️ **NIEPOTWIERDZONA** |
+**Odczyt panelu Databento (09.08):**
+
+| | |
+|---|---|
+| Historical streaming, MBO | **11,47 GB × 1,80 USD/GB = 20,65 USD** |
+| Pokryte kredytami | −20,65 USD |
+| **Obciążenie karty** | **0,00 USD** |
+| Kredyt pozostały | **104,35 / 125 USD** |
+
+### Rekonsyliacja
+
+| | |
+|---|---:|
+| obciążenia wg panelu | **20,6500** |
+| potwierdzone naszymi wycenami (§1 poz. 5 + trzy sesje + 07-06) | 12,8093 |
+| **różnica** | **7,8407** |
+| przerwane 07-06 + 07-07 liczone w **pełnym** zakresie | 3,0388 + 4,4529 = **7,4917** |
+| **residuum** | **+0,3490** |
+
+**Wniosek pomiarowy: przerwane pobrania zostały naliczone w całości.**
+Precedens z D5-B potwierdzony — Databento rozlicza **zrealizowane zapytanie,
+nie odebrane bajty**. Pozycje przestają być „niepotwierdzone".
+
+**Residuum 0,3490 USD pozostaje niewyjaśnione.** Hipoteza recenzenta (**nie
+pomiar**): dwa dodatkowe pobrania uciętego fragmentu 07-07 przy ponowieniach,
+2 × 1 867 793 rek. ≈ 0,3507. Zgadza się co do trzeciego miejsca, ale panel
+**agreguje i nie daje rozbicia per zapytanie**, więc tego nie zweryfikowałem.
+Pytanie 5a w mailu do Databento prosi o to rozbicie.
+
+**Stawka 1,80 USD/GB potwierdza model wyceny niezależnie:** 78,6044 USD =
+43,669 GB × 1,80, przy GB = 1024³. Dwie różne drogi (cena za rekord
+~9,388·10⁻⁸ i cena za gigabajt) prowadzą do tej samej kwoty.
 
 Potwierdzone diagnostyką 08.08: plik 07-07 ma **1 867 793 rekordy** i kończy
 się o **13:37:57 UTC** — 7 minut z 6,5-godzinnego okna, czyli **3,94%
@@ -96,29 +124,31 @@ rekordów** (1 867 793 / 47 432 653) i ~2% czasu.
 
 **2026-07-07 zgłoszona przez recenzję P1** — na dysku leży plik obcięty
 (1 867 793 z 47 432 653 rekordów, `BentoWarning: DBN file is truncated`),
-pozostałość po przerwanym przebiegu. Kwota podana jako **granica górna**
-(wycena z przebiegu #1); po korekcie metadanych może wynieść ~4,45 USD.
-Bez tej pozycji największe niepotwierdzone naliczenie byłoby poza księgą.
-
-**2026-07-06:** transfer przerwał się po 215,2 MB z ~0,7 GB (`BentoError:
-Response ended prematurely`). Obie sesje wymagają ponownego pobrania, co
-naliczy je **drugi raz**.
-
-**Nie wiem, czy przerwane pobrania zostały naliczone.** Precedens
-z D5-B (2026-07-07) sugeruje, że tak — Databento rozlicza zrealizowane
-zapytanie, nie odebrane bajty — ale tego nie zmierzyłem i nie wolno mi tego
-podawać jako faktu. **Do sprawdzenia na stronie zużycia konta Databento — spisz WSZYSTKIE
-pozycje z 6–8.08, nie tylko te dwie.**
+pozostałość po przerwanym przebiegu. **2026-07-06:** transfer przerwał się po
+215,2 MB z ~0,7 GB (`BentoError: Response ended prematurely`). Obie sesje
+wymagają ponownego pobrania, co naliczy je **drugi raz**.
 
 Zgodnie z zasadą 3 tego rejestru duplikacja dostaje własną pozycję i nie
-zostaje schowana w sumie zbiorczej. Po weryfikacji: albo wpisy znikają, albo
-zamieniają się w potwierdzone pozycje duplikacji.
+zostaje schowana w sumie zbiorczej.
 
-**Stan pieniędzy, uczciwie:** potwierdzone wycenami **12,8093 USD**
-(9,6916 za trzy sesje + 3,0388 za 07-06 + 0,0789 za mikro-diff).
-Niepotwierdzone: **do ~7,49 USD**.
-Liczba „12,7 USD wydane" z wcześniejszego meldunku była **dolną granicą
-podaną jak stan** — poprawka z recenzji P1 przyjęta.
+**Stan pieniędzy, uczciwie:**
+
+| | |
+|---|---:|
+| faktycznie obciążone konto (panel) | **20,6500 USD** |
+| z tego z karty | **0,00 USD** — pokryte kredytami |
+| kredyt pozostały | **104,35 / 125 USD** |
+| przypisane do konkretnych zapytań | 20,3010 |
+| **nieprzypisane** | **0,3490** |
+
+Wcześniejszy podział na „potwierdzone 12,8093 / niepotwierdzone do ~7,49"
+**przestaje obowiązywać** — panel pokazał kwotę faktyczną i jest ona wyższa
+niż górna granica moich wycen (20,65 wobec 20,30). Zasada 4 rejestru zadziałała
+w obie strony: granica była podana uczciwie, ale pomiar i tak ją przekroczył
+o 0,3490 USD, których nie umiem przypisać.
+
+**Skutek dla budżetu: żaden bieżący.** Nic nie poszło z karty, a pozostałe
+104,35 USD kredytu wystarcza na 18 brakujących sesji (≤ 68 USD) z zapasem.
 
 ---
 
@@ -135,7 +165,7 @@ commit `299ca34` z **04.08 13:31Z**, dwa dni przed awarią, ma identyczne
 liczby, a pobrania z 04–05.08 fizycznie je zawierają.
 
 Obowiązuje **rama faktograficzna bez mechanizmu**: wartość stabilna ≥4 dni
-na dwóch maszynach, skok między wieczorem 06–07.08 a 08.08 12:15Z, brak
+na dwóch maszynach, skok między **06.08 22:05:38Z** a 08.08 12:15Z, brak
 modyfikacji wg dostawcy. Mechanizm ma nazwać dostawca.
 
 Diagnostyka lokalna (08.08), **oba testy wykonane**: pięć plików bez uciętego
