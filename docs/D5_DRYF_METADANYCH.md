@@ -572,15 +572,23 @@ scenariusz; to problem z warstwą metadanych, nie z normalizacją danych.
 
 **GOTOWY DO WYSŁANIA.** Wszystkie blokery zniesione: testy 1–5 wykonane,
 `pobrano_utc` odczytane (**2026-08-06T22:05:38+00:00**), panel Databento
-odczytany (§3a `data/KOSZTY.md`). Wątek: kontynuacja rozmowy z Erikiem.
+odczytany (§3a `data/KOSZTY.md`).
+
+**Adresat: `support@databento.com`** (decyzja właściciela, 09.08). To skrzynka
+ogólna, nie wątek Erika — dlatego mail jest **samodzielny**: nie zakłada, że
+czytający pamięta poprzednią rozmowę o `sequence`, tylko powołuje się na nią
+jednym zdaniem. Gdyby trafił jednak do tamtego wątku, to zdanie nie przeszkadza.
 
 > **Subject: `metadata.get_record_count` for GLBX.MDP3 MBO jumped ~2.6% for all
 > July 2026 sessions, while `get_dataset_condition` reports no modification**
 >
-> Hi Erik,
+> Hello,
 >
-> Following up on our earlier thread. We have a reproducibility question we
-> could not resolve ourselves, and we have paused a purchase because of it.
+> We have a reproducibility question about GLBX.MDP3 MBO that we could not
+> resolve ourselves, and we have paused a purchase because of it. (We had an
+> earlier exchange with Erik on this account about `sequence` semantics in the
+> `trades` schema — this is a separate issue, so please feel free to route it
+> wherever is appropriate.)
 >
 > **Setup.** Fixed research query: `GLBX.MDP3`, schema `mbo`, symbol `MNQU6`,
 > `stype_in=raw_symbol`, 22 RTH sessions of July 2026, each `13:30–20:00 UTC`
@@ -721,6 +729,9 @@ odczytany (§3a `data/KOSZTY.md`). Wątek: kontynuacja rozmowy z Erikiem.
 > and reproducibility is a hard requirement — a result we cannot recompute later
 > is not a result we can use. We stopped after 4 of 22 sessions specifically
 > because mixing data from two periods would be invisible in the data itself.
+>
+> Happy to share the exact queries, the diff script, or the record-level output
+> if that helps you reproduce any of the above.
 >
 > Thanks,
 
