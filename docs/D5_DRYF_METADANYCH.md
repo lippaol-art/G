@@ -1,7 +1,28 @@
 # Dryf metadanych GLBX.MDP3 — zakup miesiąca WSTRZYMANY
 
-**Wykryte: 08.08.2026. Status: mechanizm NADAL NIEZNANY, ale skutek dla danych
-ROZSTRZYGNIĘTY 09.08. Zakup zablokowany warunkiem 8.**
+**Wykryte 08.08.2026. Skutek dla danych rozstrzygnięty pomiarem 09.08.
+Mechanizm NAZWANY PRZEZ DOSTAWCĘ 10.08. Zakup nadal zablokowany warunkiem 8.**
+
+> ## 📣 ODPOWIEDŹ DATABENTO — 10.08, mechanizm znany (§5b)
+>
+> > *„We released a change for GLBX.MDP3 over the weekend, which leads to
+> > additional MBO records being published for some events."* — Renan, Databento
+>
+> **To celowa zmiana normalizacji, nie awaria i nie utrata danych.** Zgadza się
+> z każdym naszym pomiarem: okno czasowe (weekend 08–09.08 mieści się
+> w przedziale 06.08 22:05:38Z → 08.08 12:15Z), proporcjonalność do rozmiaru
+> sesji („for **some** events"), oraz to, że nadwyżka jest **dodana**
+> („**additional** records"), a nie podmieniona.
+>
+> **Cena tej odpowiedzi: obalona moja trzecia teza.** Wycofałem wcześniej
+> ryzyko **A4-11 z audytu 4** („zmiana normalizacji GLBX.MDP3, VII 2026"),
+> powołując się na `last_modified_date`. Audyt miał rację, ja nie —
+> `last_modified_date` **nie obejmuje zmian normalizacji**. Rozliczenie błędu
+> w §4.2.
+>
+> **Pięć pytań nadal bez odpowiedzi**, bo mail dotarł **ucięty** („Your message
+> looks like it was cut off"). Krótkie dopytanie: §5c. Ogłoszenie dostawcy jest
+> **nieprzeczytane** — `databento.com` blokuje polityka egress tego środowiska.
 
 > ## ✅ ROZSTRZYGNIĘCIE 09.08 — wariant **B′**, pomiar na treści
 >
@@ -562,9 +583,31 @@ Konsekwencje — stan po trzech testach:
    Pytanie o rozliczenie przerwanych pobrań (07-06, 07-07) pozostaje otwarte
    i jest pytaniem do dostawcy.
 
-Powiązanie z ryzykiem A4-11 z audytu 4 (*„zmiana normalizacji GLBX.MDP3,
-VII 2026"*) **wycofuję** — `last_modified_date` mu przeczy. To nie jest ten
-scenariusz; to problem z warstwą metadanych, nie z normalizacją danych.
+### ⚠️ Wycofanie A4-11 było BŁĘDEM — przywracam, dostawca potwierdził
+
+Napisałem tu wcześniej: *„Powiązanie z ryzykiem A4-11 z audytu 4 (zmiana
+normalizacji GLBX.MDP3, VII 2026) **wycofuję** — `last_modified_date` mu
+przeczy. To nie jest ten scenariusz; to problem z warstwą metadanych, nie
+z normalizacją danych."*
+
+**To była dokładnie ta jedna rzecz, którą audyt 4 przewidział, a ja odrzuciłem.**
+Odpowiedź Databento (10.08, §5b) mówi wprost: wdrożono zmianę w GLBX.MDP3,
+która powoduje publikowanie **dodatkowych rekordów MBO dla niektórych zdarzeń**.
+To jest zmiana normalizacji. **A4-11 wraca jako ryzyko zmaterializowane.**
+
+**Gdzie dokładnie popełniłem błąd w rozumowaniu.** Wnioskowałem tak:
+`last_modified_date` = D+1 dla każdej sesji lipca ⟹ dane nie były modyfikowane
+⟹ to nie może być zmiana normalizacji. Przesłanka była prawdziwa, wniosek
+fałszywy, bo milcząco założyłem, że **`last_modified_date` obejmuje zmiany
+normalizacji**. Nie obejmuje — śledzi rewizje danych źródłowych, a nie zmiany
+w tym, jak dostawca je serializuje. Pytanie 2 maila pytało dokładnie o to
+i było postawione dobrze; szkoda, że sam odpowiedziałem sobie na nie wcześniej
+i źle.
+
+**Lekcja, która wychodzi poza ten incydent:** brak sygnału w polu metadanych
+jest dowodem tylko wtedy, gdy wiadomo, **co to pole obejmuje**. Nie wiedziałem,
+a mimo to użyłem go do odrzucenia hipotezy — i to hipotezy, którą niezależny
+audyt postawił z góry.
 
 ---
 
@@ -737,6 +780,106 @@ jednym zdaniem. Gdyby trafił jednak do tamtego wątku, to zdanie nie przeszkadz
 
 ---
 
+## 5b. ODPOWIEDŹ DOSTAWCY — 10.08.2026, mechanizm NAZWANY
+
+Odpowiedź od **Renana (Databento support)**, cytat w całości:
+
+> *We released a change for GLBX.MDP3 over the weekend, which leads to
+> additional MBO records being published for some events.*
+>
+> *Please refer to the following announcement for more details:*
+> `https://databento.com/blog/cme-normalization-changes-2026-07`
+
+**To zamyka ramę faktograficzną z §2a.** Przez trzy dni świadomie nie nazywałem
+mechanizmu, bo dwie moje próby nazwania go upadły. Nazwał go dostawca i brzmi
+on: **celowa zmiana normalizacji, wdrożona w weekend 08–09.08**, publikująca
+dodatkowe rekordy MBO dla niektórych zdarzeń.
+
+### Zgodność z naszymi pomiarami — co do szczegółu
+
+| Nasz pomiar | Wypowiedź dostawcy |
+|---|---|
+| skok zamknięty w 06.08 22:05:38Z → 08.08 12:15Z | „over the weekend" — 08.08 to sobota, przedział się zgadza |
+| przyrost **proporcjonalny** do rozmiaru sesji, nie stały | „for **some** events" — dodatkowe rekordy per zdarzenie, więc skalują się z liczbą zdarzeń |
+| nadwyżka to wyłącznie `action=N` bez treści ekonomicznej | „**additional** MBO records" — dodane, nie zmienione |
+| `tylko u nas: 0`, pięć realnych typów akcji +0 | zdarzenia rynkowe nietknięte — spójne z „additional" |
+| liczba kopert identyczna, `F_LAST` przeniesiony | spójne, ale **przez dostawcę niepotwierdzone** |
+
+**Nie odwracam kierunku wnioskowania.** Zgodność liczę jako potwierdzenie
+naszych pomiarów przez niezależne źródło, a nie jako dowód, że wszystkie nasze
+interpretacje były trafne — jedna z nich (A4-11) właśnie okazała się błędna.
+
+### ⛔ Czego ta odpowiedź NIE rozstrzyga
+
+| Pytanie | Stan |
+|---|---|
+| Q1 — która liczba jest autorytatywna | **bez odpowiedzi** (implikacja: nowa, ale to mój wniosek, nie ich słowa) |
+| Q2 — które pole obserwować dla odtwarzalności | **bez odpowiedzi**; wiemy tylko negatywnie, że `last_modified_date` NIE wystarcza |
+| Q3 — czy da się przypiąć wersję zbioru | **bez odpowiedzi** — a to jest dla nas najważniejsze pytanie długoterminowe |
+| Q4b — czy podział na zdarzenia jest **gwarantowany** niezmieniony | **bez odpowiedzi**; mamy własny pomiar na 30 minutach (§3d), nie gwarancję formatu |
+| Q5 — rozliczenie przerwanych pobrań i residuum 0,3490 USD | **bez odpowiedzi** |
+
+**Powód jest prozaiczny: mail dotarł ucięty** („Your message looks like it was
+cut off"). Renan odpowiedział na to, co zobaczył. Pytania trzeba zadać ponownie,
+krótko — treść w §5c.
+
+### Ogłoszenie — NIEPRZECZYTANE, i to trzeba wiedzieć
+
+`https://databento.com/blog/cme-normalization-changes-2026-07` jest
+**zablokowany przez politykę egress** tego środowiska (`databento.com` odrzucone,
+choć `hist.databento.com` przechodzi). Zgodnie z `/root/.ccr/README.md` to
+odmowa polityki, której nie obchodzę.
+
+**Dopóki ktoś go nie przeczyta, nie wiemy rzeczy, które mogą być tam wprost:**
+czy zmiana obejmuje historię wstecz (nasze pomiary mówią, że tak), czy jest
+odwracalna, czy istnieje sposób na wersjonowanie, i czym formalnie są rekordy
+`action=N`. **To jest najtańsze źródło odpowiedzi, jakie mamy — tańsze niż
+kolejny mail.**
+
+---
+
+## 5c. Dopytanie — krótkie, bo pierwszy mail dotarł ucięty
+
+**Diagnoza problemu z pierwszym mailem: był za długi.** Tabele, cytaty i pięć
+rozbudowanych pytań — coś po drodze go przycięło. Ta wersja mieści się na
+jednym ekranie i zadaje **cztery pytania, każde jednym zdaniem**. Szczegóły
+techniczne oferujemy na życzenie, zamiast wysyłać je z góry.
+
+> **Subject: Re: GLBX.MDP3 MBO record counts — four follow-up questions**
+>
+> Hi Renan,
+>
+> Thank you — that explains what we were seeing, and it matches our
+> measurements. Apologies for the truncated message; here is the short version.
+>
+> We hold four July 2026 MBO sessions downloaded **before** the change and
+> paused the rest of the purchase. We compared one 30-minute slice
+> (2026-07-03, 13:30–14:00 UTC) before/after, record by record: the
+> **18,152 extra records are all `action=N`** with `order_id=0`, `size=0` and
+> `price=INT64_MAX`, every real action type (A/C/F/M/T) matches exactly, and
+> **nothing is present only in our older file**. Reconstructing aggressor
+> actions from both files gives **29,734 actions identical in every field**.
+>
+> Four questions:
+>
+> 1. **Are the older, pre-change files still valid** for analysis, or should
+>    they be re-downloaded to match what the API now returns?
+> 2. **Is the event partition guaranteed unchanged** by this release — i.e.
+>    does the trailing `action=N` record always follow the record that
+>    previously carried `F_LAST`, with no real record in between?
+> 3. **Is there any way to pin a dataset version**, so a result computed today
+>    can be reproduced later? Reproducibility is a hard requirement for us.
+> 4. Two downloads were interrupted (2026-07-06 `Response ended prematurely`,
+>    2026-07-07 truncated at 1,867,793 records). **Were they billed in full,
+>    and does retrying a truncated response bill again?** Our usage page shows
+>    20.65 USD against 20.30 USD of queries we can account for.
+>
+> Happy to send the exact queries, the diff script, or record-level output.
+>
+> Thanks,
+
+---
+
 ## 5a. Mikro-diff — jedyna droga do rozstrzygnięcia A vs B′
 
 **Zgoda właściciela (R1) udzielona 09.08 z pięcioma warunkami. WYKONANY —
@@ -781,7 +924,10 @@ skryptu w commicie `85d9e73`, sprzed pobrania.
 | | |
 |---|---|
 | **Zakup miesiąca** | **WSTRZYMANY.** Warunek 8 blokuje automatycznie. |
-| **Diagnostyka lokalna** | **ZAMKNIĘTA — testy 1–5 wykonane.** Dryf scharakteryzowany w całości; nic więcej nie da się ustalić bez dostawcy |
+| **Diagnostyka lokalna** | **ZAMKNIĘTA — testy 1–5 wykonane.** Dryf scharakteryzowany w całości |
+| **Mechanizm** | **ZNANY od 10.08** — celowa zmiana normalizacji GLBX.MDP3 (§5b) |
+| **Ogłoszenie dostawcy** | **DO PRZECZYTANIA** — `databento.com` zablokowany przez egress; najtańsze źródło odpowiedzi |
+| **Dopytanie** | §5c — cztery pytania, krótko, bo pierwszy mail dotarł ucięty |
 | **Furtka na później** | `--akceptuj-rozjazd` archiwizuje stary manifest; **nie używać przed odpowiedzią** |
 | Pliki już pobrane | **NIE kasujemy.** Zgadzają się z liczbami, za które zapłacono. |
 | `2026-07-30` z D5-C | **NIE ruszamy.** SHA zamrożony, kopia zapasowa priorytetowa. |

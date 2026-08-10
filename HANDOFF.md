@@ -135,8 +135,14 @@ w `docs/D5_ETAP4_SPEC.md` §1 i zaimplementowane w `engine/mbo_events.py`.
 wykonane, `pobrano_utc` odczytane, panel Databento odczytany. Nic więcej nie
 da się ustalić po naszej stronie.
 
-**Jedyny otwarty krok: wysłać mail do Databento** (`docs/D5_DRYF_METADANYCH.md`
-§5 — tekst gotowy, wszystkie blokery zniesione). Potem czekamy.
+**Mail wysłany 10.08, odpowiedź jest — ale dotarł UCIĘTY**, więc dostawca
+odpowiedział tylko na mechanizm. Otwarte kroki, oba darmowe:
+
+1. **Przeczytać ogłoszenie** `databento.com/blog/cme-normalization-changes-2026-07`
+   — w tym środowisku `databento.com` blokuje polityka egress, więc musi to
+   zrobić właściciel. Najtańsze źródło odpowiedzi, jakie mamy.
+2. **Wysłać dopytanie** (`D5_DRYF` §5c) — cztery pytania, jeden ekran.
+   Krótkie celowo: pierwszy mail padł na długości, nie na treści.
 
 Jedna rzecz do zacommitowania z maszyny lokalnej — plik z wynikiem mikro-diffu
 powstał podczas płatnego przebiegu i leży poza tym repo-klonem:
@@ -174,9 +180,17 @@ python scripts/fetch_d5b2_month.py
 > `299ca34` z **04.08 13:31Z**, dwa dni przed awarią, ma identyczne liczby,
 > a pobrania z 04–05.08 fizycznie je zawierają.
 >
-> Obowiązuje **rama faktograficzna bez mechanizmu**: wartość stabilna ≥4 dni na
-> dwóch maszynach, skok między **06.08 22:05:38Z** a 08.08 12:15Z, brak
-> modyfikacji wg dostawcy. **Mechanizm ma nazwać dostawca, nie my.**
+> **Mechanizm NAZWANY przez dostawcę 10.08:** *„We released a change for
+> GLBX.MDP3 over the weekend, which leads to additional MBO records being
+> published for some events."* (Renan, Databento). To **celowa zmiana
+> normalizacji**, nie awaria i nie utrata danych — zgodna z każdym naszym
+> pomiarem. Szczegóły i to, czego odpowiedź NIE rozstrzyga: `D5_DRYF` §5b.
+>
+> **Rozliczenie mojego błędu:** wycofałem wcześniej ryzyko A4-11 z audytu 4
+> („zmiana normalizacji GLBX.MDP3, VII 2026"), powołując się na
+> `last_modified_date`. Audyt miał rację. `last_modified_date` **nie obejmuje
+> zmian normalizacji** — brak sygnału w polu metadanych jest dowodem tylko
+> wtedy, gdy wiadomo, co to pole obejmuje.
 >
 > Skutek praktyczny: każdy **już opłacony** plik wygląda na niekompletny, więc
 > skrypt zaproponował zakup całego miesiąca **drugi raz**. Zatrzymał go
