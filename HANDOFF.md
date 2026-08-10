@@ -26,7 +26,7 @@ niezależnych audytach zewnętrznych) jest **jedynym źródłem prawdy** — kod
 a nie odwrotnie.
 
 Gotowe: fundament repo, silnik backtestowy, komplet aparatu walidacyjnego, strażnicy
-niezmienników, CI, golden baseline. **561 funkcji testowych (632 przypadków po parametryzacji), pokrycie 92%, ruff i mypy czyste.**
+niezmienników, CI, golden baseline. **562 funkcji testowych (633 przypadków po parametryzacji), pokrycie 92%, ruff i mypy czyste.**
 Liczbę pilnuje `tests/test_guards.py::test_handoff_podaje_aktualna_liczbe_testow` —
 bez tego rotowała dwa razy w ciągu doby, co jest dokładnie tym defektem, przed
 którym ostrzega reguła na górze tego pliku.
@@ -142,8 +142,15 @@ Jedna rzecz do zacommitowania z maszyny lokalnej — plik z wynikiem mikro-diffu
 powstał podczas płatnego przebiegu i leży poza tym repo-klonem:
 
 ```powershell
-git add reports/D5_mikro_diff.json && git commit -m "reports: wynik mikro-diffu 09.08"
+git add reports/D5_mikro_diff.json
+git commit -m "reports: wynik mikro-diffu 09.08"
+git push
 ```
+
+> **Bloki `powershell` w tym pliku nie mogą używać `&&`.** Windows PowerShell
+> 5.1 nie zna tego separatora (`The token '&&' is not a valid statement
+> separator in this version`). Jedna komenda na linię — właściciel pracuje na
+> Windows, więc to nie jest kosmetyka, tylko warunek działania instrukcji.
 
 Dopiero po odpowiedzi dostawcy wracają kroki zakupowe:
 

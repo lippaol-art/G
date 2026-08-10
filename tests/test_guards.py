@@ -294,6 +294,32 @@ class TestTrialCounter:
 # ==========================================================================
 
 class TestDocConsistency:
+    def test_bloki_powershell_nie_uzywaja_operatora_and(self):
+        """Windows PowerShell 5.1 NIE zna `&&`.
+
+        Wlasciciel projektu pracuje na Windows i wykonuje instrukcje z tych
+        plikow doslownie. Wklejenie `git add X && git commit -m Y` wywala sie
+        na `The token '&&' is not a valid statement separator in this version`
+        — czyli instrukcja jest po prostu niewykonalna. Zdarzylo sie raz,
+        w HANDOFF §4.
+
+        Sprawdzamy WYLACZNIE bloki oznaczone jako ```powershell. Bloki ```bash
+        maja pelne prawo do `&&` i nie sa tu ruszane.
+        """
+        import re
+
+        korzen = Path(__file__).resolve().parent.parent
+        winne: list[str] = []
+        for plik in [*korzen.glob("*.md"), *korzen.glob("docs/*.md")]:
+            tekst = plik.read_text(encoding="utf-8")
+            for blok in re.findall(r"```powershell\n(.*?)```", tekst, re.S):
+                for linia in blok.splitlines():
+                    if "&&" in linia:
+                        winne.append(f"{plik.name}: {linia.strip()}")
+        assert not winne, (
+            "blok ```powershell uzywa `&&`, ktorego Windows PowerShell 5.1 nie "
+            "obsluguje — rozbij na osobne linie:\n  " + "\n  ".join(winne))
+
     def test_stale_kosztowe_zgodne_ze_specyfikacja(self):
         from engine.costs import POINT_VALUE, TICK_SIZE, TICK_VALUE, CostModel
         assert POINT_VALUE == 2.0
