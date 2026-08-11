@@ -963,18 +963,34 @@ NIEDOSTĘPNA.** Konsekwencje są twarde i żadna z nich nie dotyczy dryfu:
 
 ### Odpowiedź 4 — otwarta, i po naszej stronie jest problem
 
-Billing przekazany do analizy. **Równolegle właściciel zgłasza, że rozliczenie
-MBO szło z INNEGO KONTA** niż to, którego panel odczytaliśmy 09.08. Jeśli tak,
+Billing przekazany do analizy — **i na tym kończymy**. Decyzją właściciela
+z 11.08 nie wysyłamy dalszych maili w tej sprawie; jeśli ich zespół odpowie,
+odnotowujemy tu bez akcji. **Równolegle właściciel zgłosił, że rozliczenie
+MBO mogło iść z INNEGO KONTA** niż to, którego panel odczytaliśmy 09.08. Jeśli tak,
 to rekonsyliacja w `data/KOSZTY.md` §3a (20,65 wobec 20,30 USD, residuum
 0,3490) **opisuje niewłaściwe konto** i trzeba ją powtórzyć — a Databento
-dostało od nas liczby, które mogą nie dotyczyć tych zapytań. Szczegóły
-i status: `data/KOSZTY.md` §3a.
+dostało od nas liczby, które mogą nie dotyczyć tych zapytań. **Kwestia
+zamknięta bez rozstrzygnięcia** — uzasadnienie i przyjęte ryzyko szczątkowe:
+`data/KOSZTY.md` §3a.
 
 ---
 
 ## 5e. Drugi mikro-diff — kryterium zapisane PRZED biegiem
 
-**Nieuruchomiony. Wymaga zgody R1 właściciela i potwierdzenia konta.**
+> ### ✅ ZGODA R1 UDZIELONA — właściciel, 11.08.2026
+>
+> Warunek „potwierdzenie konta" **znika** — kwestia przypisania kont została
+> zamknięta świadomą decyzją właściciela bez rozstrzygnięcia
+> (`data/KOSZTY.md` §3a). Kredyt 100+ USD potwierdzony, ryzyko szczątkowe
+> przyjęte: najgorszy scenariusz to **przerwany bieg, nie utrata danych**.
+>
+> **Limit 1,00 USD na to okno zostaje nietknięty** i jest egzekwowany w kodzie
+> (`OKNA["2026-07-06"]["limit"]`), nie w dyscyplinie. Zamknięcie tematu kont
+> nie jest zgodą na rozluźnianie czegokolwiek.
+>
+> **To ostatnia bramka przed zakupem miesiąca.**
+
+**Nieuruchomiony — czeka na bieg lokalny u właściciela.**
 
 ### Dlaczego jeden mikro-diff nie wystarcza
 
@@ -1023,10 +1039,18 @@ zaplanowaną porażką.
 
 ### Konsekwencja dla decyzji mieszać/odkupić
 
-| Wynik | Co robimy |
-|---|---|
-| przechodzi | **mieszanie ma GO**; w kieszeni zostaje 13,04–16,74 USD |
-| nie przechodzi | wracamy do wariantu (b)/(c) i do pytania, czy audyt D5-C wymaga przeliczenia |
+| Wynik | Co robimy | Koszt miesiąca |
+|---|---|---:|
+| przechodzi | **wariant (a)** — mieszamy, kupujemy 17 sesji | **63,94** |
+| nie przechodzi | decyzja właściciela **(b)/(c)** wg tabeli §5d + pytanie, czy audyt D5-C wymaga przeliczenia | 76,98 / 80,68 |
+
+Oba warianty mieszczą się w limicie 82,00 i w potwierdzonym kredycie.
+
+> **Werdykt PASS/FAIL wystawia recenzent, nie Wykonawca.** Mój obowiązek kończy
+> się na meldunku z liczbami wg czterech punktów kryterium
+> (`docs/PROTOKOL_WSPOLPRACY.md`). Ogłoszenie własnego wyniku byłoby dokładnie
+> tym, czego protokół zabrania — i przy pomiarze, po którym zapada decyzja
+> o ~64 USD, nie jest to formalność.
 
 ---
 

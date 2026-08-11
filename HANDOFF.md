@@ -140,17 +140,46 @@ da się ustalić po naszej stronie.
 dla zdarzeń wielopakietowych, **starej normalizacji nie da się już pobrać**.
 Billing przekazany do ich zespołu.
 
-**Blokada zakupu nie jest już techniczna, tylko finansowa.** Właściciel zgłosił
-11.08, że rozliczenie MBO szło z **innego konta** niż to, którego panel
-odczytaliśmy. Dopóki nie wiadomo, gdzie leży kredyt, „104,35 USD starczy
-na 18 sesji" jest twierdzeniem bez pokrycia — `data/KOSZTY.md` §3a.
+### ⏳ ZOSTAŁA JEDNA BRAMKA: drugi mikro-diff
 
-Otwarte kroki:
+Decyzje właściciela z 11.08 zamknęły wszystko poza nią:
 
-1. **Ustalić konto**, z którego szły zapytania MBO, i odczytać JEGO panel.
-   Jedyna rzecz blokująca decyzję zakupową.
-2. **Zrobić kopię zapasową surowych plików** — patrz ramka niżej. Nie „po
-   zakupie", tylko teraz.
+| | |
+|---|---|
+| ✅ Kwestia kont | **zamknięta bez rozstrzygnięcia**, świadomie. Kredyt 100+ USD potwierdzony, ryzyko szczątkowe = przerwany bieg, nie utrata danych (`KOSZTY` §3a) |
+| ✅ Kopia zapasowa | **wykonana** 11.08 |
+| ✅ `reports/D5_mikro_diff.json` | zacommitowany (`76e6710`) **przed** jakimkolwiek biegiem |
+| ✅ Wątek billingowy | zamknięty — żadnych dalszych maili |
+| ✅ Zgoda R1 na drugi mikro-diff | **udzielona**, limit 1,00 USD na okno |
+| ⏳ **Drugi mikro-diff** | **do uruchomienia lokalnie** — `D5_DRYF` §5e |
+
+**Limity bez zmian: 82,00 USD na miesiąc (R4) i 1,00 USD na okno.** Zamknięcie
+tematu kont **nie jest** zgodą na rozluźnianie czegokolwiek — obu limitów
+pilnują testy.
+
+```powershell
+python scripts/diff_mikro.py --wycena --sesja 2026-07-06
+python scripts/diff_mikro.py --sesja 2026-07-06
+python scripts/diff_mikro.py --flagi --sesja 2026-07-06
+python scripts/diff_mikro.py --rekonstrukcja --sesja 2026-07-06
+```
+
+Pierwsza darmowa, druga płatna (skrypt sam odmówi powyżej 1,00 USD), dwie
+ostatnie darmowe z dysku. Potem wpis kosztu do `KOSZTY` §1 (warunek 4 zgody)
+i commit raportu — **pod nową nazwą, więc nic się nie nadpisze**:
+
+```powershell
+git add reports/D5_mikro_diff_2026-07-06.json
+git commit -m "reports: wynik mikro-diffu 07-06"
+git push
+```
+
+**Werdykt PASS/FAIL wystawia recenzent, nie Wykonawca** — meldunek z liczbami
+wg czterech punktów kryterium §5e, liczniki surowych rekordów per epoka
+**poza** kryterium. Po werdykcie: PASS → wariant (a), zakup 17 sesji za
+63,94 USD (bieg będzie wymagał `--akceptuj-rozjazd`, świadomie: archiwizuje
+manifest, a `przeniesione_wyniki` chroni pochodzenie pięciu starych sesji).
+FAIL → decyzja właściciela (b)/(c) wg tabeli §5d.
 3. *(opcjonalne)* **Lektura oryginału ogłoszenia**
    `databento.com/blog/cme-normalization-changes-2026-07`. **Treść i cytaty są
    już w `D5_DRYF` §5b** — recenzent przeczytał je 11.08 i przekazał. Świeża
@@ -329,7 +358,10 @@ obciętej sesji, która parsuje się bez błędu.
 > pilnuje teraz `tests/test_guards.py::TestKopiaZapasowa` porównując ją ze stałą
 > `SESJE_STARA_NORMALIZACJA` w kodzie.
 >
-> **Kopia na drugi nośnik ma powstać TERAZ, nie po zakupie.** Do skopiowania:
+> ### ✅ WYKONANA 11.08.2026 (deklaracja właściciela)
+>
+> Poniższe zostaje jako procedura odtworzeniowa i lista kontrolna dla kolejnych
+> zakupów — nie jako zaległe zadanie. Do skopiowania:
 > **pięć plików `.dbn.zst`**, `manifest_d5b2.json`, `wycena_cache.json`
 > i katalog `diag_mikro/`. Procedura: `docs/URUCHOMIENIE_LOKALNE.md` §8.1.
 >

@@ -75,7 +75,7 @@ z konta i dlatego stoi tu osobno.
 
 | Pozycja | Koszt | Status |
 |---|---|---|
-| MBO, **17 pozostałych** sesji RTH lipca 2026 | **63,94 USD** | ⛔ **ZAMROŻONE** — patrz §3a (konto) i `D5_DRYF` §5e (drugi mikro-diff) |
+| MBO, **17 pozostałych** sesji RTH lipca 2026 | **63,94 USD** | ⏳ **JEDNA BRAMKA** — wynik drugiego mikro-diffu (`D5_DRYF` §5e). Kwestia kont zamknięta 11.08 |
 | Cała miesięczna próbka MBO (22 sesje, nowa normalizacja) | **80,68 USD** | limit zamrożony: **82,00 USD**, zapas 1,32 |
 
 **Stan pobrań: 5 z 22 sesji**, wszystkie w **starej** normalizacji —
@@ -91,32 +91,34 @@ ją trzeci raz.
 
 ---
 
-## 3a. Przerwane pobrania — rekonsyliacja PODWAŻONA 11.08
+## 3a. Przerwane pobrania — ZAMKNIĘTE decyzją właściciela 11.08
 
-> ### ⚠️ CAŁA TA SEKCJA MOŻE OPISYWAĆ NIEWŁAŚCIWE KONTO
+> ### 🔒 ZAKOŃCZONE BEZ ROZSTRZYGNIĘCIA — decyzja właściciela, 11.08.2026
 >
-> Właściciel zgłosił 11.08, że **rozliczenie MBO szło z innego konta** niż to,
-> którego panel odczytaliśmy 09.08. Jeżeli tak, to poniższa rekonsyliacja
-> (20,65 wobec 20,30 USD, residuum 0,3490) **nie dotyczy zapytań, o których
-> mówi** — i wtedy nie jest ani potwierdzeniem, ani zaprzeczeniem tego, czy
-> przerwane pobrania zostały naliczone.
+> Właściciel zgłosił 11.08, że rozliczenie MBO mogło iść z **innego konta** niż
+> to, którego panel odczytaliśmy 09.08. **Tej kwestii świadomie NIE
+> rozstrzygamy.** Powód jest ekonomiczny, nie techniczny: koszt ustalania
+> (dwa panele, prostowanie u dostawcy, korespondencja) przekracza wartość
+> odpowiedzi, a **ryzyko szczątkowe jest ograniczone do przerwy, nie do straty**.
 >
-> **Zostawiam liczby nietknięte i oznaczone, zamiast je kasować.** Skasowanie
-> zatarłoby to, że przez dwa dni traktowaliśmy je jako pomiar — w tym w mailu
-> do Databento, gdzie podaliśmy je jako podstawę pytania o rozliczenie.
-> Databento przekazało sprawę do zespołu billingowego **na podstawie tych
-> liczb**; jeśli dotyczą innego konta, trzeba to sprostować, zanim odpowiedzą.
+> **Najgorszy scenariusz, nazwany wprost:** gdyby klucz w `DATABENTO_API_KEY`
+> wskazywał konto z mniejszym kredytem, bieg zakupowy **stanie w połowie
+> z błędem**. Sesje już pobrane pozostają opłacone, a manifest pozwala wznowić
+> bez płacenia drugi raz za te kompletne (warunek 6 + `przeniesione_wyniki`).
+> Właściciel potwierdza kredyt **100+ USD** i akceptuje to ryzyko.
 >
-> **Do ustalenia, po kolei:** (1) z którego konta faktycznie szły zapytania MBO,
-> (2) odczyt panelu **tego** konta, (3) czy 125 USD kredytu startowego było na
-> jednym koncie, czy na obu, (4) czy pozostałe **104,35 USD** kredytu, na które
-> liczymy przy zakupie 18 sesji, w ogóle jest tam, gdzie myślimy.
+> **Cztery punkty „do ustalenia" przestają obowiązywać.** Rekonsyliacja poniżej
+> i residuum **0,3490 USD** zostają jako **oznaczona historia** — nie jako
+> otwarte zadanie i nie jako pomiar, na którym cokolwiek się opiera.
 >
-> **Punkt 4 jest jedynym, który blokuje decyzję zakupową** — reszta to
-> księgowość. Dopóki nie wiadomo, gdzie leży kredyt, „starczy z zapasem"
-> jest twierdzeniem bez pokrycia.
+> **Wątek billingowy u dostawcy: bez dalszych maili.** Jeśli ich zespół
+> odpowie, odnotowujemy w `D5_DRYF` §5d bez akcji.
+>
+> ⚠️ **To zamknięcie NIE jest zgodą na rozluźnianie limitów.** Limit miesiąca
+> **82,00 USD** (reguła R4) i limit **1,00 USD** na okno diagnostyczne zostają
+> nietknięte; obu pilnują testy. Zamknęliśmy temat kont, nie bramkę kosztową.
 
-**Odczyt panelu Databento (09.08) — konto NIEPOTWIERDZONE:**
+**Odczyt panelu Databento (09.08) — konto NIEPOTWIERDZONE, pozostaje historią:**
 
 | | |
 |---|---|
@@ -139,11 +141,11 @@ ją trzeci raz.
 Precedens z D5-B potwierdzony — Databento rozlicza **zrealizowane zapytanie,
 nie odebrane bajty**. Pozycje przestają być „niepotwierdzone".
 
-**Residuum 0,3490 USD pozostaje niewyjaśnione.** Hipoteza recenzenta (**nie
-pomiar**): dwa dodatkowe pobrania uciętego fragmentu 07-07 przy ponowieniach,
-2 × 1 867 793 rek. ≈ 0,3507. Zgadza się co do trzeciego miejsca, ale panel
-**agreguje i nie daje rozbicia per zapytanie**, więc tego nie zweryfikowałem.
-Pytanie 5a w mailu do Databento prosi o to rozbicie.
+**Residuum 0,3490 USD — ZAMKNIĘTE bez wyjaśnienia** (decyzja z ramki).
+Hipoteza recenzenta (**nie pomiar**): dwa dodatkowe pobrania uciętego fragmentu
+07-07 przy ponowieniach, 2 × 1 867 793 rek. ≈ 0,3507 — zgadza się co do
+trzeciego miejsca. Panel **agreguje i nie daje rozbicia per zapytanie**, więc
+zostaje hipotezą na zawsze. Nie dopytujemy.
 
 **Stawka 1,80 USD/GB potwierdza model wyceny niezależnie:** 78,6044 USD =
 43,669 GB × 1,80, przy GB = 1024³. Dwie różne drogi (cena za rekord
@@ -178,11 +180,10 @@ niż górna granica moich wycen (20,65 wobec 20,30). Zasada 4 rejestru zadziała
 w obie strony: granica była podana uczciwie, ale pomiar i tak ją przekroczył
 o 0,3490 USD, których nie umiem przypisać.
 
-**Skutek dla budżetu — WSTRZYMANY do wyjaśnienia konta.** Na odczytanym
-koncie nic nie poszło z karty, a 104,35 USD kredytu wystarczyłoby na 18 sesji
-(≤ 68 USD) z zapasem. **Ale jeśli zapytania MBO szły z innego konta, to zdanie
-opisuje nie ten portfel.** Nie powtarzam go jako podstawy decyzji, dopóki
-konto nie jest potwierdzone.
+**Skutek dla budżetu.** Właściciel potwierdza dostępny kredyt **100+ USD**,
+co pokrywa oba warianty z tabeli `D5_DRYF` §5d: mieszanie (17 sesji, 63,94 USD)
+i pełną jednolitość (80,68 USD). Której dokładnie puli dotyczy odczyt
+104,35/125 — **nie ustalamy**, decyzja z ramki wyżej.
 
 ---
 
