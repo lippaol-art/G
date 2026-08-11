@@ -20,14 +20,18 @@ Mechanizm NAZWANY PRZEZ DOSTAWCĘ 10.08. Zakup nadal zablokowany warunkiem 8.**
 > `last_modified_date` **nie obejmuje zmian normalizacji**. Rozliczenie błędu
 > w §4.2.
 >
+> **[Stan na 10.08 — nieaktualny od 11.08. Aktualnie: §5b (ogłoszenie
+> przeczytane) i §5d (3 z 4 pytań zamknięte).]**
+>
 > **Pięć pytań nadal bez odpowiedzi — z powodu FORMATOWANIA naszych maili.**
 > Najpierw „Your message looks like it was cut off", potem wprost:
 > *„this email is formatted in a way that makes it almost impossible to read on
 > our end. Would you mind sending it back to us in paragraph format?"*
 > (Jackson, 11.08). Markdown w kliencie tekstowym to kasza. Wersja prozą: §5c.
 >
-> Ogłoszenie dostawcy pozostaje **nieprzeczytane** — `databento.com` blokuje
-> polityka egress tego środowiska.
+> Ogłoszenie dostawcy było wtedy **nieprzeczytane** — `databento.com` blokuje
+> polityka egress tego środowiska. **Przeczytane 11.08 przez recenzenta;
+> treść i cytaty w §5b.**
 
 > ## ✅ ROZSTRZYGNIĘCIE 09.08 — wariant **B′**, pomiar na treści
 >
@@ -946,10 +950,16 @@ NIEDOSTĘPNA.** Konsekwencje są twarde i żadna z nich nie dotyczy dryfu:
    `raw/` (**wyłącznie po wykonanej kopii zapasowej**), albo jawnej furtki
    w kodzie. Furtki nie dopisuję na zapas — wariant (c) nie jest wybrany.
 
-   **To jest decyzja właściciela, nie moja.** Argument za (b), mimo kosztu:
+   **To jest decyzja właściciela, nie moja.** Argument za **(c)**, mimo kosztu:
    jednorodność zdejmuje z każdego przyszłego wyniku przypis „policzone na
    mieszance dwóch wersji serwowania" — a ten przypis trzeba by nosić
    bezterminowo, bo starej wersji nikt już nie odtworzy.
+
+   **Etykieta poprawiona po recenzji: zdanie mówiło wcześniej „za (b)".**
+   To był ten sam błąd, który tabela wyżej wytyka jako trzeci — (b) **nie
+   daje** jednorodności, bo 07-30 zostaje stara. Argument o zdjęciu przypisu
+   dotyczy wyłącznie (c). Jedno słowo, ale w tabeli, na której zapada decyzja
+   o kilkudziesięciu dolarach.
 
 ### Odpowiedź 4 — otwarta, i po naszej stronie jest problem
 
@@ -974,9 +984,15 @@ z innego dnia, żeby równoważność przestała stać na jednym oknie"* — a p
 z argumentem, którego sam nie postawiłem:
 
 **2026-07-03 to półdniówka** (zamknięcie 13:00 ET), a rekordy `N` powstają
-w zdarzeniach wielopakietowych — te zaś klastrują się **na otwarciach sesji
-pełnowymiarowych**. Test 5 patrzył więc na okno o nietypowo niskim natężeniu
-dokładnie tego zjawiska, które badamy.
+w zdarzeniach wielopakietowych — te zaś **prawdopodobnie** klastrują się na
+otwarciach sesji pełnowymiarowych. Test 5 patrzył więc na okno o zapewne
+nietypowo niskim natężeniu badanego zjawiska.
+
+> ⚠️ **„Klastrują się na otwarciach" to HIPOTEZA, nie pomiar.** Jako motywacja
+> wyboru okna jest w porządku — wybieramy miejsce, gdzie zjawisko powinno być
+> najsilniejsze. **Do kryterium nie może wejść nigdy**, bo kryterium (niżej)
+> nie zna pojęcia „gdzie się klastrują" i nie wolno mu go dorobić po wyniku.
+> Etykieta wniesiona przez recenzję.
 
 ### Parametry
 

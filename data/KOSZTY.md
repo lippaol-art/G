@@ -216,6 +216,10 @@ W oknie 30 minut sesji 07-03 rekordów wspólnych **822 240**, tylko u dostawcy
 a pięć realnych typów akcji zgadza się co do rekordu. **Nasze pliki mają
 komplet zdarzeń rynkowych — odkup z tytułu kompletności odpada.**
 
+> **Stan aktualny: §3 — zostało 17 sesji za 63,94 USD.** Zapis „18 sesji
+> ≤ 68 USD" poniżej pochodzi z 08.08 i policzony jest po ówczesnych liczbach
+> rekordów; zostaje jako datowany ślad, nie jako bieżąca kwota.
+
 Skutek dla tego rejestru: **nie da się dziś podać kosztu dokończenia zakupu**,
 bo nie wiadomo, którą wersję danych kupujemy ani czy za tydzień nie będzie
 trzeciej. To, że treść zdarzeń jest ta sama, **nie znosi** tego problemu —
@@ -228,7 +232,7 @@ z 08.08.
 zablokuje miesiąc. To argument, żeby po odpowiedzi Databento nie zwlekać
 z decyzją — a nie żeby podnosić limit.
 
-Pobrane i opłacone do tej pory: **4 z 22 sesji**. Plików **nie kasujemy** —
+Pobrane i opłacone do tej pory: **5 z 22 sesji** (4 kampanijne + 07-30 z D5-C). Plików **nie kasujemy** —
 zgadzają się z liczbami, za które zapłacono.
 
 ---

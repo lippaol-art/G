@@ -106,6 +106,25 @@ def wybierz_okno(sesja: str) -> Okno:
 #: Domyslne okno — pierwszy mikro-diff, zeby stare wywolania dzialaly bez zmian.
 SESJA_DOMYSLNA = "2026-07-03"
 
+#: Nazwy raportow sprzed parametryzacji. Pierwszy mikro-diff (09.08) zapisal
+#: sie jako `D5_mikro_diff.json` — BEZ sesji w nazwie — i ten plik lezy na
+#: maszynie wlasciciela jako jedyny maszynowy slad tamtego pomiaru. Zmiana
+#: nazwy osierocilaby go dokladnie w chwili, gdy ma trafic do repo, wiec
+#: 07-03 zachowuje historyczna nazwe, a kazde kolejne okno dostaje wlasna.
+RAPORTY_HISTORYCZNE = {"2026-07-03": "D5_mikro_diff.json"}
+
+
+def sciezka_raportu(o: Okno) -> Path:
+    """Raport per OKNO — stala sciezka nadpisywalaby poprzedni pomiar.
+
+    Pliki `.dbn.zst` chronila juz nazwa zawierajaca sesje, ale raport JSON
+    szedl zawsze pod `reports/D5_mikro_diff.json`. Bieg drugiego mikro-diffu
+    skasowalby wynik pierwszego — a kazdy z nich kosztowal osobno i zaden
+    nie jest odtwarzalny, bo stara normalizacja przestala byc dostepna.
+    """
+    nazwa = RAPORTY_HISTORYCZNE.get(o.sesja, f"D5_mikro_diff_{o.sesja}.json")
+    return Path("reports") / nazwa
+
 #: Warunek 3 zgody: katalog NIE nalezy do zadnego zakupu badawczego.
 KATALOG_DIAG = "diag_mikro"
 #: Nasz plik do porownania — czytany TYLKO do odczytu.
@@ -437,7 +456,7 @@ def main() -> int:
         "typy_dostawca": dict(serw_t), "typy_nasze": dict(nasz_t),
         "utc": dt.datetime.now(UTC).isoformat(timespec="seconds"),
     }
-    raport = Path("reports/D5_mikro_diff.json")
+    raport = sciezka_raportu(o)
     raport.parent.mkdir(exist_ok=True)
     raport.write_text(json.dumps(wynik, indent=1), encoding="utf-8",
                       newline="\n")

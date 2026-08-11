@@ -26,7 +26,7 @@ niezależnych audytach zewnętrznych) jest **jedynym źródłem prawdy** — kod
 a nie odwrotnie.
 
 Gotowe: fundament repo, silnik backtestowy, komplet aparatu walidacyjnego, strażnicy
-niezmienników, CI, golden baseline. **578 funkcji testowych (654 przypadków po parametryzacji), pokrycie 92%, ruff i mypy czyste.**
+niezmienników, CI, golden baseline. **581 funkcji testowych (657 przypadków po parametryzacji), pokrycie 92%, ruff i mypy czyste.**
 Liczbę pilnuje `tests/test_guards.py::test_handoff_podaje_aktualna_liczbe_testow` —
 bez tego rotowała dwa razy w ciągu doby, co jest dokładnie tym defektem, przed
 którym ostrzega reguła na górze tego pliku.
@@ -151,8 +151,11 @@ Otwarte kroki:
    Jedyna rzecz blokująca decyzję zakupową.
 2. **Zrobić kopię zapasową surowych plików** — patrz ramka niżej. Nie „po
    zakupie", tylko teraz.
-3. **Przeczytać ogłoszenie** `databento.com/blog/cme-normalization-changes-2026-07`
-   — `databento.com` blokuje tu polityka egress, więc musi to zrobić właściciel.
+3. *(opcjonalne)* **Lektura oryginału ogłoszenia**
+   `databento.com/blog/cme-normalization-changes-2026-07`. **Treść i cytaty są
+   już w `D5_DRYF` §5b** — recenzent przeczytał je 11.08 i przekazał. Świeża
+   sesja nie powinna uznać, że treść jest nieznana; zostaje tylko sprawdzenie
+   oryginału, gdyby coś budziło wątpliwość (`databento.com` blokuje tu egress).
 4. **Drugi mikro-diff** na otwarciu sesji pełnowymiarowej (07-06 13:30–14:00),
    limit 1,00 USD, wymaga zgody R1. **Dopiero po nim** decyzja mieszać/odkupić
    — `D5_DRYF` §5d i §5e.
@@ -169,9 +172,16 @@ powstał podczas płatnego przebiegu i leży poza tym repo-klonem:
 
 ```powershell
 git add reports/D5_mikro_diff.json
-git commit -m "reports: wynik mikro-diffu 09.08"
+git commit -m "reports: wynik mikro-diffu 07-03 z 09.08"
 git push
 ```
+
+> **Nazwa `D5_mikro_diff.json` bez sesji jest HISTORYCZNA** — to pomiar okna
+> 2026-07-03 z 09.08, sprzed parametryzacji skryptu. Kolejne okna zapisują się
+> jako `D5_mikro_diff_<sesja>.json`. Zrób ten commit **zanim** uruchomisz
+> cokolwiek z `diff_mikro.py`: do korekty ścieżki raportu drugi bieg nadpisywał
+> ten plik, a jest on jedynym maszynowym śladem pomiaru, którego nie da się
+> powtórzyć.
 
 > **Bloki `powershell` w tym pliku nie mogą używać `&&`.** Windows PowerShell
 > 5.1 nie zna tego separatora (`The token '&&' is not a valid statement
@@ -268,7 +278,7 @@ python scripts/fetch_d5b2_month.py
 > zawężenia (mieszać wolno dla analiz idącej przez `rekonstruuj`, nie wolno dla
 > liczników surowych rekordów) czeka na decyzję właściciela — `D5_DRYF` §4 pkt 4.
 >
-> **Nie kupuj i nie kasuj niczego.** Stan: 4 z 22 sesji pobrane. Panel Databento
+> **Nie kupuj i nie kasuj niczego.** Stan: **5 z 22 sesji** (4 kampanijne + 07-30 z D5-C) pobrane. Panel Databento
 > odczytany 09.08: **obciążono 20,65 USD, z karty 0,00** (pokryte kredytami),
 > kredyt pozostały **104,35 / 125**. Przerwane pobrania **zostały naliczone
 > w pełnym zakresie** — to już pomiar, nie hipoteza. Szczegóły i residuum

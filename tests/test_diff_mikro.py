@@ -214,3 +214,30 @@ def test_nazwa_pliku_rozroznia_okna():
 def test_katalog_diagnostyczny_jest_osobny():
     """Warunek 3 zgody: nie zapisujemy do katalogow zakupowych."""
     assert d.KATALOG_DIAG not in d.KATALOGI_NASZE
+
+
+def test_sciezka_raportu_rozroznia_okna():
+    """Lustro `test_nazwa_pliku_rozroznia_okna` — dla raportu JSON.
+
+    Pliki danych chronila nazwa z sesja, ale raport szedl zawsze pod ta sama
+    sciezke. Drugi mikro-diff skasowalby wynik pierwszego, a kazdy kosztowal
+    osobno i zaden nie jest odtwarzalny — stara normalizacja jest niedostepna.
+    """
+    a = d.sciezka_raportu(d.wybierz_okno("2026-07-03"))
+    b = d.sciezka_raportu(d.wybierz_okno("2026-07-06"))
+    assert a != b
+
+
+def test_raport_pierwszego_okna_zachowuje_historyczna_nazwe():
+    """Plik z 09.08 lezy juz na dysku pod nazwa bez sesji.
+
+    Przemianowanie osierociloby go w chwili, gdy ma trafic do repo — a jest
+    jedynym maszynowym sladem pomiaru, ktorego nie da sie powtorzyc.
+    """
+    assert d.sciezka_raportu(d.wybierz_okno("2026-07-03")) == \
+        Path("reports/D5_mikro_diff.json")
+
+
+def test_kazde_okno_ma_wlasny_raport():
+    sciezki = {d.sciezka_raportu(d.wybierz_okno(s)) for s in d.OKNA}
+    assert len(sciezki) == len(d.OKNA)
