@@ -563,3 +563,70 @@ class TestKopiaZapasowa:
         assert len(SESJE_STARA_NORMALIZACJA) == 5
         assert SESJA_D5C in SESJE_STARA_NORMALIZACJA
         assert set(SESJE_STARA_NORMALIZACJA) <= set(SESJE)
+
+
+class TestRaportMikroDiffu:
+    """Liczby w dokumentach musza zgadzac sie z MASZYNOWYM artefaktem pomiaru.
+
+    `reports/D5_mikro_diff.json` to jedyny automatyczny zapis mikro-diffu
+    z 09.08 — pomiaru, ktorego NIE DA SIE POWTORZYC, bo stara normalizacja
+    GLBX.MDP3 przestala byc dostepna w API (Databento, 11.08). Na jego
+    wyniku stoi decyzja, ze nie odkupujemy piecu sesji za ~13 USD.
+
+    Do tej pory liczby z tego pomiaru zyly w dokumentach jako przepisany
+    tekst. Odkad artefakt jest w repo, przepisywanie mozna sprawdzic.
+    """
+
+    @staticmethod
+    def _raport() -> dict:
+        p = ROOT / "reports" / "D5_mikro_diff.json"
+        if not p.exists():
+            pytest.skip("brak reports/D5_mikro_diff.json — artefakt lokalny")
+        return json.loads(p.read_text(encoding="utf-8"))
+
+    def test_arytmetyka_raportu_sie_domyka(self):
+        """Wewnetrzna spojnosc pomiaru — niezalezna od jakiegokolwiek tekstu."""
+        j = self._raport()
+        assert j["wspolnych"] + j["tylko_dostawca"] == j["rekordow_dostawca"]
+        assert sum(j["typy_dostawca"].values()) == j["rekordow_dostawca"]
+        assert sum(j["typy_nasze"].values()) == j["rekordow_nasze"]
+        assert j["rekordow_wg_api"] == j["rekordow_dostawca"], \
+            "metadane i pobrany plik musza sie zgadzac co do rekordu"
+
+    def test_werdykt_B_prim_wynika_z_liczb_a_nie_z_narracji(self):
+        """Wariant B' stoi na DWOCH faktach: zero brakow u nas i zgodnosc
+        wszystkich realnych typow akcji. Gdyby ktorykolwiek upadl, decyzja
+        o nieodkupywaniu piecu sesji traci podstawe."""
+        j = self._raport()
+        assert j["tylko_nasze"] == 0
+        realne = {k: v for k, v in j["typy_dostawca"].items() if k != "N"}
+        assert realne == j["typy_nasze"]
+        assert "N" not in j["typy_nasze"]
+
+    def test_dokumenty_cytuja_liczby_z_artefaktu(self):
+        """Kazda kluczowa liczba pomiaru musi wystapic w D5_DRYF.
+
+        Format dokumentu uzywa spacji jako separatora tysiecy — porownujemy
+        wiec po znormalizowanym zapisie, a nie po surowym `int`.
+        """
+        j = self._raport()
+        tekst = (ROOT / "docs" / "D5_DRYF_METADANYCH.md").read_text(
+            encoding="utf-8")
+        # Spacja zwykla i nierozdzielajaca — dokument uzywa obu.
+        plaski = tekst.replace(" ", " ")
+
+        wymagane = [j["wspolnych"], j["tylko_dostawca"], j["rekordow_dostawca"],
+                    *j["typy_dostawca"].values()]
+        brakuje = [n for n in sorted(set(wymagane))
+                   if f"{n:,}".replace(",", " ") not in plaski]
+        assert not brakuje, (
+            f"D5_DRYF nie cytuje liczb z artefaktu pomiaru: {brakuje}. "
+            "Albo dokument sie rozjechal, albo pomiar zostal nadpisany.")
+
+    def test_koszt_zgadza_sie_z_ksiega(self):
+        j = self._raport()
+        koszty = (ROOT / "data" / "KOSZTY.md").read_text(encoding="utf-8")
+        zapis = f"{j['koszt_usd']:.4f}".replace(".", ",")
+        assert zapis in koszty, (
+            f"KOSZTY.md nie podaje kosztu {zapis} USD z artefaktu pomiaru — "
+            "warunek 4 zgody R1 wymaga wpisu niezaleznie od wyniku")
