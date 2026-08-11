@@ -843,6 +843,78 @@ kolejny mail.**
 
 ---
 
+## 5d. ODPOWIEDZI DOSTAWCY — 11.08, cztery pytania, cztery odpowiedzi
+
+Renan (Databento), cytaty dosłowne:
+
+| # | Pytanie | Odpowiedź |
+|---|---|---|
+| 1 | czy stare pliki są ważne | *„They're still «valid», the normalization changed with this release."* |
+| 2 | czy podział na zdarzenia gwarantowany | *„No, in some cases you'll still see the same record as before carrying F_LAST. The extra record is only published in **events spanning multiple packets**."* |
+| 3 | czy da się przypiąć wersję | *„Not clear what you're asking here. **The old data is not available anymore in our API.**"* |
+| 4 | rozliczenie przerwanych pobrań | *„I'll forward this to our billing team for analysis"* — w toku |
+
+### Odpowiedź 2 dopowiada mechanizm i zgadza się z naszym pomiarem
+
+Dodatkowy rekord `N` powstaje **wyłącznie dla zdarzeń rozciągniętych na wiele
+pakietów**. Dla pozostałych `F_LAST` siedzi tam, gdzie siedział. To tłumaczy,
+czemu potraktowanych zostało tylko **18 152 z 698 358 kopert = 2,60%**, a nie
+wszystkie — czego sam histogram nie umiał wyjaśnić.
+
+**Uwaga do sprawdzenia, na razie tylko obserwacja:** audyt D5-C wykazał, że
+**2,4%** kopert zawiera ≥2 agresorów. Teraz widzimy, że **2,60%** kopert jest
+wielopakietowych. Rzędy się zgadzają i obie liczby dotyczą „dużych" zdarzeń,
+więc **populacje mogą być w znacznej części tą samą populacją** — ale tego
+**nie zmierzyłem** i nie wolno tego zapisać jako ustalenia. Sprawdzalne lokalnie
+i za darmo na pliku mikro-diffu.
+
+**Czego odpowiedź 2 NIE daje:** gwarancji. Renan mówi „no" właśnie w sensie
+„nie ma reguły, którą opisujecie" — bo nasze pytanie zakładało, że rekord `N`
+pojawia się **zawsze**. Nasze **testy 5** (29 734 akcje identyczne) pozostają
+dowodem **empirycznym na 30 minutach**, a nie gwarancją formatu. Ta różnica
+zostaje.
+
+### ⛔ Odpowiedź 3 jest najpoważniejszą wiadomością w całym tym incydencie
+
+> *„The old data is not available anymore in our API."*
+
+**Nie ma przypinania wersji, a stara normalizacja jest BEZPOWROTNIE
+NIEDOSTĘPNA.** Konsekwencje są twarde i żadna z nich nie dotyczy dryfu:
+
+1. **Cztery pobrane sesje to jedyny istniejący egzemplarz** starej normalizacji,
+   jaki będziemy mieli. Nikt nam ich nie odtworzy — ani my, ani dostawca.
+2. **Kopia zapasowa surowych plików przestaje być ostrożnością.** Do tej pory
+   „odtworzenie kosztuje ~78 USD, skopiowanie nic". Teraz odtworzenie **nie jest
+   możliwe za żadną cenę**. Utrata dysku = utrata danych, na których policzono
+   audyt D5-C.
+3. **Wynik D5-C jest nieodtwarzalny z API.** Stoi, bo mamy plik i jego SHA-256 —
+   ale ktoś, kto zapyta „powtórzcie", nie może tego zrobić z samego zapytania.
+   To dokładnie ten scenariusz, przed którym ostrzegała reguła
+   „wynik, którego nie da się przeliczyć, nie jest wynikiem".
+4. **Pytanie o mieszanie zmienia charakter.** Nie stoimy już przed wyborem
+   „stare czy nowe" — stare przestało być kupowalne. Zostają dwie drogi:
+
+   | Droga | Koszt | Co dostajemy |
+   |---|---|---|
+   | **(a) mieszać** 4 stare + 18 nowych | **0** | miesiąc niejednorodny co do `F_LAST` w 2,6% kopert; jednostka obserwacji zmierzona jako identyczna (test 5) |
+   | **(b) odkupić** 4 sesje w nowej normalizacji | **~12,73 USD** | miesiąc jednorodny; stare pliki zostają jako archiwum |
+
+   **To jest decyzja właściciela, nie moja.** Argument za (b), mimo kosztu:
+   jednorodność zdejmuje z każdego przyszłego wyniku przypis „policzone na
+   mieszance dwóch wersji serwowania" — a ten przypis trzeba by nosić
+   bezterminowo, bo starej wersji nikt już nie odtworzy.
+
+### Odpowiedź 4 — otwarta, i po naszej stronie jest problem
+
+Billing przekazany do analizy. **Równolegle właściciel zgłasza, że rozliczenie
+MBO szło z INNEGO KONTA** niż to, którego panel odczytaliśmy 09.08. Jeśli tak,
+to rekonsyliacja w `data/KOSZTY.md` §3a (20,65 wobec 20,30 USD, residuum
+0,3490) **opisuje niewłaściwe konto** i trzeba ją powtórzyć — a Databento
+dostało od nas liczby, które mogą nie dotyczyć tych zapytań. Szczegóły
+i status: `data/KOSZTY.md` §3a.
+
+---
+
 ## 5c. Dopytanie — wersja PROSTYM TEKSTEM (11.08)
 
 ### Diagnoza była zła dwa razy z rzędu

@@ -96,6 +96,16 @@ REZERWA_GB = 20.0
 #: Warunek 1: minimum wolnego miejsca na starcie.
 MIN_WOLNE_GB = 100.0
 
+#: Przelom normalizacji GLBX.MDP3, potwierdzony przez dostawce 10-11.08.2026.
+#: Databento: *"The old data is not available anymore in our API."* — starej
+#: wersji NIE DA SIE juz pobrac za zadna cene, a obu wersji NIE WIDAC w samych
+#: danych. Bez znacznika w manifescie kolejna sesja zmiesza je na slepo.
+#: Granica jest PRZEDZIALEM, nie punktem: ostatnie pobranie ze stara
+#: normalizacja to 2026-08-06T22:05:38Z, pierwsza wycena z nowa 2026-08-08
+#: 12:15Z. Miedzy nimi nie zgadujemy — zwracamy NIEUSTALONA.
+NORMALIZACJA_OSTATNIA_STARA = dt.datetime(2026, 8, 6, 22, 5, 38, tzinfo=dt.UTC)
+NORMALIZACJA_PIERWSZA_NOWA = dt.datetime(2026, 8, 8, 12, 15, tzinfo=dt.UTC)
+
 KATALOG = "d5b2_mbo"
 #: Sesja kupiona wczesniej w ramach D5-C — lezy W INNYM KATALOGU, pod ta sama
 #: nazwa pliku. Bez tego wpisu skrypt jej nie widzi i proponuje zakup 22 sesji
@@ -391,6 +401,26 @@ def sprawdz_sha_d5c(p: Path) -> str:
     return f"SHA: zgodny z {KANONICZNY_D5C}"
 
 
+def epoka_normalizacji(kiedy: dt.datetime) -> str:
+    """W ktorej wersji normalizacji GLBX.MDP3 jest plik pobrany o `kiedy`.
+
+    Po co to w ogole istnieje: dwie wersje serwowania roznia sie rekordami
+    `action=N` w zdarzeniach wielopakietowych, ale **w danych nie widac, ktora
+    to wersja** — plik nie niesie tej informacji. Dostawca potwierdzil przy tym,
+    ze starej wersji nie da sie juz pobrac. Znacznik w manifescie jest wiec
+    jedynym sposobem, zeby ktokolwiek pozniej wiedzial, co ma na dysku.
+
+    Zwraca NIEUSTALONA dla znacznikow w przedziale przelomu. To nie jest
+    ostroznosc na wyrost: zgadniecie tutaj daje plik opisany jako jednorodny,
+    ktory jednorodny nie jest, a blad wyjdzie dopiero w wynikach badania.
+    """
+    if kiedy <= NORMALIZACJA_OSTATNIA_STARA:
+        return "przed-2026-08-08"
+    if kiedy >= NORMALIZACJA_PIERWSZA_NOWA:
+        return "po-2026-08-08"
+    return "NIEUSTALONA"
+
+
 def kompletny(p: Path, oczekiwane: int) -> tuple[bool, str]:
     """Czy plik jest kompletny. ISTNIENIE NIE WYSTARCZA.
 
@@ -565,9 +595,12 @@ def main() -> int:
         del raw
 
         ok, powod = kompletny(out, w["rekordow"])
+        teraz = dt.datetime.now(dt.UTC)
         wyniki.append(dict(**w, plik=out.name, sciezka=str(out),
                            bajtow=bajtow, sha256=sha, kompletny=ok,
-                           status=powod))
+                           status=powod,
+                           pobrano_utc=teraz.isoformat(timespec="seconds"),
+                           normalizacja=epoka_normalizacji(teraz)))
         print(f"      {bajtow / 1e9:.3f} GB  {'OK' if ok else 'NIEKOMPLETNY'}"
               f"  {sha[:16]}...", flush=True)
         if not ok:
@@ -589,6 +622,7 @@ def main() -> int:
         wolne_gb_przed=round(wolne_start, 2),
         wolne_gb_po=round(wolne_gb(kat), 2),
         pobrano_utc=dt.datetime.now(dt.UTC).isoformat(timespec="seconds"),
+        normalizacja=epoka_normalizacji(dt.datetime.now(dt.UTC)),
         databento=db.__version__,
     ), indent=1), encoding="utf-8", newline="\n")
 

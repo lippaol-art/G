@@ -26,7 +26,7 @@ niezależnych audytach zewnętrznych) jest **jedynym źródłem prawdy** — kod
 a nie odwrotnie.
 
 Gotowe: fundament repo, silnik backtestowy, komplet aparatu walidacyjnego, strażnicy
-niezmienników, CI, golden baseline. **562 funkcji testowych (633 przypadków po parametryzacji), pokrycie 92%, ruff i mypy czyste.**
+niezmienników, CI, golden baseline. **567 funkcji testowych (640 przypadków po parametryzacji), pokrycie 92%, ruff i mypy czyste.**
 Liczbę pilnuje `tests/test_guards.py::test_handoff_podaje_aktualna_liczbe_testow` —
 bez tego rotowała dwa razy w ciągu doby, co jest dokładnie tym defektem, przed
 którym ostrzega reguła na górze tego pliku.
@@ -135,15 +135,26 @@ w `docs/D5_ETAP4_SPEC.md` §1 i zaimplementowane w `engine/mbo_events.py`.
 wykonane, `pobrano_utc` odczytane, panel Databento odczytany. Nic więcej nie
 da się ustalić po naszej stronie.
 
-**Mail wysłany 10.08, odpowiedź jest — ale dotarł UCIĘTY**, więc dostawca
-odpowiedział tylko na mechanizm. Otwarte kroki, oba darmowe:
+**Korespondencja z dostawcą ZAMKNIĘTA w trzech z czterech punktów** (11.08,
+`D5_DRYF` §5d): stare pliki są ważne, dodatkowy rekord `N` powstaje wyłącznie
+dla zdarzeń wielopakietowych, **starej normalizacji nie da się już pobrać**.
+Billing przekazany do ich zespołu.
 
-1. **Przeczytać ogłoszenie** `databento.com/blog/cme-normalization-changes-2026-07`
-   — w tym środowisku `databento.com` blokuje polityka egress, więc musi to
-   zrobić właściciel. Najtańsze źródło odpowiedzi, jakie mamy.
-2. **Wysłać dopytanie** — wersja robocza **już leży w skrzynce** jako odpowiedź
-   w wątku (Gmail nie ma narzędzia do wysyłania, zostaje kliknięcie).
-   Treść i diagnoza: `D5_DRYF` §5c.
+**Blokada zakupu nie jest już techniczna, tylko finansowa.** Właściciel zgłosił
+11.08, że rozliczenie MBO szło z **innego konta** niż to, którego panel
+odczytaliśmy. Dopóki nie wiadomo, gdzie leży kredyt, „104,35 USD starczy
+na 18 sesji" jest twierdzeniem bez pokrycia — `data/KOSZTY.md` §3a.
+
+Otwarte kroki:
+
+1. **Ustalić konto**, z którego szły zapytania MBO, i odczytać JEGO panel.
+   Jedyna rzecz blokująca decyzję zakupową.
+2. **Zrobić kopię zapasową surowych plików** — patrz ramka niżej. Nie „po
+   zakupie", tylko teraz.
+3. **Przeczytać ogłoszenie** `databento.com/blog/cme-normalization-changes-2026-07`
+   — `databento.com` blokuje tu polityka egress, więc musi to zrobić właściciel.
+4. **Rozstrzygnąć: mieszać czy odkupić** 4 stare sesje za ~12,73 USD
+   (`D5_DRYF` §5d) — decyzja właściciela.
 
 > **Zasada korespondencji z dostawcą, wprowadzona po dwóch reprymendach.**
 > Maile do Databento pisze się **prozą, prostym tekstem** — bez tabel, `**`,
@@ -282,8 +293,18 @@ obciętej sesji, która parsuje się bez błędu.
 > Precedens: D5-B, sesja 2026-07-07, pozycja „duplikacja" w `data/KOSZTY.md`.
 > Nie przerywaj pobierania bez powodu.
 
-Po zakupie: kopia zapasowa surowego MBO na drugi dysk. Odtworzenie kosztuje ~78 USD,
-skopiowanie kosztuje nic.
+> ## ⛔ KOPIA ZAPASOWA PRZESTAŁA BYĆ OSTROŻNOŚCIĄ — 11.08
+>
+> Databento na pytanie o przypinanie wersji: *„**The old data is not available
+> anymore in our API.**"* Stara normalizacja jest **bezpowrotnie niedostępna**.
+>
+> Cztery pobrane sesje (07-01, 07-02, 07-03, 07-30) to **jedyny istniejący
+> egzemplarz** tej wersji danych. Do wczoraj obowiązywało „odtworzenie kosztuje
+> ~78 USD, skopiowanie nic". Dziś **odtworzenie nie jest możliwe za żadną cenę**
+> — utrata dysku to utrata danych, na których policzono audyt D5-C.
+>
+> **Kopia na drugi nośnik ma powstać TERAZ, nie po zakupie.** Procedura:
+> `docs/URUCHOMIENIE_LOKALNE.md` §8.1.
 
 ### Potem: bramka GO/NO-GO
 

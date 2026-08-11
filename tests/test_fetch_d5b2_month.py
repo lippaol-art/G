@@ -426,3 +426,55 @@ class TestZamrozoneStale:
         a, b = f.okno("2026-07-15")
         assert a == "2026-07-15T13:30"
         assert b == "2026-07-15T20:00"
+
+
+class TestEpokaNormalizacji:
+    """Znacznik wersji normalizacji GLBX.MDP3 w manifescie.
+
+    Powod istnienia: dostawca potwierdzil 11.08.2026, ze *"the old data is not
+    available anymore in our API"*. Dwie wersje serwowania roznia sie rekordami
+    `action=N` w zdarzeniach wielopakietowych, ale **w samych danych nie widac,
+    ktora to wersja**. Skoro starej nie da sie juz pobrac, znacznik w manifescie
+    jest jedynym sposobem, zeby kolejna sesja nie zmieszala ich na slepo.
+    """
+
+    def test_przed_przelomem(self):
+        assert f.epoka_normalizacji(
+            dt.datetime(2026, 8, 6, 22, 5, 38, tzinfo=dt.UTC)
+        ) == "przed-2026-08-08"
+
+    def test_po_przelomie(self):
+        assert f.epoka_normalizacji(
+            dt.datetime(2026, 8, 8, 12, 15, tzinfo=dt.UTC)
+        ) == "po-2026-08-08"
+
+    def test_dzisiejsze_pobranie_jest_nowa_normalizacja(self):
+        assert f.epoka_normalizacji(
+            dt.datetime.now(dt.UTC)) == "po-2026-08-08"
+
+    @pytest.mark.parametrize("kiedy", [
+        dt.datetime(2026, 8, 6, 22, 5, 39, tzinfo=dt.UTC),
+        dt.datetime(2026, 8, 7, 12, 0, tzinfo=dt.UTC),
+        dt.datetime(2026, 8, 8, 12, 14, 59, tzinfo=dt.UTC),
+    ])
+    def test_w_przedziale_przelomu_NIE_ZGADUJEMY(self, kiedy):
+        """Granica jest przedzialem, nie punktem — i tak ma zostac.
+
+        Zgadniecie tutaj dawaloby plik opisany jako jednorodny, ktory jednorodny
+        nie jest, a blad wyszedlby dopiero w wynikach badania. Lepiej miec
+        w manifescie jawne NIEUSTALONA niz cicha nieprawde.
+        """
+        assert f.epoka_normalizacji(kiedy) == "NIEUSTALONA"
+
+    def test_granice_pochodza_z_udokumentowanych_pomiarow(self):
+        """Obie daty musza zgadzac sie z osia czasu z D5_DRYF_METADANYCH.
+
+        Lewy kraniec to `pobrano_utc` z manifestu, prawy to wycena, ktora
+        pierwsza pokazala nowe liczby. Przesuniecie ich "na oko" uniewaznia
+        klasyfikacje wszystkich plikow naraz.
+        """
+        assert f.NORMALIZACJA_OSTATNIA_STARA < f.NORMALIZACJA_PIERWSZA_NOWA
+        assert f.NORMALIZACJA_OSTATNIA_STARA.isoformat() == \
+            "2026-08-06T22:05:38+00:00"
+        assert f.NORMALIZACJA_PIERWSZA_NOWA.isoformat() == \
+            "2026-08-08T12:15:00+00:00"

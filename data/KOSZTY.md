@@ -83,9 +83,32 @@ inaczej naliczyłby ją trzeci raz.
 
 ---
 
-## 3a. Przerwane pobrania — ROZSTRZYGNIĘTE panelem 09.08
+## 3a. Przerwane pobrania — rekonsyliacja PODWAŻONA 11.08
 
-**Odczyt panelu Databento (09.08):**
+> ### ⚠️ CAŁA TA SEKCJA MOŻE OPISYWAĆ NIEWŁAŚCIWE KONTO
+>
+> Właściciel zgłosił 11.08, że **rozliczenie MBO szło z innego konta** niż to,
+> którego panel odczytaliśmy 09.08. Jeżeli tak, to poniższa rekonsyliacja
+> (20,65 wobec 20,30 USD, residuum 0,3490) **nie dotyczy zapytań, o których
+> mówi** — i wtedy nie jest ani potwierdzeniem, ani zaprzeczeniem tego, czy
+> przerwane pobrania zostały naliczone.
+>
+> **Zostawiam liczby nietknięte i oznaczone, zamiast je kasować.** Skasowanie
+> zatarłoby to, że przez dwa dni traktowaliśmy je jako pomiar — w tym w mailu
+> do Databento, gdzie podaliśmy je jako podstawę pytania o rozliczenie.
+> Databento przekazało sprawę do zespołu billingowego **na podstawie tych
+> liczb**; jeśli dotyczą innego konta, trzeba to sprostować, zanim odpowiedzą.
+>
+> **Do ustalenia, po kolei:** (1) z którego konta faktycznie szły zapytania MBO,
+> (2) odczyt panelu **tego** konta, (3) czy 125 USD kredytu startowego było na
+> jednym koncie, czy na obu, (4) czy pozostałe **104,35 USD** kredytu, na które
+> liczymy przy zakupie 18 sesji, w ogóle jest tam, gdzie myślimy.
+>
+> **Punkt 4 jest jedynym, który blokuje decyzję zakupową** — reszta to
+> księgowość. Dopóki nie wiadomo, gdzie leży kredyt, „starczy z zapasem"
+> jest twierdzeniem bez pokrycia.
+
+**Odczyt panelu Databento (09.08) — konto NIEPOTWIERDZONE:**
 
 | | |
 |---|---|
@@ -147,8 +170,11 @@ niż górna granica moich wycen (20,65 wobec 20,30). Zasada 4 rejestru zadziała
 w obie strony: granica była podana uczciwie, ale pomiar i tak ją przekroczył
 o 0,3490 USD, których nie umiem przypisać.
 
-**Skutek dla budżetu: żaden bieżący.** Nic nie poszło z karty, a pozostałe
-104,35 USD kredytu wystarcza na 18 brakujących sesji (≤ 68 USD) z zapasem.
+**Skutek dla budżetu — WSTRZYMANY do wyjaśnienia konta.** Na odczytanym
+koncie nic nie poszło z karty, a 104,35 USD kredytu wystarczyłoby na 18 sesji
+(≤ 68 USD) z zapasem. **Ale jeśli zapytania MBO szły z innego konta, to zdanie
+opisuje nie ten portfel.** Nie powtarzam go jako podstawy decyzji, dopóki
+konto nie jest potwierdzone.
 
 ---
 
