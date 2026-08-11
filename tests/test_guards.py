@@ -516,3 +516,50 @@ class TestPakowalnosc:
             elif not (kat / "__init__.py").exists():
                 braki.append(f"{nazwa}: brak __init__.py")
         assert not braki, "Niespojna deklaracja pakietow:\n" + "\n".join(braki)
+
+
+class TestKopiaZapasowa:
+    """Lista plikow do kopii zapasowej musi byc KOMPLETNA.
+
+    Databento potwierdzilo 11.08: *"The old data is not available anymore in
+    our API."* Piec sesji pobranych przed przelomem normalizacji to jedyny
+    istniejacy egzemplarz tamtej wersji danych — nie da sie ich odtworzyc
+    za zadna cene.
+
+    Sesja 2026-07-06 wypadla z tej listy DWA RAZY: raz w mailu do dostawcy
+    ("We hold four"), raz w ramce kopii zapasowej w HANDOFF. Pierwsza pomylka
+    byla zawstydzajaca, druga bylaby fizyczna — kopia zrobiona wedlug tej
+    ramki zostawilaby 07-06 na jednym dysku.
+    """
+
+    def test_handoff_wymienia_wszystkie_stare_sesje(self):
+        import sys
+        korzen = Path(__file__).resolve().parent.parent
+        sys.path.insert(0, str(korzen))
+        from scripts.fetch_d5b2_month import SESJE_STARA_NORMALIZACJA
+
+        tekst = (korzen / "HANDOFF.md").read_text(encoding="utf-8")
+        blok = tekst.split("KOPIA ZAPASOWA", 1)
+        assert len(blok) == 2, "HANDOFF nie ma juz ramki o kopii zapasowej"
+        # Do konca sekcji cytatu — dalej zaczyna sie zwykly tekst.
+        ramka = blok[1].split("\n\n", 1)[0] + blok[1].split("\n\n", 1)[1][:1200]
+
+        brakuje = [s for s in SESJE_STARA_NORMALIZACJA
+                   if s not in ramka and s[5:] not in ramka]
+        assert not brakuje, (
+            "ramka kopii zapasowej w HANDOFF nie wymienia sesji: "
+            f"{brakuje}. Tych plikow NIE DA SIE odtworzyc z API — "
+            "pominiete w liscie zostana na jednym dysku.")
+
+    def test_stala_zgadza_sie_z_liczba_oplaconych_sesji(self):
+        import sys
+        korzen = Path(__file__).resolve().parent.parent
+        sys.path.insert(0, str(korzen))
+        from scripts.fetch_d5b2_month import (
+            SESJA_D5C,
+            SESJE,
+            SESJE_STARA_NORMALIZACJA,
+        )
+        assert len(SESJE_STARA_NORMALIZACJA) == 5
+        assert SESJA_D5C in SESJE_STARA_NORMALIZACJA
+        assert set(SESJE_STARA_NORMALIZACJA) <= set(SESJE)

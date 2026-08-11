@@ -3,7 +3,7 @@
 **Ten dokument jest napisany dla sesji, która nie widziała poprzedniej rozmowy.**
 Kontener jest efemeryczny, więc wszystko potrzebne do kontynuacji jest tutaj i w repo.
 
-Data: 08.08.2026 · Branch: `claude/financial-market-strategy-8mb1y1` · PR #4
+Data: 11.08.2026 · Branch: `claude/financial-market-strategy-8mb1y1` · PR #4
 
 > **Reguła utrzymania tego pliku.** HANDOFF aktualizuje się w TYM SAMYM commicie, który
 > zmienia stan projektu. **Nieaktualny HANDOFF to defekt P1, jak czerwony test** — nie
@@ -26,7 +26,7 @@ niezależnych audytach zewnętrznych) jest **jedynym źródłem prawdy** — kod
 a nie odwrotnie.
 
 Gotowe: fundament repo, silnik backtestowy, komplet aparatu walidacyjnego, strażnicy
-niezmienników, CI, golden baseline. **567 funkcji testowych (640 przypadków po parametryzacji), pokrycie 92%, ruff i mypy czyste.**
+niezmienników, CI, golden baseline. **578 funkcji testowych (654 przypadków po parametryzacji), pokrycie 92%, ruff i mypy czyste.**
 Liczbę pilnuje `tests/test_guards.py::test_handoff_podaje_aktualna_liczbe_testow` —
 bez tego rotowała dwa razy w ciągu doby, co jest dokładnie tym defektem, przed
 którym ostrzega reguła na górze tego pliku.
@@ -153,8 +153,9 @@ Otwarte kroki:
    zakupie", tylko teraz.
 3. **Przeczytać ogłoszenie** `databento.com/blog/cme-normalization-changes-2026-07`
    — `databento.com` blokuje tu polityka egress, więc musi to zrobić właściciel.
-4. **Rozstrzygnąć: mieszać czy odkupić** 4 stare sesje za ~12,73 USD
-   (`D5_DRYF` §5d) — decyzja właściciela.
+4. **Drugi mikro-diff** na otwarciu sesji pełnowymiarowej (07-06 13:30–14:00),
+   limit 1,00 USD, wymaga zgody R1. **Dopiero po nim** decyzja mieszać/odkupić
+   — `D5_DRYF` §5d i §5e.
 
 > **Zasada korespondencji z dostawcą, wprowadzona po dwóch reprymendach.**
 > Maile do Databento pisze się **prozą, prostym tekstem** — bez tabel, `**`,
@@ -298,13 +299,35 @@ obciętej sesji, która parsuje się bez błędu.
 > Databento na pytanie o przypinanie wersji: *„**The old data is not available
 > anymore in our API.**"* Stara normalizacja jest **bezpowrotnie niedostępna**.
 >
-> Cztery pobrane sesje (07-01, 07-02, 07-03, 07-30) to **jedyny istniejący
-> egzemplarz** tej wersji danych. Do wczoraj obowiązywało „odtworzenie kosztuje
-> ~78 USD, skopiowanie nic". Dziś **odtworzenie nie jest możliwe za żadną cenę**
-> — utrata dysku to utrata danych, na których policzono audyt D5-C.
+> **PIĘĆ** pobranych sesji to **jedyny istniejący egzemplarz** tej wersji
+> danych:
 >
-> **Kopia na drugi nośnik ma powstać TERAZ, nie po zakupie.** Procedura:
-> `docs/URUCHOMIENIE_LOKALNE.md` §8.1.
+> | sesja | rekordów | gdzie |
+> |---|---:|---|
+> | 2026-07-01 | 39 297 265 | `d5b2_mbo/` |
+> | 2026-07-02 | 61 279 315 | `d5b2_mbo/` |
+> | 2026-07-03 | 2 660 629 | `d5b2_mbo/` |
+> | **2026-07-06** | **32 369 900** | `d5b2_mbo/` |
+> | 2026-07-30 | 38 306 877 | `d5c_mbo/` — SHA `3e6f023d…74ac42` |
+>
+> Do wczoraj obowiązywało „odtworzenie kosztuje ~78 USD, skopiowanie nic".
+> Dziś **odtworzenie nie jest możliwe za żadną cenę** — utrata dysku to utrata
+> danych, na których policzono audyt D5-C.
+>
+> **Sesja 2026-07-06 wypadła z tej listy dwa razy** (raz w mailu do dostawcy,
+> raz właśnie tutaj). Za drugim razem miałoby to skutek fizyczny, więc listę
+> pilnuje teraz `tests/test_guards.py::TestKopiaZapasowa` porównując ją ze stałą
+> `SESJE_STARA_NORMALIZACJA` w kodzie.
+>
+> **Kopia na drugi nośnik ma powstać TERAZ, nie po zakupie.** Do skopiowania:
+> **pięć plików `.dbn.zst`**, `manifest_d5b2.json`, `wycena_cache.json`
+> i katalog `diag_mikro/`. Procedura: `docs/URUCHOMIENIE_LOKALNE.md` §8.1.
+>
+> ```powershell
+> robocopy C:\ProjektG_dane E:\ProjektG_dane_backup /E /COPY:DAT /R:2 /W:5
+> Get-FileHash -Algorithm SHA256 E:\ProjektG_dane_backup\raw\d5c_mbo\mnq_mbo_rth_2026-07-30.dbn.zst
+> Get-ChildItem E:\ProjektG_dane_backup\raw\d5b2_mbo -Filter *.dbn.zst | Get-FileHash -Algorithm SHA256
+> ```
 
 ### Potem: bramka GO/NO-GO
 

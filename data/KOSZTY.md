@@ -75,11 +75,19 @@ z konta i dlatego stoi tu osobno.
 
 | Pozycja | Koszt | Status |
 |---|---|---|
-| MBO, pozostałe **21 sesji** RTH lipca 2026 | **75,0083 USD** | 🔄 **W TRAKCIE.** Wycena 06.08.2026: 78,6044 USD za 22 sesje (limit 82,00); 2026-07-30 pominięta (SHA zgodny). Pobrano **3 z 21**: 2026-07-01, 07-02, 07-03 — **9,6916 USD**. Przerwane na 2026-07-06 (`Response ended prematurely`, plik częściowy 215,2 MB). |
-| Cała miesięczna próbka MBO (22 sesje) | 78,6044 USD | limit zamrożony: **82,00 USD** |
+| MBO, **17 pozostałych** sesji RTH lipca 2026 | **63,94 USD** | ⛔ **ZAMROŻONE** — patrz §3a (konto) i `D5_DRYF` §5e (drugi mikro-diff) |
+| Cała miesięczna próbka MBO (22 sesje, nowa normalizacja) | **80,68 USD** | limit zamrożony: **82,00 USD**, zapas 1,32 |
 
-Miesięczny downloader **musi wykryć 2026-07-30 jako kompletną i ją pominąć** —
-inaczej naliczyłby ją trzeci raz.
+**Stan pobrań: 5 z 22 sesji**, wszystkie w **starej** normalizacji —
+2026-07-01, 07-02, 07-03, **07-06** i 07-30. Sesja 07-06 była raz przerwana
+(`Response ended prematurely`), ale drugie pobranie **zakończyło się
+powodzeniem**: plik jest kompletny (32 369 900 rekordów, pokrycie
+13:30–19:59:59), a podwójne naliczenie rozliczone w §3a. Wcześniejszy wpis
+„pobrano 3 z 21, przerwane na 07-06" był nieaktualny od diagnostyki 08.08.
+
+Zostaje więc **17 sesji do dokupienia**, nie 18 i nie 21: 07-30 mamy z D5-C,
+a downloader **musi wykryć ją jako kompletną i pominąć** — inaczej naliczyłby
+ją trzeci raz.
 
 ---
 

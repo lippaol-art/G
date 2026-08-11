@@ -163,16 +163,52 @@ def test_raport_flag_nie_dotyka_sieci():
             f"tryb --flagi siega po {zakazane} — przestal byc darmowy")
 
 
-def test_limit_kosztu_zostal_nietkniety():
-    """Limit 0,10 USD byl warunkiem 1 zgody wlasciciela. Podniesienie go po
-    fakcie byloby zmiana specyfikacji po zobaczeniu wyniku (regula R2)."""
-    assert d.LIMIT_USD == 0.10
+def test_limit_pierwszego_okna_zostal_nietkniety():
+    """Limit 0,10 USD byl warunkiem 1 zgody z 09.08. Podniesienie go po fakcie
+    byloby zmiana specyfikacji po zobaczeniu wyniku (regula R2)."""
+    assert d.wybierz_okno("2026-07-03").limit_usd == 0.10
 
 
-def test_zakres_pozostaje_zamrozony():
-    """Warunek 2 zgody: dokladnie 30 minut jednej sesji, bez furtki w CLI."""
-    assert (d.SESJA, d.START_UTC, d.END_UTC) == (
+def test_drugie_okno_ma_limit_z_paragrafu_5e():
+    """Limit 1,00 USD zapisany w D5_DRYF §5e PRZED biegiem."""
+    assert d.wybierz_okno("2026-07-06").limit_usd == 1.00
+
+
+def test_kazde_okno_ma_wlasny_twardy_limit():
+    """Wspolny limit bylby albo bezuzyteczny, albo blokujacy — sesje roznia
+    sie rozmiarem dziesieciokrotnie."""
+    for sesja in d.OKNA:
+        assert d.wybierz_okno(sesja).limit_usd > 0
+
+
+def test_zakresy_pozostaja_zamrozone():
+    """Warunek 2 zgody: 30 minut, granice z rejestru, nie z linii polecen."""
+    assert d.wybierz_okno("2026-07-03")[:3] == (
         "2026-07-03", "2026-07-03T13:30", "2026-07-03T14:00")
+    assert d.wybierz_okno("2026-07-06")[:3] == (
+        "2026-07-06", "2026-07-06T13:30", "2026-07-06T14:00")
+
+
+@pytest.mark.parametrize("sesja", [
+    "2026-07-07", "2026-07-03T13:30", "", "2026-07-03 13:30/20:00"])
+def test_okno_spoza_rejestru_jest_TWARDA_ODMOWA(sesja):
+    """Parametryzacja NIE moze byc rozluznieniem warunku 2 zgody.
+
+    Zaszycie jednego okna na stale bronilo przed przypadkowym zapytaniem
+    o cala sesje (~3 USD zamiast ~0,08). Rejestr ma bronic tak samo: wszystko
+    spoza listy konczy sie `SystemExit`, a nie domyslnym oknem.
+    """
+    with pytest.raises(SystemExit) as e:
+        d.wybierz_okno(sesja)
+    assert "warunek 2" in str(e.value)
+
+
+def test_nazwa_pliku_rozroznia_okna():
+    """Dwa pomiary NIE moga nadpisac sobie plikow — kazdy kosztowal osobno."""
+    a = d.wybierz_okno("2026-07-03").nazwa_pliku
+    b = d.wybierz_okno("2026-07-06").nazwa_pliku
+    assert a != b
+    assert a == "mikro_2026-07-03_1330_1400.dbn.zst"
 
 
 def test_katalog_diagnostyczny_jest_osobny():

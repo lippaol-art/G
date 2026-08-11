@@ -478,3 +478,71 @@ class TestEpokaNormalizacji:
             "2026-08-06T22:05:38+00:00"
         assert f.NORMALIZACJA_PIERWSZA_NOWA.isoformat() == \
             "2026-08-08T12:15:00+00:00"
+
+
+class TestPrzeniesienieWynikow:
+    """Manifest nie moze zgubic pochodzenia sesji, ktorych biezacy bieg nie tyka.
+
+    Zapis manifestu opisywal wylacznie biezacy bieg. Nastepny bieg zakupowy
+    (a taki bedzie — zostalo 17 sesji) nadpisalby plik tak, ze `sha256`,
+    `pobrano_utc` i `normalizacja` pieciu sesji ze STAREJ normalizacji
+    zniknelyby z aktywnego manifestu. Skoro starej wersji nie da sie juz
+    pobrac, a w danych jej nie widac, byloby to bezpowrotne zatarcie jedynej
+    informacji o tym, co lezy na dysku.
+    """
+
+    def _manifest(self, tmp_path, monkeypatch, tresc: dict):
+        cel = tmp_path / "manifests" / f.MANIFEST
+        cel.parent.mkdir(parents=True, exist_ok=True)
+        cel.write_text(json.dumps(tresc), encoding="utf-8")
+        monkeypatch.setattr(f, "sciezka_manifestu", lambda: cel)
+        return cel
+
+    def test_przenosi_wpisy_sesji_pomijanych(self, tmp_path, monkeypatch):
+        self._manifest(tmp_path, monkeypatch, {
+            "pobrano_utc": "2026-08-06T22:05:38+00:00",
+            "wyniki": [
+                {"sesja": "2026-07-01", "sha256": "aaa", "kompletny": True,
+                 "pobrano_utc": "2026-08-06T20:00:00+00:00",
+                 "normalizacja": "przed-2026-08-08"},
+                {"sesja": "2026-07-08", "sha256": "bbb", "kompletny": True},
+            ]})
+        out = f.przeniesione_wyniki(["2026-07-01"])
+        assert [w["sesja"] for w in out] == ["2026-07-01"]
+        assert out[0]["sha256"] == "aaa"
+        assert out[0]["normalizacja"] == "przed-2026-08-08"
+        assert out[0]["z_poprzedniego_biegu"] is True
+
+    def test_backfill_epoki_z_wlasnego_znacznika(self, tmp_path, monkeypatch):
+        """Wpisy sprzed wprowadzenia pola dostaja je wyliczone, nie zgadniete."""
+        self._manifest(tmp_path, monkeypatch, {
+            "pobrano_utc": "2026-08-09T10:00:00+00:00",
+            "wyniki": [{"sesja": "2026-07-02", "sha256": "ccc",
+                        "pobrano_utc": "2026-08-06T22:05:38+00:00"}]})
+        out = f.przeniesione_wyniki(["2026-07-02"])
+        assert out[0]["normalizacja"] == "przed-2026-08-08"
+
+    def test_backfill_z_manifestu_gdy_wpis_nie_ma_znacznika(
+            self, tmp_path, monkeypatch):
+        self._manifest(tmp_path, monkeypatch, {
+            "pobrano_utc": "2026-08-06T22:05:38+00:00",
+            "wyniki": [{"sesja": "2026-07-03", "sha256": "ddd"}]})
+        out = f.przeniesione_wyniki(["2026-07-03"])
+        assert out[0]["normalizacja"] == "przed-2026-08-08"
+
+    def test_bez_znacznika_NIE_ZGADUJEMY(self, tmp_path, monkeypatch):
+        self._manifest(tmp_path, monkeypatch, {
+            "wyniki": [{"sesja": "2026-07-03", "sha256": "eee"}]})
+        assert f.przeniesione_wyniki(["2026-07-03"])[0]["normalizacja"] == \
+            "NIEUSTALONA"
+
+    def test_brak_manifestu_i_smiec_nie_wywalaja_biegu(
+            self, tmp_path, monkeypatch):
+        """Zakup nie moze paesc przez uszkodzony manifest — to zablokowaloby
+        pobranie, za ktore juz zaplacono wycena."""
+        cel = tmp_path / "manifests" / f.MANIFEST
+        monkeypatch.setattr(f, "sciezka_manifestu", lambda: cel)
+        assert f.przeniesione_wyniki(["2026-07-01"]) == []
+        cel.parent.mkdir(parents=True, exist_ok=True)
+        cel.write_text("{to nie jest json", encoding="utf-8")
+        assert f.przeniesione_wyniki(["2026-07-01"]) == []

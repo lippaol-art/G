@@ -13,10 +13,12 @@ na ktore odpowiada wylacznie porownanie TRESCI:
                -> nie kupujemy nic, ale nadal nie wolno mieszac.
 
 WARUNKI ZGODY WLASCICIELA (R1) — wszystkie egzekwowane w kodzie:
-  1. `get_cost` PRZED pobraniem; STOP bez pytania, gdy koszt > `LIMIT_USD`,
-  2. zakres WYLACZNIE 2026-07-03 13:30-14:00 UTC, start identyczny z naszym
-     plikiem — dzieki temu syntetyczny snapshot ksiegi wypada w tym samym
-     miejscu po obu stronach i SKRACA SIE w porownaniu,
+  1. `get_cost` PRZED pobraniem; STOP bez pytania, gdy koszt przekroczy
+     limit WLASNY DLA TEGO OKNA (`OKNA[...]['limit']`),
+  2. zakres WYLACZNIE z zamrozonego rejestru `OKNA` — nie da sie podac
+     dowolnego przedzialu z linii polecen. Start kazdego okna jest identyczny
+     ze startem naszego pliku, wiec syntetyczny snapshot ksiegi wypada w tym
+     samym miejscu po obu stronach i SKRACA SIE w porownaniu,
   3. zapis do OSOBNEGO katalogu diagnostycznego; `d5b2_mbo/`, `d5c_mbo/`
      i manifesty pozostaja NIETKNIETE,
   4. wpis do `data/KOSZTY.md` NIEZALEZNIE od wyniku,
@@ -29,6 +31,8 @@ Uruchomienie:
     python scripts/diff_mikro.py --wycena   # sam koszt, nic nie pobiera
     python scripts/diff_mikro.py            # wycena + pobranie + diff
     python scripts/diff_mikro.py --flagi    # histogram flag, LOKALNIE i DARMO
+    python scripts/diff_mikro.py --rekonstrukcja        # akcje, LOKALNIE i DARMO
+    python scripts/diff_mikro.py --sesja 2026-07-06     # drugie okno (§5e)
 """
 
 from __future__ import annotations
@@ -40,6 +44,7 @@ import os
 import sys
 from collections import Counter
 from pathlib import Path
+from typing import NamedTuple
 
 import databento as db
 
@@ -52,12 +57,54 @@ UTC = dt.UTC
 
 ZAPYTANIE = dict(dataset="GLBX.MDP3", symbols=["MNQU6"],
                  stype_in="raw_symbol", schema="mbo")
-SESJA = "2026-07-03"
-START_UTC, END_UTC = f"{SESJA}T13:30", f"{SESJA}T14:00"
+#: REJESTR DOZWOLONYCH OKIEN. Parametryzacja przez `--sesja`, ale WYLACZNIE
+#: po kluczach tego slownika — dowolnego przedzialu nie da sie podac z linii
+#: polecen. To jest ta sama ochrona co wczesniejsze zaszycie jednego okna na
+#: stale (warunek 2 zgody R1), tylko rozszerzona o drugi pomiar; luzniejsza
+#: wersja pozwalalaby przypadkiem zapytac o cala sesje za ~3 USD.
+#:
+#: Kazde okno ma WLASNY twardy limit kosztu, bo rozmiary sesji roznia sie
+#: dziesieciokrotnie i jeden wspolny limit bylby albo bezuzyteczny, albo
+#: blokujacy.
+OKNA = {
+    # Pierwszy mikro-diff, wykonany 09.08 za 0,0789 USD. Zmierzone
+    # ~840 392 rek. x 9,388e-8; limit z zapasem na kolejny skok +2,6%.
+    "2026-07-03": {"od": "13:30", "do": "14:00", "limit": 0.10},
+    # Drugi mikro-diff (D5_DRYF §5e) — NIEURUCHOMIONY, wymaga zgody R1.
+    # Sesja pelnowymiarowa: 07-03 to polowka, a rekordy `N` powstaja
+    # w zdarzeniach wielopakietowych klastrujacych sie na otwarciach.
+    # 32 910 056 rek. w calej sesji; 30 min otwarcia modelowo ~0,3-0,5 USD.
+    "2026-07-06": {"od": "13:30", "do": "14:00", "limit": 1.00},
+}
 
-#: Warunek 1 zgody. Wycena z 08.08: ~840 392 rek. x 9,388e-8 ~= 0,0789 USD.
-#: Limit ma zapas nawet na kolejny skok liczby rekordow o +2,6%.
-LIMIT_USD = 0.10
+
+class Okno(NamedTuple):
+    """Jedno zamrozone okno diagnostyczne wraz z wlasnym limitem kosztu."""
+
+    sesja: str
+    start_utc: str
+    end_utc: str
+    limit_usd: float
+
+    @property
+    def nazwa_pliku(self) -> str:
+        znacznik = f"{self.start_utc[-5:]}_{self.end_utc[-5:]}".replace(":", "")
+        return f"mikro_{self.sesja}_{znacznik}.dbn.zst"
+
+
+def wybierz_okno(sesja: str) -> Okno:
+    """Okno z rejestru albo TWARDA ODMOWA. Nie ma trzeciej mozliwosci."""
+    if sesja not in OKNA:
+        sys.exit(f"STOP (warunek 2): okno {sesja} nie jest w zamrozonym "
+                 f"rejestrze. Dozwolone: {', '.join(sorted(OKNA))}. "
+                 "Rejestr rozszerza sie commitem PRZED biegiem, nie flaga.")
+    w = OKNA[sesja]
+    return Okno(sesja, f"{sesja}T{w['od']}", f"{sesja}T{w['do']}",
+                float(w["limit"]))
+
+
+#: Domyslne okno — pierwszy mikro-diff, zeby stare wywolania dzialaly bez zmian.
+SESJA_DOMYSLNA = "2026-07-03"
 
 #: Warunek 3 zgody: katalog NIE nalezy do zadnego zakupu badawczego.
 KATALOG_DIAG = "diag_mikro"
@@ -71,13 +118,21 @@ BITY_FLAG = ((128, "F_LAST"), (64, "F_TOB"), (32, "F_SNAPSHOT"),
              (16, "F_MBP"), (8, "F_BAD_TS_RECV"), (4, "F_MAYBE_BAD_BOOK"))
 
 
-def nasz_plik() -> Path:
+def nasz_plik(o: Okno) -> Path:
     for kat in KATALOGI_NASZE:
-        p = raw_dir(kat, f"mnq_mbo_rth_{SESJA}.dbn.zst")
+        p = raw_dir(kat, f"mnq_mbo_rth_{o.sesja}.dbn.zst")
         if p.exists():
             return p
-    sys.exit(f"STOP: nie znalazlem naszego pliku {SESJA} w "
+    sys.exit(f"STOP: nie znalazlem naszego pliku {o.sesja} w "
              f"{KATALOGI_NASZE}. Bez niego nie ma czego porownywac.")
+
+
+def granice_ns(o: Okno) -> tuple[int, int]:
+    """Okno w nanosekundach — jedno miejsce, w ktorym parsuje sie znaczniki."""
+    def na_ns(s: str) -> int:
+        return int(dt.datetime.fromisoformat(s)
+                   .replace(tzinfo=UTC).timestamp() * 1e9)
+    return na_ns(o.start_utc), na_ns(o.end_utc)
 
 
 def klucz(r) -> tuple:
@@ -138,23 +193,21 @@ def opis_flag(wartosc: int) -> str:
     return "|".join(nazwy) if nazwy else "(brak bitow)"
 
 
-def raport_flag() -> int:
+def raport_flag(o: Okno) -> int:
     """Tryb LOKALNY i DARMOWY — czyta tylko pliki, ktore juz sa na dysku.
 
     Wolno go uruchamiac bez zgody R1, bo nie dotyka sieci i nie wywoluje nawet
     `get_cost`. Klucz API nie jest potrzebny.
     """
-    plik_mikro = raw_dir(KATALOG_DIAG, f"mikro_{SESJA}_1330_1400.dbn.zst")
+    plik_mikro = raw_dir(KATALOG_DIAG, o.nazwa_pliku)
     if not plik_mikro.exists():
         sys.exit(f"STOP: brak {plik_mikro}. Ten tryb NIE pobiera danych — "
                  "uruchom najpierw pelny mikro-diff.")
-    plik_nasz = nasz_plik()
+    plik_nasz = nasz_plik(o)
 
-    y, m, d = map(int, SESJA.split("-"))
-    od_ns = int(dt.datetime(y, m, d, 13, 30, tzinfo=UTC).timestamp() * 1e9)
-    do_ns = int(dt.datetime(y, m, d, 14, 0, tzinfo=UTC).timestamp() * 1e9)
+    od_ns, do_ns = granice_ns(o)
 
-    print(f"zakres : {START_UTC} .. {END_UTC} UTC")
+    print(f"zakres : {o.start_utc} .. {o.end_utc} UTC")
     print("czytam swiezy wycinek...", flush=True)
     serw = flagi_wg_akcji(plik_mikro, od_ns, do_ns)
     print("czytam nasz plik (kilka minut — to setki MB)...", flush=True)
@@ -214,7 +267,7 @@ def raport_flag() -> int:
     return 0
 
 
-def raport_rekonstrukcji() -> int:
+def raport_rekonstrukcji(o: Okno) -> int:
     """Test KONCOWY: te same akcje agresywne z obu plikow, czy nie?
 
     Histogramy odpowiadaja na pytania o liczebnosc. To pytanie jest inne:
@@ -226,14 +279,12 @@ def raport_rekonstrukcji() -> int:
     To jest jedyny test, ktory patrzy na KOLEJNOSC rekordow, a nie na ich
     rozklad. Lokalny i darmowy.
     """
-    plik_mikro = raw_dir(KATALOG_DIAG, f"mikro_{SESJA}_1330_1400.dbn.zst")
+    plik_mikro = raw_dir(KATALOG_DIAG, o.nazwa_pliku)
     if not plik_mikro.exists():
         sys.exit(f"STOP: brak {plik_mikro}. Ten tryb NIE pobiera danych.")
-    plik_nasz = nasz_plik()
+    plik_nasz = nasz_plik(o)
 
-    y, m, d = map(int, SESJA.split("-"))
-    od_ns = int(dt.datetime(y, m, d, 13, 30, tzinfo=UTC).timestamp() * 1e9)
-    do_ns = int(dt.datetime(y, m, d, 14, 0, tzinfo=UTC).timestamp() * 1e9)
+    od_ns, do_ns = granice_ns(o)
     okno = (od_ns, do_ns)
 
     def akcje(p: Path) -> list[tuple]:
@@ -243,7 +294,7 @@ def raport_rekonstrukcji() -> int:
                  a.ts_recv_ostatni, a.poziomy, a.minuta)
                 for a in rekonstruuj(z_dbn(store, tylko_rth=okno))]
 
-    print(f"zakres : {START_UTC} .. {END_UTC} UTC")
+    print(f"zakres : {o.start_utc} .. {o.end_utc} UTC")
     print("rekonstruuje ze swiezego wycinka...", flush=True)
     a_serw = akcje(plik_mikro)
     print("rekonstruuje z naszego pliku (kilka minut)...", flush=True)
@@ -289,28 +340,32 @@ def main() -> int:
     ap.add_argument("--rekonstrukcja", action="store_true",
                     help="porownanie akcji agresywnych z obu plikow — "
                          "rozstrzyga los audytu D5-C, lokalnie i darmo")
+    ap.add_argument("--sesja", default=SESJA_DOMYSLNA,
+                    help="okno z zamrozonego rejestru OKNA; dowolnego "
+                         f"przedzialu podac sie NIE DA. Domyslnie {SESJA_DOMYSLNA}")
     args = ap.parse_args()
+    o = wybierz_okno(args.sesja)
 
     if args.flagi:
-        return raport_flag()
+        return raport_flag(o)
     if args.rekonstrukcja:
-        return raport_rekonstrukcji()
+        return raport_rekonstrukcji(o)
 
-    plik_nasz = nasz_plik()
+    plik_nasz = nasz_plik(o)
     print(f"nasz plik   : {plik_nasz}")
-    print(f"zakres      : {START_UTC} .. {END_UTC} UTC")
-    print(f"limit kosztu: {LIMIT_USD:.2f} USD (warunek 1 zgody)\n", flush=True)
+    print(f"zakres      : {o.start_utc} .. {o.end_utc} UTC")
+    print(f"limit kosztu: {o.limit_usd:.2f} USD (warunek 1 zgody)\n", flush=True)
 
     c = db.Historical(os.environ["DATABENTO_API_KEY"])
 
     # --- WARUNEK 1: wycena PRZED pobraniem -------------------------------
-    koszt = c.metadata.get_cost(**ZAPYTANIE, start=START_UTC, end=END_UTC)
-    rekordow = c.metadata.get_record_count(**ZAPYTANIE, start=START_UTC,
-                                           end=END_UTC)
+    koszt = c.metadata.get_cost(**ZAPYTANIE, start=o.start_utc, end=o.end_utc)
+    rekordow = c.metadata.get_record_count(**ZAPYTANIE, start=o.start_utc,
+                                           end=o.end_utc)
     print(f"koszt wg API : {koszt:.4f} USD")
     print(f"rekordow     : {rekordow:,}", flush=True)
-    if koszt > LIMIT_USD:
-        sys.exit(f"\nSTOP (warunek 1): {koszt:.4f} > {LIMIT_USD:.2f} USD. "
+    if koszt > o.limit_usd:
+        sys.exit(f"\nSTOP (warunek 1): {koszt:.4f} > {o.limit_usd:.2f} USD. "
                  "Zgoda wlasciciela obejmowala kwote do limitu — nie pobieram.")
 
     if args.wycena:
@@ -320,20 +375,18 @@ def main() -> int:
     # --- WARUNEK 3: osobny katalog, cudze nietkniete ----------------------
     kat = raw_dir(KATALOG_DIAG)
     kat.mkdir(parents=True, exist_ok=True)
-    out = kat / f"mikro_{SESJA}_1330_1400.dbn.zst"
+    out = kat / o.nazwa_pliku
     if out.exists():
         print(f"\n{out} juz istnieje — uzywam bez ponownego pobrania "
               "(zero dodatkowego kosztu).", flush=True)
     else:
         print("\npobieranie 30 minut...", flush=True)
-        c.timeseries.get_range(**ZAPYTANIE, start=START_UTC, end=END_UTC,
+        c.timeseries.get_range(**ZAPYTANIE, start=o.start_utc, end=o.end_utc,
                                path=str(out))
         print(f"  -> {out}  ({out.stat().st_size / 1e6:.1f} MB)", flush=True)
 
     # --- porownanie tresci -------------------------------------------------
-    y, m, d = map(int, SESJA.split("-"))
-    od_ns = int(dt.datetime(y, m, d, 13, 30, tzinfo=UTC).timestamp() * 1e9)
-    do_ns = int(dt.datetime(y, m, d, 14, 0, tzinfo=UTC).timestamp() * 1e9)
+    od_ns, do_ns = granice_ns(o)
 
     print("\nczytam swiezy wycinek...", flush=True)
     serw_k, serw_t = wczytaj(out, od_ns, do_ns)
@@ -375,7 +428,7 @@ def main() -> int:
     print("  Wpisz koszt do data/KOSZTY.md niezaleznie od wyniku (warunek 4).")
 
     wynik = {
-        "sesja": SESJA, "zakres_utc": [START_UTC, END_UTC],
+        "sesja": o.sesja, "zakres_utc": [o.start_utc, o.end_utc],
         "koszt_usd": round(float(koszt), 4), "rekordow_wg_api": int(rekordow),
         "rekordow_dostawca": n_serw, "rekordow_nasze": n_nasz,
         "wspolnych": wspolne,

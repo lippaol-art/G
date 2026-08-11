@@ -106,15 +106,25 @@ MIN_WOLNE_GB = 100.0
 NORMALIZACJA_OSTATNIA_STARA = dt.datetime(2026, 8, 6, 22, 5, 38, tzinfo=dt.UTC)
 NORMALIZACJA_PIERWSZA_NOWA = dt.datetime(2026, 8, 8, 12, 15, tzinfo=dt.UTC)
 
+#: Sesja kupiona w D5-C. Nazwana stala, bo odwoluja sie do niej trzy rozne
+#: kontrole i literal w trzech miejscach rozjechalby sie przy pierwszej zmianie.
+SESJA_D5C = "2026-07-30"
+
+#: PIEC sesji pobranych PRZED przelomem normalizacji. Lista jest tu, a nie
+#: w dokumentacji, bo dwa razy z rzedu zgubila sie w niej sesja 2026-07-06 —
+#: raz w mailu do dostawcy ("We hold four"), raz w liscie plikow DO KOPII
+#: ZAPASOWEJ. Ta druga pomylka ma skutek fizyczny: 07-06 zostalby na jednym
+#: dysku, a starej normalizacji nie da sie juz pobrac. Straznik
+#: `TestKopiaZapasowa` w tests/test_guards.py porownuje z ta stala.
+SESJE_STARA_NORMALIZACJA = ("2026-07-01", "2026-07-02", "2026-07-03",
+                            "2026-07-06", SESJA_D5C)
+
 KATALOG = "d5b2_mbo"
 #: Sesja kupiona wczesniej w ramach D5-C — lezy W INNYM KATALOGU, pod ta sama
 #: nazwa pliku. Bez tego wpisu skrypt jej nie widzi i proponuje zakup 22 sesji
 #: zamiast 21, czyli TRZECIE naliczenie tej samej doby (3,5961 USD).
 #: Wykryte przy wycenie, zanim cokolwiek kupiono.
 KATALOG_D5C = "d5c_mbo"
-#: Sesja kupiona w D5-C. Nazwana stala, bo odwoluja sie do niej trzy rozne
-#: kontrole i literal w trzech miejscach rozjechalby sie przy pierwszej zmianie.
-SESJA_D5C = "2026-07-30"
 MANIFEST = "manifest_d5b2.json"
 #: Cache wyceny. Wycena to 572 wywolania metadanych (22 sesje x 13 kawalkow
 #: x 2 zapytania) i jedno nieudane kasowalo dotad CALA prace — realnie zdarzyl
@@ -401,6 +411,51 @@ def sprawdz_sha_d5c(p: Path) -> str:
     return f"SHA: zgodny z {KANONICZNY_D5C}"
 
 
+def przeniesione_wyniki(pomijane: list[str]) -> list[dict]:
+    """Wpisy z POPRZEDNIEGO manifestu dla sesji, ktorych ten bieg nie pobiera.
+
+    Bez tego manifest opisuje wylacznie biezacy bieg, a `kompletnych_przed`
+    to gole daty. Nastepny bieg zakupowy — a taki bedzie, bo zostalo 17 sesji —
+    nadpisalby manifest tak, ze `sha256`, `pobrano_utc` i `normalizacja` PIECIU
+    sesji ze starej normalizacji zniknelyby z aktywnego pliku. Zostalyby tylko
+    w kopii archiwalnej, czyli tam, gdzie nikt ich nie szuka.
+
+    To nie jest hipotetyczne: starej normalizacji **nie da sie juz pobrac**
+    (Databento, 11.08), a obu wersji nie widac w danych. Znacznik w manifescie
+    jest jedynym nosnikiem tej informacji — musi wiec przezyc nadpisanie.
+
+    BACKFILL: wpisy sprzed wprowadzenia pola `normalizacja` dostaja je
+    wyliczone z wlasnego `pobrano_utc`, a gdy i tego brak — z `pobrano_utc`
+    calego manifestu. Gdy brak obu, zostaje "NIEUSTALONA"; nie zgadujemy.
+    """
+    cel = sciezka_manifestu()
+    if not cel.exists():
+        return []
+    try:
+        stary = json.loads(cel.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return []
+
+    manifest_utc = stary.get("pobrano_utc")
+    szukane = set(pomijane)
+    out: list[dict] = []
+    for w in stary.get("wyniki", []):
+        if w.get("sesja") not in szukane:
+            continue
+        w = dict(w)
+        if not w.get("normalizacja"):
+            znacznik = w.get("pobrano_utc") or manifest_utc
+            try:
+                w["normalizacja"] = epoka_normalizacji(
+                    dt.datetime.fromisoformat(znacznik))
+                w.setdefault("pobrano_utc", znacznik)
+            except (TypeError, ValueError):
+                w["normalizacja"] = "NIEUSTALONA"
+        w["z_poprzedniego_biegu"] = True
+        out.append(w)
+    return out
+
+
 def epoka_normalizacji(kiedy: dt.datetime) -> str:
     """W ktorej wersji normalizacji GLBX.MDP3 jest plik pobrany o `kiedy`.
 
@@ -618,7 +673,7 @@ def main() -> int:
         sesji_planowanych=len(SESJE),
         kompletnych_przed=juz_mamy,
         pobranych_teraz=[w["sesja"] for w in wyniki if w["kompletny"]],
-        plan=plan, wyniki=wyniki,
+        plan=plan, wyniki=przeniesione_wyniki(juz_mamy) + wyniki,
         wolne_gb_przed=round(wolne_start, 2),
         wolne_gb_po=round(wolne_gb(kat), 2),
         pobrano_utc=dt.datetime.now(dt.UTC).isoformat(timespec="seconds"),

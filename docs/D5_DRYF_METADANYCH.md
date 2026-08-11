@@ -828,20 +828,44 @@ interpretacje były trafne — jedna z nich (A4-11) właśnie okazała się bł�
 cut off"). Renan odpowiedział na to, co zobaczył. Pytania trzeba zadać ponownie,
 krótko — treść w §5c.
 
-### Ogłoszenie — NIEPRZECZYTANE, i to trzeba wiedzieć
+### Ogłoszenie dostawcy — treść, przekazana przez recenzenta 11.08
 
-`https://databento.com/blog/cme-normalization-changes-2026-07` jest
-**zablokowany przez politykę egress** tego środowiska (`databento.com` odrzucone,
-choć `hist.databento.com` przechodzi). Zgodnie z `/root/.ccr/README.md` to
-odmowa polityki, której nie obchodzę.
+`databento.com/blog/cme-normalization-changes-2026-07`, *„Upcoming changes to
+CME data normalization"*, **opublikowane 2026-07-07**. Pięć zmian; nas dotyczy
+**#2 „Standalone F_LAST record"**. Cytaty:
 
-**Dopóki ktoś go nie przeczyta, nie wiemy rzeczy, które mogą być tam wprost:**
-czy zmiana obejmuje historię wstecz (nasze pomiary mówią, że tak), czy jest
-odwracalna, czy istnieje sposób na wersjonowanie, i czym formalnie są rekordy
-`action=N`. **To jest najtańsze źródło odpowiedzi, jakie mamy — tańsze niż
-kolejny mail.**
+> *„The new normalization will replace the current normalization and apply to
+> both live data and **the full historical dataset retroactively**."*
 
----
+> *„the end of the event for each instrument is marked by a new, separate
+> record with F_LAST and action='N' (None)"*
+
+Mechanizm: dotąd rekordy zdarzeń rozpiętych na wiele pakietów **buforowano**,
+a `F_LAST` dostawał ostatni rekord realny. Teraz publikacja następuje
+natychmiast po każdym pakiecie, a koniec zdarzenia oznacza osobny rekord.
+Rekord `N` ma `flags=128`, `order_id=0`, `size=0`, cenę UNDEF, **własny
+`ts_recv` i własny `sequence`**.
+
+Oś czasu: **07.07 preview** (osobne bramy `hist-preview`), **08.08 produkcja
+i koniec preview**. Dziś nie istnieje więc żadna droga do starej normalizacji —
+spójne z *„The old data is not available anymore"*.
+
+**Wszystko zgadza się z naszymi pomiarami 1:1.** „Multi-packet only" tłumaczy
+2,60% kopert; własny `sequence` rekordu `N` **potwierdza, że wyłączenie
+`sequence` z klucza tożsamości było konieczne** — z nim mikro-diff dałby
+fałszywy wariant A.
+
+### ⚠️ Ogłoszenie było publiczne 30 dni przed zakupem
+
+Opublikowane **07.07**, zakup **06.08**, cutover **08.08** — dwa dni po
+zakupie. Audyt 4 wskazywał ryzyko A4-11 („zmiana normalizacji GLBX.MDP3,
+VII 2026") **wskazując na dokument, który leżał w sieci**. Nie przeczytałem go
+ani przed zakupem, ani gdy odrzucałem A4-11.
+
+**Reguła do §7:** przed każdą płatną kampanią **obowiązkowy przegląd ogłoszeń
+i changelogu dostawcy**, z datą przeglądu zapisaną w manifeście zakupu.
+To nie jest kwestia staranności — to jedyny moment, w którym taka informacja
+jest jeszcze darmowa.
 
 ## 5d. ODPOWIEDZI DOSTAWCY — 11.08, cztery pytania, cztery odpowiedzi
 
@@ -881,8 +905,11 @@ zostaje.
 **Nie ma przypinania wersji, a stara normalizacja jest BEZPOWROTNIE
 NIEDOSTĘPNA.** Konsekwencje są twarde i żadna z nich nie dotyczy dryfu:
 
-1. **Cztery pobrane sesje to jedyny istniejący egzemplarz** starej normalizacji,
-   jaki będziemy mieli. Nikt nam ich nie odtworzy — ani my, ani dostawca.
+1. **PIĘĆ pobranych sesji to jedyny istniejący egzemplarz** starej
+   normalizacji: 07-01, 07-02, 07-03, **07-06** i 07-30. Nikt ich nie odtworzy —
+   ani my, ani dostawca. (Wcześniejsza wersja mówiła „cztery", gubiąc 07-06.
+   Ta sama pomyłka trafiła do listy plików do **kopii zapasowej**, gdzie miałaby
+   skutek fizyczny; pilnuje jej teraz `tests/test_guards.py::TestKopiaZapasowa`.)
 2. **Kopia zapasowa surowych plików przestaje być ostrożnością.** Do tej pory
    „odtworzenie kosztuje ~78 USD, skopiowanie nic". Teraz odtworzenie **nie jest
    możliwe za żadną cenę**. Utrata dysku = utrata danych, na których policzono
@@ -894,10 +921,30 @@ NIEDOSTĘPNA.** Konsekwencje są twarde i żadna z nich nie dotyczy dryfu:
 4. **Pytanie o mieszanie zmienia charakter.** Nie stoimy już przed wyborem
    „stare czy nowe" — stare przestało być kupowalne. Zostają dwie drogi:
 
-   | Droga | Koszt | Co dostajemy |
-   |---|---|---|
-   | **(a) mieszać** 4 stare + 18 nowych | **0** | miesiąc niejednorodny co do `F_LAST` w 2,6% kopert; jednostka obserwacji zmierzona jako identyczna (test 5) |
-   | **(b) odkupić** 4 sesje w nowej normalizacji | **~12,73 USD** | miesiąc jednorodny; stare pliki zostają jako archiwum |
+   | Droga | Skład miesiąca | Koszt | Uwaga |
+   |---|---|---:|---|
+   | **(a) mieszać** | 5 starych + **17** nowych | **63,94** | dokupujemy 17, nie 18 — 07-30 mamy, skrypt ją pomija (warunek 4) |
+   | **(b) odkupić 4 kampanijne** | 21 nowych + **1 stara** | 63,94 + **13,04** = **76,98** | **nadal mieszany** — 07-30 zostaje stara |
+   | **(c) pełna jednolitość** | 22 nowe | 76,98 + **3,70** = **80,68** | wymaga `--kup-ponownie-d5c`; limit 82,00, zapas **1,32** |
+
+   Wszystko po zmierzonej stawce **9,388·10⁻⁸ USD/rekord**, na **nowych**
+   liczbach rekordów.
+
+   **Trzy błędy mojej poprzedniej wersji tej tabeli — wszystkie wskazane przez
+   recenzję, wszystkie potwierdzone przeze mnie rachunkiem:**
+
+   1. pisałem „4 stare + 18 nowych"; jest **5 + 17**, bo 07-30 już mamy,
+   2. wyceniłem odkup na **12,73 USD** po **starych** liczbach rekordów —
+      zapłaci się po nowych, czyli **13,04**,
+   3. twierdziłem, że odkup 4 sesji daje **jednorodny** miesiąc. Nie daje:
+      07-30 zostaje stara, bo warunek 4 celowo broni jej przed dokupieniem.
+      Jednorodność wymaga wariantu (c).
+
+   **Uwaga praktyczna do (c):** dopóki kanoniczny plik 07-30 leży w `d5c_mbo/`,
+   `sciezka_istniejaca()` go znajdzie i sesja zostanie pominięta mimo flagi.
+   Świeże pobranie wymaga albo czasowego odłożenia kanonicznego pliku poza
+   `raw/` (**wyłącznie po wykonanej kopii zapasowej**), albo jawnej furtki
+   w kodzie. Furtki nie dopisuję na zapas — wariant (c) nie jest wybrany.
 
    **To jest decyzja właściciela, nie moja.** Argument za (b), mimo kosztu:
    jednorodność zdejmuje z każdego przyszłego wyniku przypis „policzone na
@@ -912,6 +959,58 @@ to rekonsyliacja w `data/KOSZTY.md` §3a (20,65 wobec 20,30 USD, residuum
 0,3490) **opisuje niewłaściwe konto** i trzeba ją powtórzyć — a Databento
 dostało od nas liczby, które mogą nie dotyczyć tych zapytań. Szczegóły
 i status: `data/KOSZTY.md` §3a.
+
+---
+
+## 5e. Drugi mikro-diff — kryterium zapisane PRZED biegiem
+
+**Nieuruchomiony. Wymaga zgody R1 właściciela i potwierdzenia konta.**
+
+### Dlaczego jeden mikro-diff nie wystarcza
+
+W §4 pkt 4 zapisałem warunek minimalny: *„powtórzyć test 5 na drugiej sesji
+z innego dnia, żeby równoważność przestała stać na jednym oknie"* — a potem
+**zgubiłem go we własnej rekomendacji mieszania**. Recenzja przywróciła go
+z argumentem, którego sam nie postawiłem:
+
+**2026-07-03 to półdniówka** (zamknięcie 13:00 ET), a rekordy `N` powstają
+w zdarzeniach wielopakietowych — te zaś klastrują się **na otwarciach sesji
+pełnowymiarowych**. Test 5 patrzył więc na okno o nietypowo niskim natężeniu
+dokładnie tego zjawiska, które badamy.
+
+### Parametry
+
+| | |
+|---|---|
+| Sesja | **2026-07-06**, 13:30–14:00 UTC |
+| Dlaczego ta | pełny rozmiar (32,9 mln rek.) **i** plik o najmętniejszej historii — przerwany transfer, potem drugie pobranie. Dwa pytania za jeden koszt |
+| Koszt modelowany | **~0,3–0,5 USD** |
+| Twardy limit | **1,00 USD**, `get_cost` przed pobraniem |
+| Katalog | `diag_mikro/` — manifesty i katalogi zakupowe nietknięte |
+
+### Kryterium — zapisane teraz, przed zobaczeniem czegokolwiek
+
+**PRZECHODZI**, gdy wszystkie cztery naraz:
+
+1. liczba akcji agresywnych **identyczna** po obu stronach,
+2. suma `n_trade` **identyczna**,
+3. suma rozmiaru **identyczna**,
+4. **pozycja pierwszej różnicy: n/d** — zero różnic pole po polu.
+
+**NIE PRZECHODZI** przy jakiejkolwiek różnicy. Byłoby to odkrycie ważniejsze
+niż oszczędność: znaczyłoby, że jednostka obserwacji **zależy od wersji
+normalizacji**, a wtedy pod znakiem zapytania staje również audyt D5-C.
+
+Liczniki **surowych** rekordów raportujemy per epoka, **poza kryterium** —
+wiadomo z góry, że muszą się różnić, więc wciągnięcie ich do kryterium byłoby
+zaplanowaną porażką.
+
+### Konsekwencja dla decyzji mieszać/odkupić
+
+| Wynik | Co robimy |
+|---|---|
+| przechodzi | **mieszanie ma GO**; w kieszeni zostaje 13,04–16,74 USD |
+| nie przechodzi | wracamy do wariantu (b)/(c) i do pytania, czy audyt D5-C wymaga przeliczenia |
 
 ---
 
@@ -1006,8 +1105,9 @@ skryptu w commicie `85d9e73`, sprzed pobrania.
 | **Zakup miesiąca** | **WSTRZYMANY.** Warunek 8 blokuje automatycznie. |
 | **Diagnostyka lokalna** | **ZAMKNIĘTA — testy 1–5 wykonane.** Dryf scharakteryzowany w całości |
 | **Mechanizm** | **ZNANY od 10.08** — celowa zmiana normalizacji GLBX.MDP3 (§5b) |
-| **Ogłoszenie dostawcy** | **DO PRZECZYTANIA** — `databento.com` zablokowany przez egress; najtańsze źródło odpowiedzi |
-| **Dopytanie** | §5c — cztery pytania, krótko, bo pierwszy mail dotarł ucięty |
+| **Ogłoszenie dostawcy** | **PRZECZYTANE** 11.08 (przez recenzenta — mnie blokuje egress). Treść i cytaty: §5b |
+| **Korespondencja** | zamknięta w 3 z 4 punktów (§5d); billing u ich zespołu |
+| **Drugi mikro-diff** | §5e — kryterium zapisane, bieg po zgodzie R1 |
 | **Furtka na później** | `--akceptuj-rozjazd` archiwizuje stary manifest; **nie używać przed odpowiedzią** |
 | Pliki już pobrane | **NIE kasujemy.** Zgadzają się z liczbami, za które zapłacono. |
 | `2026-07-30` z D5-C | **NIE ruszamy.** SHA zamrożony, kopia zapasowa priorytetowa. |
@@ -1038,6 +1138,14 @@ projekcie warunkiem, nie ozdobą.
    0,0789 USD i po tym, jak liczebności wyczerpały swoje możliwości. Kolejność
    „najpierw wyciśnij darmowe, potem kup najmniejszy możliwy pomiar" jest
    wzorcem do powtórzenia, nie jednorazową sztuczką.
+0a. **Przed każdą płatną kampanią — przegląd ogłoszeń i changelogu dostawcy,
+   z datą przeglądu w manifeście zakupu.** Ogłoszenie o zmianie normalizacji
+   wisiało publicznie od **07.07**, zakup poszedł **06.08**, cutover nastąpił
+   **08.08**. Audyt 4 wskazywał to ryzyko (A4-11) **cytując dokument, który
+   leżał w sieci** — a ja go nie przeczytałem ani przed zakupem, ani gdy A4-11
+   odrzucałem. Cały ten incydent był do uniknięcia za darmo, jednym otwarciem
+   strony.
+
 0. **Mail do człowieka pisze się prozą, prostym tekstem.** Bez tabel, bez `**`,
    bez backticków, bez `>`. Liczby wplecione w zdania. Formatowanie, które
    pomaga w repozytorium, **szkodzi w skrzynce odbiorczej** — Markdown renderuje
