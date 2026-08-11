@@ -20,9 +20,14 @@ Mechanizm NAZWANY PRZEZ DOSTAWCĘ 10.08. Zakup nadal zablokowany warunkiem 8.**
 > `last_modified_date` **nie obejmuje zmian normalizacji**. Rozliczenie błędu
 > w §4.2.
 >
-> **Pięć pytań nadal bez odpowiedzi**, bo mail dotarł **ucięty** („Your message
-> looks like it was cut off"). Krótkie dopytanie: §5c. Ogłoszenie dostawcy jest
-> **nieprzeczytane** — `databento.com` blokuje polityka egress tego środowiska.
+> **Pięć pytań nadal bez odpowiedzi — z powodu FORMATOWANIA naszych maili.**
+> Najpierw „Your message looks like it was cut off", potem wprost:
+> *„this email is formatted in a way that makes it almost impossible to read on
+> our end. Would you mind sending it back to us in paragraph format?"*
+> (Jackson, 11.08). Markdown w kliencie tekstowym to kasza. Wersja prozą: §5c.
+>
+> Ogłoszenie dostawcy pozostaje **nieprzeczytane** — `databento.com` blokuje
+> polityka egress tego środowiska.
 
 > ## ✅ ROZSTRZYGNIĘCIE 09.08 — wariant **B′**, pomiar na treści
 >
@@ -838,45 +843,48 @@ kolejny mail.**
 
 ---
 
-## 5c. Dopytanie — krótkie, bo pierwszy mail dotarł ucięty
+## 5c. Dopytanie — wersja PROSTYM TEKSTEM (11.08)
 
-**Diagnoza problemu z pierwszym mailem: był za długi.** Tabele, cytaty i pięć
-rozbudowanych pytań — coś po drodze go przycięło. Ta wersja mieści się na
-jednym ekranie i zadaje **cztery pytania, każde jednym zdaniem**. Szczegóły
-techniczne oferujemy na życzenie, zamiast wysyłać je z góry.
+### Diagnoza była zła dwa razy z rzędu
 
-> **Subject: Re: GLBX.MDP3 MBO record counts — four follow-up questions**
->
-> Hi Renan,
->
-> Thank you — that explains what we were seeing, and it matches our
-> measurements. Apologies for the truncated message; here is the short version.
->
-> We hold four July 2026 MBO sessions downloaded **before** the change and
-> paused the rest of the purchase. We compared one 30-minute slice
-> (2026-07-03, 13:30–14:00 UTC) before/after, record by record: the
-> **18,152 extra records are all `action=N`** with `order_id=0`, `size=0` and
-> `price=INT64_MAX`, every real action type (A/C/F/M/T) matches exactly, and
-> **nothing is present only in our older file**. Reconstructing aggressor
-> actions from both files gives **29,734 actions identical in every field**.
->
-> Four questions:
->
-> 1. **Are the older, pre-change files still valid** for analysis, or should
->    they be re-downloaded to match what the API now returns?
-> 2. **Is the event partition guaranteed unchanged** by this release — i.e.
->    does the trailing `action=N` record always follow the record that
->    previously carried `F_LAST`, with no real record in between?
-> 3. **Is there any way to pin a dataset version**, so a result computed today
->    can be reproduced later? Reproducibility is a hard requirement for us.
-> 4. Two downloads were interrupted (2026-07-06 `Response ended prematurely`,
->    2026-07-07 truncated at 1,867,793 records). **Were they billed in full,
->    and does retrying a truncated response bill again?** Our usage page shows
->    20.65 USD against 20.30 USD of queries we can account for.
->
-> Happy to send the exact queries, the diff script, or record-level output.
->
-> Thanks,
+| Kiedy | Co uznałem za przyczynę | Co zrobiłem | Czy trafione |
+|---|---|---|---|
+| 10.08 | mail „ucięty" ⟹ za długi | skróciłem 149 linii → 33 | **nie** |
+| 11.08 | Jackson: *„formatted in a way that makes it almost impossible to read"* | usunąłem **cały Markdown** | to była przyczyna |
+
+**Przyczyną było formatowanie, nie objętość.** Tabele z `|`, `**pogrubienia**`,
+backticki i cytaty `>` czytane jako czysty tekst są kaszą. „Ucięcie" też było
+najpewniej artefaktem renderowania, a nie limitem długości.
+
+### Gorsza część: dostałem tę uwagę TYDZIEŃ WCZEŚNIEJ
+
+Odpowiedź Databento z **04.08** (wątek o `sequence`, `docs/D5_PYTANIE_DATABENTO.md`)
+kończyła się tak:
+
+> *„I think your LLM may be making these questions a bit longer and more complex
+> than necessary. We have real humans respond to every message. Moving forward,
+> if you absolutely must use an LLM to craft your questions for you, please at
+> least ask that it do so in a concise manner."*
+
+**Miałem to na piśmie i mimo to wysłałem 149 linii z tabelami.** Koszt nie jest
+teoretyczny: pytanie o dryf jest otwarte od 08.08, a dwie z trzech rund
+korespondencji poszły wyłącznie na to, żeby mail dało się przeczytać.
+
+### Reguła, która z tego zostaje
+
+**Mail do człowieka pisze się prozą, prostym tekstem, bez Markdownu.**
+Bez tabel, bez `**`, bez backticków, bez `>`. Liczby wplecione w zdania.
+Formatowanie, które pomaga mnie i recenzentom w repozytorium, **szkodzi
+w skrzynce odbiorczej** — to dwa różne media i tylko jedno z nich renderuje
+Markdown.
+
+Wersja robocza założona w skrzynce właściciela jako odpowiedź w wątku
+(Gmail nie daje narzędzia do wysyłania — zostaje kliknięcie). Treść: podziękowanie
+i przyznanie się do formatowania, cztery zdania kontekstu, akapit z pomiarem
+(840 392 wobec 822 240; 18 152 rekordy `action=N`; F_LAST 698 358 po obu
+stronach; 29 734 akcje identyczne) i **cztery pytania, każde osobnym akapitem**:
+ważność starych plików, gwarancja podziału na zdarzenia, przypinanie wersji,
+rozliczenie przerwanych pobrań.
 
 ---
 
@@ -958,6 +966,15 @@ projekcie warunkiem, nie ozdobą.
    0,0789 USD i po tym, jak liczebności wyczerpały swoje możliwości. Kolejność
    „najpierw wyciśnij darmowe, potem kup najmniejszy możliwy pomiar" jest
    wzorcem do powtórzenia, nie jednorazową sztuczką.
+0. **Mail do człowieka pisze się prozą, prostym tekstem.** Bez tabel, bez `**`,
+   bez backticków, bez `>`. Liczby wplecione w zdania. Formatowanie, które
+   pomaga w repozytorium, **szkodzi w skrzynce odbiorczej** — Markdown renderuje
+   się w jednym z tych mediów, nie w obu. Databento powiedziało to 04.08
+   („please at least ask that it do so in a concise manner"), zignorowałem,
+   i 11.08 usłyszałem to drugi raz, ostrzej. Dwie z trzech rund korespondencji
+   poszły na czytelność zamiast na treść — przy pytaniu blokującym zakup
+   za ~68 USD to jest realny koszt, nie kwestia stylu.
+
 5. **Filtr `action` należy do kontraktu wczytywania, nie do detali.**
    Rekordy `action=N` przechodzą przez każdy naiwny licznik rekordów i psują
    porównania między pobraniami. Każdy nowy kod czytający MBO musi je jawnie

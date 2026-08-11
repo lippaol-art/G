@@ -141,8 +141,16 @@ odpowiedział tylko na mechanizm. Otwarte kroki, oba darmowe:
 1. **Przeczytać ogłoszenie** `databento.com/blog/cme-normalization-changes-2026-07`
    — w tym środowisku `databento.com` blokuje polityka egress, więc musi to
    zrobić właściciel. Najtańsze źródło odpowiedzi, jakie mamy.
-2. **Wysłać dopytanie** (`D5_DRYF` §5c) — cztery pytania, jeden ekran.
-   Krótkie celowo: pierwszy mail padł na długości, nie na treści.
+2. **Wysłać dopytanie** — wersja robocza **już leży w skrzynce** jako odpowiedź
+   w wątku (Gmail nie ma narzędzia do wysyłania, zostaje kliknięcie).
+   Treść i diagnoza: `D5_DRYF` §5c.
+
+> **Zasada korespondencji z dostawcą, wprowadzona po dwóch reprymendach.**
+> Maile do Databento pisze się **prozą, prostym tekstem** — bez tabel, `**`,
+> backticków i `>`. Markdown jest u nich nieczytelny. Powiedzieli to 04.08
+> („please at least ask that it do so in a concise manner"), zignorowałem
+> i usłyszałem drugi raz 11.08. Dwie z trzech rund poszły na czytelność
+> zamiast na treść.
 
 Jedna rzecz do zacommitowania z maszyny lokalnej — plik z wynikiem mikro-diffu
 powstał podczas płatnego przebiegu i leży poza tym repo-klonem:
