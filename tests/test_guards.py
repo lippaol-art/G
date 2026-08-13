@@ -565,68 +565,105 @@ class TestKopiaZapasowa:
         assert set(SESJE_STARA_NORMALIZACJA) <= set(SESJE)
 
 
+def _raporty_mikro() -> list[Path]:
+    """Wszystkie zacommitowane raporty mikro-diffu.
+
+    Discovery zamiast listy: kazdy kolejny pomiar ma byc objety straznikiem
+    AUTOMATYCZNIE. Pierwsza wersja tej klasy pilnowala jednego pliku po nazwie
+    i drugi raport (07-06) wszedl do repo niechroniony — dokladnie ta klasa
+    przeoczenia, ktora wytknela korekta A przy sciezce raportu.
+    """
+    return sorted((ROOT / "reports").glob("D5_mikro_diff*.json"))
+
+
+#: Puste tylko na maszynie bez artefaktow (np. swiezy klon bez pomiarow).
+RAPORTY = _raporty_mikro()
+IDS = [p.stem for p in RAPORTY]
+
+
+@pytest.mark.skipif(not RAPORTY, reason="brak raportow mikro-diffu w repo")
 class TestRaportMikroDiffu:
-    """Liczby w dokumentach musza zgadzac sie z MASZYNOWYM artefaktem pomiaru.
+    """Liczby w dokumentach musza zgadzac sie z MASZYNOWYMI artefaktami pomiarow.
 
-    `reports/D5_mikro_diff.json` to jedyny automatyczny zapis mikro-diffu
-    z 09.08 — pomiaru, ktorego NIE DA SIE POWTORZYC, bo stara normalizacja
-    GLBX.MDP3 przestala byc dostepna w API (Databento, 11.08). Na jego
-    wyniku stoi decyzja, ze nie odkupujemy piecu sesji za ~13 USD.
+    `reports/D5_mikro_diff*.json` to jedyne automatyczne zapisy mikro-diffow —
+    pomiarow, ktorych NIE DA SIE POWTORZYC, bo stara normalizacja GLBX.MDP3
+    przestala byc dostepna w API (Databento, 11.08). Na ich wyniku stoi decyzja
+    o skladzie miesiecznej probki i o kilkudziesieciu dolarach.
 
-    Do tej pory liczby z tego pomiaru zyly w dokumentach jako przepisany
-    tekst. Odkad artefakt jest w repo, przepisywanie mozna sprawdzic.
+    Testy chodza po WSZYSTKICH raportach, nie po nazwanym jednym.
     """
 
     @staticmethod
-    def _raport() -> dict:
-        p = ROOT / "reports" / "D5_mikro_diff.json"
-        if not p.exists():
-            pytest.skip("brak reports/D5_mikro_diff.json — artefakt lokalny")
+    def _wczytaj(p: Path) -> dict:
         return json.loads(p.read_text(encoding="utf-8"))
 
-    def test_arytmetyka_raportu_sie_domyka(self):
+    @pytest.mark.parametrize("plik", RAPORTY, ids=IDS)
+    def test_arytmetyka_raportu_sie_domyka(self, plik):
         """Wewnetrzna spojnosc pomiaru — niezalezna od jakiegokolwiek tekstu."""
-        j = self._raport()
+        j = self._wczytaj(plik)
         assert j["wspolnych"] + j["tylko_dostawca"] == j["rekordow_dostawca"]
         assert sum(j["typy_dostawca"].values()) == j["rekordow_dostawca"]
         assert sum(j["typy_nasze"].values()) == j["rekordow_nasze"]
         assert j["rekordow_wg_api"] == j["rekordow_dostawca"], \
             "metadane i pobrany plik musza sie zgadzac co do rekordu"
 
-    def test_werdykt_B_prim_wynika_z_liczb_a_nie_z_narracji(self):
+    @pytest.mark.parametrize("plik", RAPORTY, ids=IDS)
+    def test_werdykt_B_prim_wynika_z_liczb_a_nie_z_narracji(self, plik):
         """Wariant B' stoi na DWOCH faktach: zero brakow u nas i zgodnosc
         wszystkich realnych typow akcji. Gdyby ktorykolwiek upadl, decyzja
         o nieodkupywaniu piecu sesji traci podstawe."""
-        j = self._raport()
+        j = self._wczytaj(plik)
         assert j["tylko_nasze"] == 0
         realne = {k: v for k, v in j["typy_dostawca"].items() if k != "N"}
         assert realne == j["typy_nasze"]
         assert "N" not in j["typy_nasze"]
 
-    def test_dokumenty_cytuja_liczby_z_artefaktu(self):
+    @pytest.mark.parametrize("plik", RAPORTY, ids=IDS)
+    def test_dokumenty_cytuja_liczby_z_artefaktu(self, plik):
         """Kazda kluczowa liczba pomiaru musi wystapic w D5_DRYF.
 
         Format dokumentu uzywa spacji jako separatora tysiecy — porownujemy
         wiec po znormalizowanym zapisie, a nie po surowym `int`.
         """
-        j = self._raport()
+        j = self._wczytaj(plik)
         tekst = (ROOT / "docs" / "D5_DRYF_METADANYCH.md").read_text(
             encoding="utf-8")
         # Spacja zwykla i nierozdzielajaca — dokument uzywa obu.
-        plaski = tekst.replace(" ", " ")
+        plaski = tekst.replace("\u00a0", " ")
 
         wymagane = [j["wspolnych"], j["tylko_dostawca"], j["rekordow_dostawca"],
                     *j["typy_dostawca"].values()]
         brakuje = [n for n in sorted(set(wymagane))
                    if f"{n:,}".replace(",", " ") not in plaski]
         assert not brakuje, (
-            f"D5_DRYF nie cytuje liczb z artefaktu pomiaru: {brakuje}. "
+            f"D5_DRYF nie cytuje liczb z {plik.name}: {brakuje}. "
             "Albo dokument sie rozjechal, albo pomiar zostal nadpisany.")
 
-    def test_koszt_zgadza_sie_z_ksiega(self):
-        j = self._raport()
+    @pytest.mark.parametrize("plik", RAPORTY, ids=IDS)
+    def test_koszt_zgadza_sie_z_ksiega(self, plik):
+        """Warunek 4 zgody R1: wpis do KOSZTY niezaleznie od wyniku."""
+        j = self._wczytaj(plik)
         koszty = (ROOT / "data" / "KOSZTY.md").read_text(encoding="utf-8")
         zapis = f"{j['koszt_usd']:.4f}".replace(".", ",")
         assert zapis in koszty, (
-            f"KOSZTY.md nie podaje kosztu {zapis} USD z artefaktu pomiaru — "
+            f"KOSZTY.md nie podaje kosztu {zapis} USD z {plik.name} — "
             "warunek 4 zgody R1 wymaga wpisu niezaleznie od wyniku")
+
+    @pytest.mark.parametrize("plik", RAPORTY, ids=IDS)
+    def test_koszt_miesci_sie_w_limicie_swojego_okna(self, plik):
+        """Limit z rejestru okien mial byc egzekwowany PRZED pobraniem.
+
+        Raport jest dowodem po fakcie: gdyby ktorys pomiar przekroczyl swoj
+        limit, znaczyloby to, ze bramka kosztowa nie zadzialala.
+        """
+        import sys
+        sys.path.insert(0, str(ROOT))
+        from scripts.diff_mikro import wybierz_okno
+
+        j = self._wczytaj(plik)
+        limit = wybierz_okno(j["sesja"]).limit_usd
+        assert j["koszt_usd"] <= limit, (
+            f"{plik.name}: zaplacono {j['koszt_usd']} przy limicie {limit}")
+
+
+
