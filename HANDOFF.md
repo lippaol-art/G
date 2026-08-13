@@ -157,6 +157,21 @@ Decyzje właściciela z 11.08 zamknęły wszystko poza nią:
 tematu kont **nie jest** zgodą na rozluźnianie czegokolwiek — obu limitów
 pilnują testy.
 
+> **Najpierw aktywuj venv.** Bez tego każda z poniższych komend kończy się
+> `ModuleNotFoundError: No module named 'databento'`. Rozpoznanie zajmuje
+> sekundę: znak zachęty **musi** zaczynać się od `(.venv)`.
+>
+> ```powershell
+> .\.venv\Scripts\Activate.ps1
+> ```
+>
+> Gdyby PowerShell odmówił uruchomienia skryptu (polityka wykonywania), można
+> pominąć aktywację i wołać interpreter wprost:
+> `.\.venv\Scripts\python.exe scripts\diff_mikro.py ...`
+>
+> **Ten błąd nic nie kosztuje** — `import databento` jest przed jakimkolwiek
+> wywołaniem sieciowym, więc skrypt pada, zanim dotknie API.
+
 ```powershell
 python scripts/diff_mikro.py --wycena --sesja 2026-07-06
 python scripts/diff_mikro.py --sesja 2026-07-06
