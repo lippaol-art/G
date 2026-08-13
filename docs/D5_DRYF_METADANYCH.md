@@ -1010,7 +1010,74 @@ zamknięta bez rozstrzygnięcia** — uzasadnienie i przyjęte ryzyko szczątkow
 >
 > **To ostatnia bramka przed zakupem miesiąca.**
 
-**Nieuruchomiony — czeka na bieg lokalny u właściciela.**
+**WYKONANY 11.08. Koszt 0,6133 USD** (limit 1,00 — dotrzymany).
+
+### Wynik — cztery punkty kryterium
+
+```
+rekordow u dostawcy (dzis)  :  6,533,219
+rekordow u nas              :  6,375,196
+WSPOLNYCH (ten sam klucz)   :  6,375,196
+TYLKO u dostawcy            :    158,023   — wszystkie action=N
+TYLKO u nas                 :          0
+```
+
+| action | dostawca | my | różnica |
+|---|---:|---:|---:|
+| A | 2 630 559 | 2 630 559 | **+0** |
+| C | 2 631 014 | 2 631 014 | **+0** |
+| F | 297 394 | 297 394 | **+0** |
+| M | 634 032 | 634 032 | **+0** |
+| **N** | **158 023** | **0** | **+158 023** |
+| T | 182 197 | 182 197 | **+0** |
+
+**Flagi.** Wszystkie 158 023 rekordów `N` niosą `F_LAST`, a **liczba kopert
+jest identyczna: 5 742 884** po obu stronach. Nadwyżka `F_LAST` na rekordach
+realnych po naszej stronie: A **+72 899**, C **+74 048**, M **+11 076** —
+razem **158 023**, co do rekordu. Ten sam mechanizm przeniesienia bitu,
+co przy 07-03.
+
+**Rekonstrukcja — cztery punkty kryterium zapisane przed biegiem:**
+
+| # | Kryterium | Świeży wycinek | Nasz plik | |
+|---|---|---:|---:|---|
+| 1 | akcji agresywnych | **165 980** | **165 980** | ✅ |
+| 2 | suma `n_trade` | **182 197** | **182 197** | ✅ |
+| 3 | suma rozmiaru | **330 714** | **330 714** | ✅ |
+| 4 | pozycja pierwszej różnicy | **n/d** | **n/d** | ✅ |
+
+```
+-> IDENTYCZNE, akcja po akcji, we wszystkich polach.
+```
+
+**Cross-check:** suma `n_trade` = 182 197 zgadza się co do rekordu z licznikiem
+`action=T`. Arytmetyka domyka się w czterech niezależnych ujęciach
+(6 375 196 + 158 023 = 6 533 219; sumy typów po obu stronach; bilans
+przeniesienia; sumy `F_LAST`).
+
+> **Werdykt PASS/FAIL wystawia recenzent.** Powyżej są liczby i ich zgodność
+> z kryterium — nie werdykt. Wykonawca nie ocenia własnej pracy
+> (`docs/PROTOKOL_WSPOLPRACY.md`).
+
+### Obserwacja poza kryterium: hipoteza o otwarciach
+
+| okno | `N` / rekordy | `N` / koperty |
+|---|---:|---:|
+| 07-03, półdniówka | 2,160% | 2,599% |
+| **07-06, pełna sesja** | **2,419%** | **2,752%** |
+
+Zdarzenia wielopakietowe są na otwarciu pełnej sesji **nieco** częstsze —
+kierunek zgodny z hipotezą, która motywowała wybór tego okna, ale różnica jest
+mała (2,75% wobec 2,60% kopert). **Obawa, że 07-03 było niereprezentatywne,
+okazuje się drobna.**
+
+To **nie osłabia wartości drugiego pomiaru**: podwoił bazę dowodową na innym
+dniu i — co ważniejsze — objął **plik o najmętniejszej historii**, ten, którego
+transfer raz się urwał i był pobierany dwa razy. Ten plik również ma **zero**
+rekordów obecnych wyłącznie u nas i komplet zgodnych typów akcji.
+
+Ta tabela jest **obserwacją, nie kryterium** — zgodnie z etykietą zapisaną
+wyżej, przed biegiem.
 
 ### Dlaczego jeden mikro-diff nie wystarcza
 

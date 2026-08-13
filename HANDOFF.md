@@ -151,7 +151,8 @@ Decyzje właściciela z 11.08 zamknęły wszystko poza nią:
 | ✅ `reports/D5_mikro_diff.json` | zacommitowany (`76e6710`) **przed** jakimkolwiek biegiem |
 | ✅ Wątek billingowy | zamknięty — żadnych dalszych maili |
 | ✅ Zgoda R1 na drugi mikro-diff | **udzielona**, limit 1,00 USD na okno |
-| ⏳ **Drugi mikro-diff** | **do uruchomienia lokalnie** — `D5_DRYF` §5e |
+| ✅ Drugi mikro-diff | **wykonany 11.08**, koszt 0,6133 USD (limit 1,00). Cztery punkty kryterium spełnione — `D5_DRYF` §5e |
+| ⏳ **Werdykt PASS/FAIL** | **u recenzenta.** Wykonawca nie ocenia własnej pracy |
 
 **Limity bez zmian: 82,00 USD na miesiąc (R4) i 1,00 USD na okno.** Zamknięcie
 tematu kont **nie jest** zgodą na rozluźnianie czegokolwiek — obu limitów

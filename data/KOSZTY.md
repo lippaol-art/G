@@ -21,12 +21,14 @@ kredytu należy weryfikować w panelu Databento.
 | 2 | D5 Etap 1 | `trades` MNQU6, **pełna doba** 2026-07-30 | **2,1240 USD** | limit 2,15 — dotrzymany |
 | 3 | D5-B | `trades` MNQU6, 21 sesji RTH lipca 2026 | **26,4060 USD** | wycena; górna granica **27,9160** |
 | 4 | D5-C | `mbo` MNQU6, RTH 2026-07-30 | **3,5961 USD** | limit 4,00 — dotrzymany |
-| 5 | D5 diagnostyka | `mbo` MNQU6, **30 min** 2026-07-03 13:30–14:00 | **0,0789 USD** | mikro-diff, limit 0,10 — dotrzymany |
+| 5 | D5 diagnostyka | `mbo` MNQU6, **30 min** 2026-07-03 13:30–14:00 | **0,0789 USD** | mikro-diff #1, limit 0,10 — dotrzymany |
+| 6 | D5 diagnostyka | `mbo` MNQU6, **30 min** 2026-07-06 13:30–14:00 | **0,6133 USD** | mikro-diff #2, limit 1,00 — dotrzymany |
 
-**Suma zakupów unikalnych: 40,0250 USD** (przy górnej granicy pozycji 3:
-41,5350 USD).
+**Suma zakupów unikalnych: 40,6383 USD** (przy górnej granicy pozycji 3:
+42,1483 USD). Na diagnostykę poszło łącznie **0,6922 USD** — dwie pozycje,
+obie z limitem zamrożonym w kodzie przed biegiem.
 
-### Pozycja 5 — jedyny zakup diagnostyczny w projekcie
+### Pozycja 5 — pierwszy mikro-diff, 09.08
 
 Zgoda właściciela wg reguły R1, udzielona 09.08 z pięcioma warunkami
 (wyliczone i odhaczone w `docs/D5_DRYF_METADANYCH.md` §5a). Cel: rozstrzygnąć,
@@ -37,6 +39,20 @@ je **odkupić za ~13 USD**.
 odpowiedź na pytanie warte dwa rzędy wielkości więcej. Zapisuję to nie jako
 pochwałę, tylko jako wzorzec: **najmniejszy możliwy płatny pomiar zamiast
 decyzji podjętej w niepewności**.
+
+### Pozycja 6 — drugi mikro-diff, 11.08
+
+Zgoda R1 udzielona 11.08, limit **1,00 USD** zapisany w kodzie
+(`OKNA["2026-07-06"]["limit"]`) **przed** biegiem. Wycena `get_cost`:
+**0,6133 USD** za 6 533 219 rekordów — mieści się, więc skrypt przepuścił.
+
+**Po co drugi pomiar, skoro pierwszy dał jednoznaczny wynik:** 2026-07-03 to
+półdniówka, a rekordy `N` powstają w zdarzeniach wielopakietowych. Pierwszy
+mikro-diff mógł więc patrzeć na okno nietypowe. Drugi bada **otwarcie sesji
+pełnowymiarowej** i przy okazji plik o najmętniejszej historii — ten, którego
+transfer raz się urwał i był pobierany dwa razy.
+
+Wynik: `docs/D5_DRYF_METADANYCH.md` §5e.
 
 ### Dlaczego pozycja 3 ma dwie liczby
 
