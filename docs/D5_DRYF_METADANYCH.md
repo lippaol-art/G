@@ -880,7 +880,7 @@ Renan (Databento), cytaty dosłowne:
 | 1 | czy stare pliki są ważne | *„They're still «valid», the normalization changed with this release."* |
 | 2 | czy podział na zdarzenia gwarantowany | *„No, in some cases you'll still see the same record as before carrying F_LAST. The extra record is only published in **events spanning multiple packets**."* |
 | 3 | czy da się przypiąć wersję | *„Not clear what you're asking here. **The old data is not available anymore in our API.**"* |
-| 4 | rozliczenie przerwanych pobrań | *„I'll forward this to our billing team for analysis"* — w toku |
+| 4 | rozliczenie przerwanych pobrań | **zamknięte 11.08** — patrz niżej |
 
 ### Odpowiedź 2 dopowiada mechanizm i zgadza się z naszym pomiarem
 
@@ -961,7 +961,27 @@ NIEDOSTĘPNA.** Konsekwencje są twarde i żadna z nich nie dotyczy dryfu:
    dotyczy wyłącznie (c). Jedno słowo, ale w tabeli, na której zapada decyzja
    o kilkudziesięciu dolarach.
 
-### Odpowiedź 4 — otwarta, i po naszej stronie jest problem
+### Odpowiedź 4 — ZAMKNIĘTA 11.08, i obala jedno moje twierdzenie
+
+Rob (Databento), po analizie zespołu billingowego:
+
+> *„We don't see any issue with these requests here. **If a request was broken
+> and only partially sent, you'll be charged for the partial data sent.**
+> In any case, we've add $20 in credits to your account."*
+
+**To obala mój „wniosek pomiarowy" z `KOSZTY` §3a**, że przerwane pobrania
+naliczono w całości. Jest odwrotnie: płaci się za **dane faktycznie przesłane**.
+Rozliczenie błędu i jego mechanizm — nazwałem pomiarem dopasowanie hipotezy do
+jednej sumy zbiorczej — w `data/KOSZTY.md` §3a. Poprawione również w docstringu
+`fetch_d5b2_month.py` i w HANDOFF, bo obie te reguły sterują zachowaniem.
+
+**Reguła postępowania się nie zmienia:** nie przerywamy pobrań. Przerwanie
+kosztuje urwany fragment **plus** pełne pobranie przy wznowieniu.
+
+**+20 USD kredytu** dodane przez dostawcę bez naszej prośby — zapisane
+w `KOSZTY` §3a. Wątek zamknięty, nie dopytujemy.
+
+### Wcześniejszy stan tej odpowiedzi — po naszej stronie był problem
 
 Billing przekazany do analizy — **i na tym kończymy**. Decyzją właściciela
 z 11.08 nie wysyłamy dalszych maili w tej sprawie; jeśli ich zespół odpowie,

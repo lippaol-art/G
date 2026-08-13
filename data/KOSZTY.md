@@ -111,8 +111,9 @@ ją trzeci raz.
 > i residuum **0,3490 USD** zostają jako **oznaczona historia** — nie jako
 > otwarte zadanie i nie jako pomiar, na którym cokolwiek się opiera.
 >
-> **Wątek billingowy u dostawcy: bez dalszych maili.** Jeśli ich zespół
-> odpowie, odnotowujemy w `D5_DRYF` §5d bez akcji.
+> **Wątek billingowy u dostawcy: ZAMKNIĘTY 11.08 ich odpowiedzią.** Rob
+> (Databento): *„We don't see any issue with these requests here."* Plus
+> **+20,00 USD kredytu** dodane do konta bez naszej prośby. Nie dopytujemy.
 >
 > ⚠️ **To zamknięcie NIE jest zgodą na rozluźnianie limitów.** Limit miesiąca
 > **82,00 USD** (reguła R4) i limit **1,00 USD** na okno diagnostyczne zostają
@@ -137,9 +138,29 @@ ją trzeci raz.
 | przerwane 07-06 + 07-07 liczone w **pełnym** zakresie | 3,0388 + 4,4529 = **7,4917** |
 | **residuum** | **+0,3490** |
 
-**Wniosek pomiarowy: przerwane pobrania zostały naliczone w całości.**
-Precedens z D5-B potwierdzony — Databento rozlicza **zrealizowane zapytanie,
-nie odebrane bajty**. Pozycje przestają być „niepotwierdzone".
+> **❌ TEN WNIOSEK ZOSTAŁ OBALONY PRZEZ DOSTAWCĘ — 11.08.2026**
+>
+> Napisałem tu: *„Wniosek pomiarowy: przerwane pobrania zostały naliczone
+> w całości. Databento rozlicza zrealizowane zapytanie, nie odebrane bajty."*
+>
+> Databento (Rob): *„If a request was broken and only partially sent, you'll be
+> charged for the **partial data sent**."* Czyli **odwrotnie**: płaci się za
+> bajty faktycznie przesłane.
+>
+> **Jak popełniłem ten błąd.** Nazwałem „wnioskiem pomiarowym" coś, co było
+> **wnioskowaniem z jednej sumy zbiorczej** — różnica 7,8407 USD pasowała do
+> obu przerwanych sesji liczonych w całości, więc uznałem dopasowanie za pomiar.
+> To była hipoteza dopasowana do liczby, w dodatku z panelu, o którym dziś
+> wiemy, że mógł dotyczyć innego konta.
+>
+> **Rachunek przy poprawnej regule** (dla porządku, nie do dalszych wniosków):
+> 07-06 urwane po 215,2 MB z ~0,7 GB → rzędu **0,9 USD**, nie 3,0388;
+> 07-07 urwane na 3,94% rekordów → rzędu **0,18 USD**, nie 4,4529. Razem ~1,1
+> zamiast 7,49. Reszty różnicy **nie tłumaczę** — kwestia kont jest zamknięta
+> decyzją właściciela i nie wracamy do niej.
+>
+> **Co się NIE zmienia:** nie przerywamy pobrań. Przerwanie kosztuje urwany
+> fragment **plus** pełne pobranie przy wznowieniu.
 
 **Residuum 0,3490 USD — ZAMKNIĘTE bez wyjaśnienia** (decyzja z ramki).
 Hipoteza recenzenta (**nie pomiar**): dwa dodatkowe pobrania uciętego fragmentu
@@ -179,6 +200,19 @@ Wcześniejszy podział na „potwierdzone 12,8093 / niepotwierdzone do ~7,49"
 niż górna granica moich wycen (20,65 wobec 20,30). Zasada 4 rejestru zadziałała
 w obie strony: granica była podana uczciwie, ale pomiar i tak ją przekroczył
 o 0,3490 USD, których nie umiem przypisać.
+
+### Kredyt — stan po odpowiedzi Databento (11.08)
+
+| | |
+|---|---:|
+| kredyt wg panelu 09.08 | 104,35 |
+| **doładowanie od Databento 11.08** | **+20,00** |
+| **razem** | **124,35 USD** |
+
+Rob dodał 20 USD **z własnej inicjatywy**, zamykając pytanie o rozliczenie.
+Zapisuję to jako przychód, bo rejestr ma pokazywać każdy ruch — również ten
+na naszą korzyść. **Nie zmienia to żadnego limitu:** 82,00 na miesiąc (R4)
+i 1,00 na okno diagnostyczne stoją.
 
 **Skutek dla budżetu.** Właściciel potwierdza dostępny kredyt **100+ USD**,
 co pokrywa oba warianty z tabeli `D5_DRYF` §5d: mieszanie (17 sesji, 63,94 USD)

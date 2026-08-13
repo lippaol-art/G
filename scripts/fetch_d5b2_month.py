@@ -42,10 +42,19 @@ sesji, ktora parsuje sie bez bledu. Po awarii skrypt konczy prace, wypisuje
 stan i zostawia decyzje czlowiekowi.
 
 WZNOWIENIE NIE JEST DARMOWE DLA SESJI PRZERWANEJ W LOCIE. Sesje juz KOMPLETNE
-sa pomijane bez kosztu, ale sesja, ktorej pobieranie przerwano, zostanie
-naliczona ponownie przy nastepnym uruchomieniu — Databento liczy za zrealizowane
-zapytanie, nie za odebrane bajty. Precedens: D5-B, sesja 2026-07-07, pozycja
-"duplikacja" w `data/KOSZTY.md`. Przerywanie w trakcie kosztuje.
+sa pomijane bez kosztu. Sesja, ktorej pobieranie przerwano, kosztuje DWA RAZY:
+raz za dane faktycznie przeslane przed zerwaniem, drugi raz za pelne pobranie
+przy wznowieniu.
+
+  Databento (Rob, 11.08.2026): *"If a request was broken and only partially
+  sent, you'll be charged for the partial data sent."*
+
+  KOREKTA: pisalem tu wczesniej, ze dostawca liczy "za zrealizowane zapytanie,
+  nie za odebrane bajty". To bylo BLEDNE — rozliczenie idzie po danych
+  faktycznie przeslanych. Regula postepowania sie nie zmienia (nie przerywaj),
+  ale jej uzasadnienie tak: strata to nadmiarowa czesc, nie cala sesja.
+
+Precedens: D5-B, sesja 2026-07-07, pozycja "duplikacja" w `data/KOSZTY.md`.
 
 Metadane sa darmowe i dzielone na kawalki (`engine/databento_io.py`), bo dla
 MBO pojedyncze zapytanie o cala sesje trafia w 60-sekundowy limit bramy.

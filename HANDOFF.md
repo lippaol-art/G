@@ -329,7 +329,10 @@ obciętej sesji, która parsuje się bez błędu.
 
 > **Wznowienie NIE jest darmowe dla sesji przerwanej w locie.** Sesje już **kompletne**
 > są pomijane bez kosztu — ale sesja, której pobieranie przerwano, zostanie naliczona
-> ponownie, bo Databento liczy za zrealizowane zapytanie, nie za odebrane bajty.
+> ponownie. **Korekta 11.08:** Databento rozlicza **dane faktycznie przesłane**
+> („*you'll be charged for the partial data sent*", Rob), a nie całe zapytanie —
+> wcześniejszy zapis w tym pliku był błędny. Przerwanie nadal kosztuje, bo płaci
+> się za urwany fragment **i** za pełne pobranie przy wznowieniu.
 > Precedens: D5-B, sesja 2026-07-07, pozycja „duplikacja" w `data/KOSZTY.md`.
 > Nie przerywaj pobierania bez powodu.
 
