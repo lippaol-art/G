@@ -1,0 +1,17 @@
+{
+ "sesja": "2026-07-03",
+ "zakres_utc": [
+  "2026-07-03T13:30",
+  "2026-07-03T14:00"
+ ],
+ "akcji_swiezy": 29734,
+ "akcji_nasz": 29734,
+ "n_trade_swiezy": 32953,
+ "n_trade_nasz": 32953,
+ "rozmiar_swiezy": 63394,
+ "rozmiar_nasz": 63394,
+ "pozycja_pierwszej_roznicy": null,
+ "roznych_pozycji": 0,
+ "identyczne": true,
+ "utc": "2026-08-18T13:37:53+00:00"
+}
