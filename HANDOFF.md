@@ -12,6 +12,10 @@ Data: 11.08.2026 · Branch: `claude/financial-market-strategy-8mb1y1` · PR #4
 > a Gen1 zamknięta. Świeża sesja zaczyna od niego i poszłaby „odblokowywać" rozwiązany
 > problem albo powtórzyć zamknięte badanie.
 
+**Szerszy obraz — mapa dokumentów, proces recenzji, dziennik decyzji i kolejka:
+[`docs/STAN_PROJEKTU.md`](docs/STAN_PROJEKTU.md).** Ten plik mówi, JAK wznowić pracę;
+tamten — CZYM jest projekt i co jest do zrobienia.
+
 **Podział ról między agentami: [`docs/PROTOKOL_WSPOLPRACY.md`](docs/PROTOKOL_WSPOLPRACY.md).**
 Przeczytaj go, zanim wystawisz jakąkolwiek ocenę własnej pracy — Wykonawca nie wystawia
 sobie werdyktu końcowego.
@@ -26,7 +30,7 @@ niezależnych audytach zewnętrznych) jest **jedynym źródłem prawdy** — kod
 a nie odwrotnie.
 
 Gotowe: fundament repo, silnik backtestowy, komplet aparatu walidacyjnego, strażnicy
-niezmienników, CI, golden baseline. **586 funkcji testowych (667 przypadków po parametryzacji), pokrycie 92%, ruff i mypy czyste.**
+niezmienników, CI, golden baseline. **590 funkcji testowych (671 przypadków po parametryzacji), pokrycie 92%, ruff i mypy czyste.**
 Liczbę pilnuje `tests/test_guards.py::test_handoff_podaje_aktualna_liczbe_testow` —
 bez tego rotowała dwa razy w ciągu doby, co jest dokładnie tym defektem, przed
 którym ostrzega reguła na górze tego pliku.

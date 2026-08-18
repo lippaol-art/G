@@ -265,7 +265,7 @@ Fakty o rynku i o procesie odkryte przy okazji badań. Zasilają projektowanie k
 
 ---
 
-## Reguły trwałe projektu (R1–R3, R9)
+## Reguły trwałe projektu (R1–R4, R9)
 
 Zapisane 02.08.2026 na podstawie kontekstu właściciela projektu: ograniczony budżet,
 docelowo konto fundowane 200 000 USD z limitem 5% dziennie i 10% całkowicie.
@@ -276,6 +276,7 @@ docelowo konto fundowane 200 000 USD z limitem 5% dziennie i 10% całkowicie.
 | **R1** | **Każde nowe płatne źródło danych lub narzędzie wymaga czterech rzeczy przed zakupem:** uzasadnienia (co konkretnie odblokowuje), oszacowania kosztu, sprawdzenia darmowej alternatywy i **zgody właściciela**. Formalizuje procedurę zastosowaną przy zakupie warstwy K6 za $7.82. |
 | **R9** | **Zapytania do wsparcia dostawcy piszemy zwiezle: 2-4 zdania kontekstu, jeden przyklad, maksymalnie 2-3 pytania na zgloszenie.** Wprost poproszone przez Databento: *I think your LLM may be making these questions a bit longer and more complex than necessary. We have real humans respond to every message.* Nasze pierwsze zgloszenie mialo szesc pytan i pelna tabele statystyk. Odpowiedz byla wyczerpujaca mimo to, ale po drugiej stronie siedzi czlowiek i to jego czas. Jedno zgloszenie = jeden watek problemowy. |
 | **R2** | **Zakaz strojenia pod wynik docelowy.** Żadna zmiana specyfikacji, parametru ani reguły wejścia po zobaczeniu P&L, jeśli motywem jest zbliżenie się do zakładanego wyniku miesięcznego. Deklarowane 1–2%/mies. jest potrzebą finansową właściciela, **nie targetem strategii**. Jeśli przewagi nie ma, projekt ma to wykazać, a nie dopasować. Wzmacnia W002 i W004. |
+| **R4** | **Każdy zakup danych ma limit zamrożony w commicie SPRZED zakupu.** Limit jest stałą w kodzie i pilnuje go test, więc podniesienie go wymaga zmiany kodu i przejścia przez recenzję — nie da się go „poprawić" w trakcie biegu. Reguła obowiązywała i była cytowana w `data/KOSZTY.md` §4 od pierwszego zakupu MBO; do tej tabeli dopisana 13.08.2026, gdy przegląd wykazał, że jedyna reguła egzekwowana przez kod nie miała wpisu w rejestrze reguł. Zatrzymała zakup dwukrotnie i za każdym razem miała rację. |
 | **R3** | **Limity firmowe 5%/10% są barierami awaryjnymi, nie roboczymi.** Wewnętrzne limity strategii muszą być istotnie niższe. Metryką bramki operacyjnej jest **prawdopodobieństwo utrzymania konta**, nie zwrot ani Sharpe. |
 
 ### Bramka badawcza a bramka operacyjna

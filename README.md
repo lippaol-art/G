@@ -8,7 +8,12 @@ makroekonomicznych.
 specyfikacja techniczna silnika, metodologia badawcza i katalog hipotez. Wersja 1.1, po czterech
 niezależnych audytach zewnętrznych.
 
-**Stan bieżący projektu: [`HANDOFF.md`](HANDOFF.md). `PLAN.*` to historyczny dokument wizji** —
+**Całość jednym plikiem: [`docs/STAN_PROJEKTU.md`](docs/STAN_PROJEKTU.md)** — mapa
+dokumentów, proces recenzji, dziennik decyzji i kolejka zadań. Zacznij tam, jeśli
+chcesz zrozumieć projekt, a nie tylko go uruchomić.
+
+**Stan bieżący dla agenta wznawiającego pracę: [`HANDOFF.md`](HANDOFF.md).
+`PLAN.*` to historyczny dokument wizji** —
 nadal wiążący tam, gdzie definiuje metodę i progi, ale nieaktualizowany o postęp prac.
 
 ---
@@ -20,7 +25,7 @@ nadal wiążący tam, gdzie definiuje metodę i progi, ale nieaktualizowany o po
 | Dokument założycielski v1.1 | ✅ zrobione |
 | Etap 0 — fundament repo | ✅ zrobione |
 | Etap 1 — dane rynkowe | ✅ MNQ/NQ/ES, bary M1 2019–2026, w `data/clean/` |
-| Etap 2 — silnik i aparat walidacyjny | ✅ kompletny: **586 funkcji testowych, pokrycie 92%**, bramka 5.6 zaliczona (dokładną liczbę pilnuje strażnik — patrz HANDOFF) |
+| Etap 2 — silnik i aparat walidacyjny | ✅ kompletny: **590 funkcji testowych, pokrycie 92%**, bramka 5.6 zaliczona (dokładną liczbę pilnuje strażnik — patrz HANDOFF) |
 | Gen1 — 16 hipotez na barach M1 | ✅ zamknięta: **wszystkie odrzucone w pre-flightach**. Wniosek: M1 przewiduje amplitudę, nie kierunek ([SYNTEZA_GEN1.md](docs/SYNTEZA_GEN1.md)) |
 | D5 — przepływ agresywny na danych MBO | 🔄 **w toku**: jednostka rozstrzygnięta (D5-C GO), dry run 8/8. Następny krok i bramka GO/NO-GO: **[HANDOFF.md](HANDOFF.md)** §4 |
 

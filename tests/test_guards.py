@@ -667,3 +667,64 @@ class TestRaportMikroDiffu:
 
 
 
+
+
+class TestStanProjektu:
+    """`docs/STAN_PROJEKTU.md` jest skorowidzem — wiec jego odsylacze musza dzialac.
+
+    Dokument ma jedno zadanie: pokazac calosc i odeslac do zrodel prawdy.
+    Odsylacz do pliku, ktorego nie ma, jest gorszy niz brak odsylacza — czytelnik
+    traci zaufanie do calej mapy i wraca do zgadywania, gdzie co lezy.
+
+    Ten straznik NIE sprawdza tresci. Sprawdza dwie rzeczy, ktore rotuja same
+    z siebie: czy wskazywane pliki istnieja i czy dokument nie zaczal duplikowac
+    kwot, ktorych zrodlem jest `data/KOSZTY.md`.
+    """
+
+    PLIK = ROOT / "docs" / "STAN_PROJEKTU.md"
+
+    def _tekst(self) -> str:
+        return self.PLIK.read_text(encoding="utf-8")
+
+    def test_wszystkie_wskazywane_pliki_istnieja(self):
+        """Sciezki w backtickach, wygladajace na pliki repo, musza istniec."""
+        wzorzec = re.compile(r"`([A-Za-z0-9_./-]+\.(?:md|pdf|json|py|sh|html))`")
+        brakuje = sorted({
+            s for s in wzorzec.findall(self._tekst())
+            # Wzorce globalne (np. reports/D5_mikro_diff*.json) i sciezki
+            # spoza repo nie sa tu sprawdzane — te pierwsze nie sa pojedynczym
+            # plikiem, drugich repo nie kontroluje.
+            if "*" not in s and not (ROOT / s).exists()
+        })
+        assert not brakuje, (
+            f"STAN_PROJEKTU.md odsyla do nieistniejacych plikow: {brakuje}")
+
+    def test_nie_duplikuje_kwot_z_ksiegi(self):
+        """Zrodlem prawdy o pieniadzach jest data/KOSZTY.md — i tylko on.
+
+        Dokument sam deklaruje w naglowku, ze nie zawiera kwot. Ten test pilnuje,
+        zeby deklaracja nie rozjechala sie z trescia przy pierwszej edycji
+        „dla wygody czytelnika". Wyjatkiem sa LIMITY (82,00 / 1,00), bo to nie
+        wydatki, tylko bramki — i o nich dokument mowi wprost.
+        """
+        limity = {"82,00", "1,00"}
+        kwoty = set(re.findall(r"\b\d+,\d{2,4}\b", self._tekst())) - limity
+        assert not kwoty, (
+            f"STAN_PROJEKTU.md zaczal duplikowac kwoty: {sorted(kwoty)}. "
+            "Zrodlem prawdy jest data/KOSZTY.md — tu ma byc odsylacz, nie liczba.")
+
+    def test_wymienia_komplet_regul_trwalych(self):
+        """Reguly R sa rdzeniem governance — mapa nie moze zgubic zadnej."""
+        tekst = self._tekst()
+        brak = [r for r in ("R1", "R2", "R3", "R4", "R9") if f"**{r}**" not in tekst]
+        assert not brak, f"STAN_PROJEKTU.md nie wymienia regul: {brak}"
+
+    def test_regula_R4_jest_w_rejestrze_regul(self):
+        """R4 byla cytowana w KOSZTY §4, ale nie miala wpisu w REGISTRY.
+
+        Znalezione przy pisaniu mapy 13.08. Regula egzekwowana przez kod
+        (LIMIT_USD) musi byc w rejestrze regul, inaczej nowa osoba widzi
+        w tabeli luke i nie wie, czy to pomylka w numeracji, czy brakujaca zasada.
+        """
+        rejestr = (ROOT / "hypotheses" / "REGISTRY.md").read_text(encoding="utf-8")
+        assert "| **R4** |" in rejestr, "R4 zniknela z tabeli regul w REGISTRY"
