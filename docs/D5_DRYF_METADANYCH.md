@@ -995,6 +995,49 @@ zamknięta bez rozstrzygnięcia** — uzasadnienie i przyjęte ryzyko szczątkow
 
 ---
 
+## 5f. ⚠️ Pułapka w ścieżce zakupu — znaleziona 13.08, PRZED wydaniem pieniędzy
+
+Recenzja zapowiedziała, że bieg zakupowy będzie wymagał `--akceptuj-rozjazd`,
+„świadomie: archiwizacja manifestu + `przeniesione_wyniki` chronią pochodzenie
+5 starych sesji". **Ochrona pochodzenia w manifeście to nie to samo, co ochrona
+plików na dysku.** Prześledziłem tę ścieżkę linia po linii, zanim podałem
+właścicielowi komendę.
+
+### Co zrobiłby skrypt przed poprawką
+
+| krok | skutek |
+|---|---|
+| `--akceptuj-rozjazd` przyjmuje nowe liczby rekordów | manifest zarchiwizowany, w planie **nowe** liczby |
+| `kompletny()` porównuje pliki z **nową** liczbą | wszystkie **5 starych plików wypada jako niekompletne** |
+| trafiają na listę do pobrania | koszt rośnie o sesje, **za które już zapłacono** |
+| pętla pobierania: `out.unlink()` | **kasuje jedyny istniejący egzemplarz starej normalizacji** |
+
+Nieodwracalne w dwóch wymiarach naraz: pieniądze (~17 USD za dane, które mamy)
+i **dane, których nie odtworzy nikt** — dostawca potwierdził, że starej wersji
+nie ma już w API.
+
+Warunek 4 zatrzymałby bieg na 2026-07-30, więc w praktyce skrypt padłby przed
+pierwszym pobraniem. To jednak **przypadkowa** ochrona: gdyby ktoś dołożył
+`--kup-ponownie-d5c`, żeby „odblokować", straciłby cztery pliki kampanijne.
+
+### Poprawka
+
+`kompletny()` przyjmuje teraz **dwie** dopuszczalne liczby rekordów: bieżącą
+z wyceny **i** tę zapisaną w manifeście, czyli tę, za którą zapłacono. Plik
+zgodny z drugą jest **kompletny w swojej epoce normalizacji** i zostaje
+pominięty bez kosztu.
+
+Druga linia obrony stoi przy samym `unlink()`: przed skasowaniem plik jest
+przeliczany i jeśli ma liczbę rekordów z manifestu, skrypt **przerywa zakup**
+zamiast kasować. To nie powinno nigdy zadziałać — ale kasowanie jest
+nieodwracalne, a stawka to jedyny egzemplarz.
+
+Cztery testy, w tym jeden pilnujący, że poprawka **nie przepuszcza plików
+uciętych w locie** — bo „cokolwiek innego niż bieżąca wycena" byłoby dokładnie
+tym błędem, dla którego `kompletny()` w ogóle powstał.
+
+---
+
 ## 5e. Drugi mikro-diff — kryterium zapisane PRZED biegiem
 
 > ### ✅ ZGODA R1 UDZIELONA — właściciel, 11.08.2026

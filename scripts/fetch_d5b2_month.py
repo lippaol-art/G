@@ -35,6 +35,14 @@ byc — inaczej jedna obcieta sesja blokowalaby caly miesiac. Odmowa (warunek 6)
 dotyczy sesji niekompletnej PO pobraniu, bo to znaczy, ze cos jest nie tak
 z zapytaniem i dalsze wydawanie pieniedzy nie ma sensu.
 
+  WYJATEK OD TEGO KASOWANIA — plik zgodny z liczba rekordow z MANIFESTU.
+  Po zmianie normalizacji GLBX.MDP3 (08.08.2026) biezaca wycena podaje dla
+  naszych pieciu sesji WIECEJ rekordow, niz maja pliki na dysku, a starej
+  wersji nie da sie juz pobrac. Bez tego wyjatku `--akceptuj-rozjazd`
+  kasowalby jedyny istniejacy egzemplarz starej normalizacji i kupowal te
+  same doby drugi raz. `kompletny()` przyjmuje wiec DWIE dopuszczalne liczby:
+  biezaca i oplacona. Druga linia obrony stoi przy samym `unlink()`.
+
 CZEGO NIE ROBI — I TO JEST CELOWE.
 Nie ponawia pobierania po bledzie 504. Pobieranie jest PLATNE i tworzy plik;
 slepe ponowienie grozi podwojnym naliczeniem i cichym zostawieniem obcietej
@@ -485,12 +493,26 @@ def epoka_normalizacji(kiedy: dt.datetime) -> str:
     return "NIEUSTALONA"
 
 
-def kompletny(p: Path, oczekiwane: int) -> tuple[bool, str]:
+def kompletny(p: Path, oczekiwane: int,
+              oplacone: int | None = None) -> tuple[bool, str]:
     """Czy plik jest kompletny. ISTNIENIE NIE WYSTARCZA.
 
     Ta regula powstala po tym, jak przerwany transfer zostawil obcieta sesje,
     ktora parsowala sie BEZ BLEDU. Sprawdzamy: obecnosc, niezerowy rozmiar,
     parsowalnosc i zgodnosc liczby rekordow z `metadata.get_record_count`.
+
+    `oplacone` — liczba rekordow ZAPISANA W MANIFESCIE, czyli to, za co juz
+    zaplacono. Plik zgodny z ta liczba jest **kompletny w swojej epoce
+    normalizacji** i NIE WOLNO go ani kupowac ponownie, ani kasowac.
+
+    PO CO TEN DRUGI PARAMETR — sytuacja, ktora bez niego konczy sie utrata
+    danych i podwojna platnoscia. Databento zmienilo 08.08.2026 normalizacje
+    GLBX.MDP3: te same zapytania zwracaja dzis WIECEJ rekordow, a starej wersji
+    **nie da sie juz pobrac**. Nasze piec plikow zgadza sie z liczbami sprzed
+    zmiany. Gdyby porownywac je wylacznie z biezaca wycena, kazdy wygladalby
+    na niekompletny, wiec skrypt kasowalby je (`out.unlink()`) i kupowal
+    ponownie — niszczac jedyny istniejacy egzemplarz starej normalizacji
+    i placac drugi raz za to, co juz mamy.
     """
     if not p.exists():
         return False, "brak pliku"
@@ -500,9 +522,12 @@ def kompletny(p: Path, oczekiwane: int) -> tuple[bool, str]:
         n = sum(1 for _ in db.DBNStore.from_file(p))
     except Exception as e:                                    # noqa: BLE001
         return False, f"nie parsuje sie: {type(e).__name__}"
-    if n != oczekiwane:
-        return False, f"rekordow {n:,} != oczekiwanych {oczekiwane:,}"
-    return True, "kompletny"
+    if n == oczekiwane:
+        return True, "kompletny"
+    if oplacone is not None and n == oplacone:
+        return True, (f"kompletny wg manifestu ({n:,} rek.) — plik ze STAREJ "
+                      "normalizacji, oplacony i nieodtwarzalny")
+    return False, f"rekordow {n:,} != oczekiwanych {oczekiwane:,}"
 
 
 def main() -> int:
@@ -585,10 +610,14 @@ def main() -> int:
                                 akceptuj=args.akceptuj_rozjazd))
 
     # ------------------------------------------------ stan przed zakupem --
+    # Liczby rekordow, za ktore JUZ ZAPLACONO. Plik zgodny z ta liczba jest
+    # kompletny w swojej epoce normalizacji — patrz `kompletny()`.
+    oplacone = rekordy_z_manifestu()
+
     juz_mamy, do_pobrania, koszt_do_zaplaty = [], [], 0.0
     for w in plan:
         p = sciezka_istniejaca(w["sesja"])
-        ok, powod = kompletny(p, w["rekordow"])
+        ok, powod = kompletny(p, w["rekordow"], oplacone.get(w["sesja"]))
         if ok:
             juz_mamy.append(w["sesja"])
             komunikat = f"  MAM {w['sesja']}: {powod} ({p.parent.name})"
@@ -633,6 +662,20 @@ def main() -> int:
 
         # Plik niekompletny usuwamy dopiero tutaj, swiadomie i z komunikatem.
         if out.exists():
+            # DRUGA LINIA OBRONY. Po poprawce w `kompletny()` plik zgodny
+            # z manifestem nie powinien tu w ogole trafic — ale kasowanie jest
+            # NIEODWRACALNE, a starej normalizacji nie da sie odtworzyc za
+            # zadna cene. Wolimy przerwac zakup niz skasowac jedyny egzemplarz.
+            ile = sum(1 for _ in db.DBNStore.from_file(out))
+            if ile == oplacone.get(s):
+                sys.exit(
+                    f"\nSTOP: {s} ma {ile:,} rekordow — dokladnie tyle, za ile "
+                    "juz ZAPLACONO (manifest).\n"
+                    "  Ten plik jest kompletny w swojej epoce normalizacji "
+                    "i NIE WOLNO go skasowac:\n"
+                    "  starej normalizacji GLBX.MDP3 nie da sie juz pobrac.\n"
+                    "  Zatrzymuje zakup — to blad logiki kwalifikacji, "
+                    "nie stan danych.")
             print(f"  {s}: usuwam niekompletny plik przed ponownym pobraniem",
                   flush=True)
             out.unlink()

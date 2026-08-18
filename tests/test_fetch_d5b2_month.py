@@ -546,3 +546,75 @@ class TestPrzeniesienieWynikow:
         cel.parent.mkdir(parents=True, exist_ok=True)
         cel.write_text("{to nie jest json", encoding="utf-8")
         assert f.przeniesione_wyniki(["2026-07-01"]) == []
+
+
+class TestPlikZeStarejNormalizacji:
+    """Plik zgodny z MANIFESTEM jest kompletny — nawet gdy API mowi inaczej.
+
+    PULAPKA, KTORA TEN TEST ZAMYKA. Databento zmienilo 08.08.2026 normalizacje:
+    te same zapytania zwracaja wiecej rekordow, a starej wersji NIE DA SIE juz
+    pobrac. Nasze piec plikow zgadza sie z liczbami sprzed zmiany.
+
+    Gdyby `kompletny()` porownywal je wylacznie z biezaca wycena, przy
+    `--akceptuj-rozjazd` kazdy wygladalby na niekompletny. Skutek lancuchowy:
+    piec sesji trafia na liste do pobrania -> `out.unlink()` KASUJE jedyny
+    istniejacy egzemplarz starej normalizacji -> placimy drugi raz za dane,
+    ktore juz mamy. Okolo 17 USD i dane nie do odtworzenia za zadna cene.
+
+    Wykryte przy czytaniu sciezki `--akceptuj-rozjazd` PRZED podaniem
+    wlascicielowi komendy zakupu.
+    """
+
+    STARE = 39_297_265      # 2026-07-01 w manifescie
+    NOWE = 40_286_094       # ta sama sesja wg wyceny z 08.08
+
+    def _plik(self, tmp_path, ile: int) -> Path:
+        """Plik, ktory `kompletny()` policzy na `ile` rekordow."""
+        p = tmp_path / "mnq_mbo_rth_2026-07-01.dbn.zst"
+        p.write_bytes(b"x")
+        return p
+
+    def test_plik_ze_stara_liczba_jest_kompletny(self, tmp_path, monkeypatch):
+        p = self._plik(tmp_path, self.STARE)
+        monkeypatch.setattr(f.db.DBNStore, "from_file",
+                            staticmethod(lambda _: range(self.STARE)))
+        ok, powod = f.kompletny(p, self.NOWE, oplacone=self.STARE)
+        assert ok, f"plik oplacony uznany za niekompletny: {powod}"
+        assert "STAREJ normalizacji" in powod
+
+    def test_bez_manifestu_stary_plik_wypada_jako_niekompletny(
+            self, tmp_path, monkeypatch):
+        """Kontrola: bez `oplacone` zachowanie jest stare — i wlasnie GROZNE.
+
+        Ten test pokazuje, ze poprawka realnie zmienia wynik, a nie tylko
+        dokłada parametr, ktory nic nie robi.
+        """
+        p = self._plik(tmp_path, self.STARE)
+        monkeypatch.setattr(f.db.DBNStore, "from_file",
+                            staticmethod(lambda _: range(self.STARE)))
+        ok, _ = f.kompletny(p, self.NOWE)
+        assert not ok
+
+    def test_plik_obciety_nadal_jest_niekompletny(self, tmp_path, monkeypatch):
+        """Poprawka NIE MOZE przepuszczac plikow urwanych w locie.
+
+        Gdyby wystarczylo 'cokolwiek innego niz biezaca wycena', obcieta sesja
+        przechodzilaby jako kompletna — a to jest dokladnie ten blad, dla
+        ktorego `kompletny()` w ogole powstal.
+        """
+        p = self._plik(tmp_path, 1_867_793)
+        monkeypatch.setattr(f.db.DBNStore, "from_file",
+                            staticmethod(lambda _: range(1_867_793)))
+        ok, powod = f.kompletny(p, self.NOWE, oplacone=self.STARE)
+        assert not ok
+        assert "1,867,793" in powod
+
+    def test_kwalifikacja_pomija_wszystkie_piec_starych_sesji(self, monkeypatch):
+        """Calosciowo: przy przyjetym rozjezdzie zadna ze starych sesji nie
+        moze trafic na liste do pobrania."""
+        stare = {s: 1000 + i for i, s in enumerate(f.SESJE_STARA_NORMALIZACJA)}
+        for sesja, ile in stare.items():
+            monkeypatch.setattr(f.db.DBNStore, "from_file",
+                                staticmethod(lambda _, n=ile: range(n)))
+            ok, _ = f.kompletny(Path(__file__), 9_999_999, oplacone=ile)
+            assert ok, f"{sesja}: plik oplacony trafilby do ponownego zakupu"
