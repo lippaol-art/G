@@ -40,7 +40,7 @@ odpowiedź na pytanie warte dwa rzędy wielkości więcej. Zapisuję to nie jako
 pochwałę, tylko jako wzorzec: **najmniejszy możliwy płatny pomiar zamiast
 decyzji podjętej w niepewności**.
 
-### Pozycja 6 — drugi mikro-diff, 11.08
+### Pozycja 6 — drugi mikro-diff: zgoda 11.08, bieg 13.08
 
 Zgoda R1 udzielona 11.08, limit **1,00 USD** zapisany w kodzie
 (`OKNA["2026-07-06"]["limit"]`) **przed** biegiem. Wycena `get_cost`:

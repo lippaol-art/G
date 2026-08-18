@@ -125,6 +125,20 @@ def sciezka_raportu(o: Okno) -> Path:
     nazwa = RAPORTY_HISTORYCZNE.get(o.sesja, f"D5_mikro_diff_{o.sesja}.json")
     return Path("reports") / nazwa
 
+
+def sciezka_rekonstrukcji(o: Okno) -> Path:
+    """Artefakt trybu `--rekonstrukcja` — osobny plik, bo osobny pomiar.
+
+    Do 13.08 cztery liczby kryterium (akcje, suma n_trade, suma rozmiaru,
+    pozycja pierwszej roznicy) istnialy WYLACZNIE w prozie: w D5_DRYF §5e
+    i w opisie commita. Straznik dokument<->artefakt nie mial ich z czym
+    porownac, bo raport diffu zapisuje inne wielkosci.
+
+    Zarzut recenzji: przy pomiarach niepowtarzalnych rozjazd dokument-konsola
+    bylby niewykrywalny. Trafny — stad ten plik.
+    """
+    return Path("reports") / f"D5_rekonstrukcja_{o.sesja}.json"
+
 #: Warunek 3 zgody: katalog NIE nalezy do zadnego zakupu badawczego.
 KATALOG_DIAG = "diag_mikro"
 #: Nasz plik do porownania — czytany TYLKO do odczytu.
@@ -332,14 +346,36 @@ def raport_rekonstrukcji(o: Okno) -> int:
     # Celowo POMIJAMY pole `koperta`: numer koperty to indeks porzadkowy,
     # a nie cecha zdarzenia. Rownosc pozostalych jedenastu pol znaczy, ze
     # jednostka obserwacji jest ta sama — i tylko to jest tu pytaniem.
-    if a_serw == a_nasz:
+    rozne = [i for i, (x, z) in enumerate(zip(a_serw, a_nasz, strict=False))
+             if x != z]
+    identyczne = a_serw == a_nasz
+
+    # Artefakt PRZED wypisaniem werdyktu — zeby powstal takze wtedy, gdy
+    # porownanie wypadnie zle. Zapis wylacznie przy niepowodzeniu bylby
+    # ksiegowaniem samych sukcesow.
+    wynik = {
+        "sesja": o.sesja, "zakres_utc": [o.start_utc, o.end_utc],
+        "akcji_swiezy": len(a_serw), "akcji_nasz": len(a_nasz),
+        "n_trade_swiezy": sum(x[2] for x in a_serw),
+        "n_trade_nasz": sum(x[2] for x in a_nasz),
+        "rozmiar_swiezy": sum(x[3] for x in a_serw),
+        "rozmiar_nasz": sum(x[3] for x in a_nasz),
+        "pozycja_pierwszej_roznicy": (rozne[0] if rozne else None),
+        "roznych_pozycji": len(rozne),
+        "identyczne": identyczne,
+        "utc": dt.datetime.now(UTC).isoformat(timespec="seconds"),
+    }
+    cel = sciezka_rekonstrukcji(o)
+    cel.parent.mkdir(parents=True, exist_ok=True)
+    cel.write_text(json.dumps(wynik, indent=1), encoding="utf-8", newline="\n")
+    print(f"-> {cel}")
+
+    if identyczne:
         print("  -> IDENTYCZNE, akcja po akcji, we wszystkich polach.")
         print("     AUDYT D5-C STOI. Przeniesienie bitu F_LAST na wypelniacz")
         print("     nie zmienia jednostki obserwacji.")
         return 0
 
-    rozne = [i for i, (x, z) in enumerate(zip(a_serw, a_nasz, strict=False))
-             if x != z]
     print(f"  -> ROZNICA. Pierwsza na pozycji {rozne[0] if rozne else len(a_serw)}"
           f", roznych pozycji: {len(rozne):,}")
     for i in (rozne or [0])[:3]:

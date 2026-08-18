@@ -1010,7 +1010,12 @@ zamknięta bez rozstrzygnięcia** — uzasadnienie i przyjęte ryzyko szczątkow
 >
 > **To ostatnia bramka przed zakupem miesiąca.**
 
-**WYKONANY 11.08. Koszt 0,6133 USD** (limit 1,00 — dotrzymany).
+**ZGODA R1: 11.08. BIEG: 13.08** (`utc` artefaktu `2026-08-13T10:16:07Z`).
+**Koszt 0,6133 USD**, limit 1,00 — dotrzymany.
+
+> **Korekta daty wniesiona przez recenzję.** Stało tu „WYKONANY 11.08" — to była
+> data **zgody**, nie biegu. Przy incydencie, w którym oś czasu obaliła już dwie
+> diagnozy, daty są danymi, nie ozdobą.
 
 ### Wynik — cztery punkty kryterium
 
@@ -1055,9 +1060,42 @@ co przy 07-03.
 (6 375 196 + 158 023 = 6 533 219; sumy typów po obu stronach; bilans
 przeniesienia; sumy `F_LAST`).
 
-> **Werdykt PASS/FAIL wystawia recenzent.** Powyżej są liczby i ich zgodność
-> z kryterium — nie werdykt. Wykonawca nie ocenia własnej pracy
-> (`docs/PROTOKOL_WSPOLPRACY.md`).
+> ### ✅ WERDYKT RECENZENTA: **PASS** (13.08, przy SHA `e67c8ab`)
+>
+> Wszystkie cztery punkty kryterium spełnione. Recenzent zweryfikował
+> niezależnie w źródle: arytmetykę artefaktu, cross-check kryterium 2 z
+> licznikiem `action=T`, bilans przeniesienia bitu, koszt wobec limitu
+> i wpis do księgi.
+>
+> **Konsekwencja wg tej sekcji: wariant (a) — mieszamy.** Decyzja
+> i uruchomienie należą do właściciela.
+>
+> **Warunek minimalny z §4 pkt 4 jest tym pomiarem spełniony**, więc propozycja
+> zawężenia zakazu mieszania (liczniki surowe: nie; analizy przez `rekonstruuj`:
+> tak) jest formalnie odblokowana — nadal jako rekomendacja do decyzji, nie
+> werdykt.
+
+### Zarzut recenzji przyjęty: liczby rekonstrukcji żyły tylko w prozie
+
+Cztery liczby powyżej były do 13.08 **wyłącznie w tym dokumencie i w opisie
+commita**. Artefakt `reports/D5_mikro_diff_*.json` zapisuje diff rekordów —
+inne wielkości — więc strażnik dokument↔artefakt nie miał ich z czym porównać.
+Przy pomiarze, którego nie da się powtórzyć, rozjazd byłby niewykrywalny.
+
+**Naprawione:** tryb `--rekonstrukcja` zapisuje teraz własny artefakt
+`reports/D5_rekonstrukcja_<sesja>.json` z kompletem czterech liczb i flagą
+`identyczne`, a trzy parametryzowane testy pilnują ich spójności i cytowania
+w tym dokumencie. Zapis następuje **przed** wypisaniem werdyktu, żeby powstał
+także przy wyniku negatywnym — księgowanie samych sukcesów byłoby gorsze niż
+brak księgowania.
+
+**Artefakty dla obu okien trzeba wygenerować ponownym uruchomieniem** — jest
+darmowe i czyta wyłącznie pliki z dysku:
+
+```powershell
+python scripts/diff_mikro.py --rekonstrukcja --sesja 2026-07-03
+python scripts/diff_mikro.py --rekonstrukcja --sesja 2026-07-06
+```
 
 ### Obserwacja poza kryterium: hipoteza o otwarciach
 

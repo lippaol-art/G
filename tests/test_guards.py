@@ -728,3 +728,78 @@ class TestStanProjektu:
         """
         rejestr = (ROOT / "hypotheses" / "REGISTRY.md").read_text(encoding="utf-8")
         assert "| **R4** |" in rejestr, "R4 zniknela z tabeli regul w REGISTRY"
+
+
+REKONSTRUKCJE = sorted((ROOT / "reports").glob("D5_rekonstrukcja_*.json"))
+IDS_REK = [p.stem for p in REKONSTRUKCJE]
+
+
+@pytest.mark.skipif(not REKONSTRUKCJE, reason="brak artefaktow rekonstrukcji")
+class TestArtefaktRekonstrukcji:
+    """Cztery liczby kryterium §5e nie moga zyc wylacznie w prozie.
+
+    Zarzut recenzji z 13.08, trafny: `--rekonstrukcja` drukowal akcje, sumy
+    n_trade i rozmiaru na konsole, a raport JSON zapisywal CO INNEGO (diff
+    rekordow). Straznik dokument<->artefakt nie mial wiec z czym porownac
+    tych czterech liczb — a to na nich stoi werdykt.
+
+    Przy pomiarze, ktorego nie da sie powtorzyc, rozjazd miedzy dokumentem
+    a konsola bylby niewykrywalny.
+    """
+
+    @staticmethod
+    def _wczytaj(p: Path) -> dict:
+        return json.loads(p.read_text(encoding="utf-8"))
+
+    @pytest.mark.parametrize("plik", REKONSTRUKCJE, ids=IDS_REK)
+    def test_cztery_punkty_kryterium_sa_spojne(self, plik):
+        """`identyczne` musi wynikac z liczb, a nie byc osobna deklaracja."""
+        j = self._wczytaj(plik)
+        rowne = (j["akcji_swiezy"] == j["akcji_nasz"]
+                 and j["n_trade_swiezy"] == j["n_trade_nasz"]
+                 and j["rozmiar_swiezy"] == j["rozmiar_nasz"]
+                 and j["pozycja_pierwszej_roznicy"] is None
+                 and j["roznych_pozycji"] == 0)
+        assert j["identyczne"] == rowne, (
+            f"{plik.name}: flaga `identyczne` nie zgadza sie z liczbami")
+
+    @pytest.mark.parametrize("plik", REKONSTRUKCJE, ids=IDS_REK)
+    def test_dokument_cytuje_liczby_rekonstrukcji(self, plik):
+        j = self._wczytaj(plik)
+        tekst = (ROOT / "docs" / "D5_DRYF_METADANYCH.md").read_text(
+            encoding="utf-8").replace("\u00a0", " ")
+        wymagane = [j["akcji_swiezy"], j["n_trade_swiezy"], j["rozmiar_swiezy"]]
+        brakuje = [n for n in sorted(set(wymagane))
+                   if f"{n:,}".replace(",", " ") not in tekst]
+        assert not brakuje, (
+            f"D5_DRYF nie cytuje liczb z {plik.name}: {brakuje}")
+
+    @pytest.mark.parametrize("plik", REKONSTRUKCJE, ids=IDS_REK)
+    def test_okno_pochodzi_z_zamrozonego_rejestru(self, plik):
+        """Artefakt nie moze opisywac okna, ktorego rejestr nie zna."""
+        import sys
+        sys.path.insert(0, str(ROOT))
+        from scripts.diff_mikro import wybierz_okno
+
+        j = self._wczytaj(plik)
+        o = wybierz_okno(j["sesja"])
+        assert j["zakres_utc"] == [o.start_utc, o.end_utc]
+
+
+def test_rekonstrukcja_zapisuje_artefakt_i_nadal_jest_darmowa():
+    """Dopisanie zapisu NIE moze przemycic wywolania sieciowego.
+
+    Tryb `--rekonstrukcja` jest uruchamiany bez zgody R1, bo nic nie kosztuje.
+    Ta wlasnosc musi przezyc kazda przyszla zmiane funkcji.
+    """
+    import inspect
+    import sys
+    sys.path.insert(0, str(ROOT))
+    from scripts import diff_mikro
+
+    zrodlo = inspect.getsource(diff_mikro.raport_rekonstrukcji)
+    assert "sciezka_rekonstrukcji(" in zrodlo, "tryb przestal zapisywac artefakt"
+    bez_docstringa = zrodlo.replace(diff_mikro.raport_rekonstrukcji.__doc__, "")
+    for zakazane in ("Historical", "get_cost", "get_range", "DATABENTO_API_KEY"):
+        assert zakazane not in bez_docstringa, (
+            f"tryb --rekonstrukcja siega po {zakazane} — przestal byc darmowy")
