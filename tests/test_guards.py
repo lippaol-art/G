@@ -803,3 +803,61 @@ def test_rekonstrukcja_zapisuje_artefakt_i_nadal_jest_darmowa():
     for zakazane in ("Historical", "get_cost", "get_range", "DATABENTO_API_KEY"):
         assert zakazane not in bez_docstringa, (
             f"tryb --rekonstrukcja siega po {zakazane} — przestal byc darmowy")
+
+
+class TestDatyPrzySHA:
+    """Data podana obok skrotu commita musi zgadzac sie z gitem.
+
+    TRZY NAWROTY TEJ SAMEJ KLASY BLEDU. Za kazdym razem pisalem date z pamieci
+    zamiast z `git show`: najpierw "wykonany 11.08" dla biegu z 13.08, potem
+    "znaleziona 13.08" dla commita z 18.08, potem "PASS (13.08)" dla commita
+    z 18.08. Recenzent ujal to precyzyjnie: w incydencie, w ktorym os czasu
+    obalila juz dwie diagnozy, DATY SA DANYMI.
+
+    Zamiast czwartego postanowienia poprawy — mechanizm. Szukamy wzorca
+    `<skrot>` w poblizu daty `DD.MM` i porownujemy z data commita.
+
+    Straznik pomija sie czysto, gdy repo nie ma historii (plytki klon w CI) —
+    lepiej stracic pokrycie w CI niz miec test, ktory klamie o powodzie.
+    """
+
+    #: Dokumenty, w ktorych daty przy SHA maja znaczenie dowodowe.
+    PLIKI = ("docs/D5_DRYF_METADANYCH.md", "data/KOSZTY.md", "HANDOFF.md")
+
+    @staticmethod
+    def _data_commita(sha: str) -> str | None:
+        import subprocess
+        try:
+            r = subprocess.run(
+                ["git", "show", "-s", "--format=%cd", "--date=format:%d.%m", sha],
+                cwd=ROOT, capture_output=True, text=True, timeout=15)
+        except (OSError, subprocess.SubprocessError):
+            return None
+        return r.stdout.strip() if r.returncode == 0 else None
+
+    def test_daty_obok_skrotow_zgadzaja_sie_z_gitem(self):
+        # `SHA` w backtickach, a w tej samej linii gdzies data DD.MM.
+        wzorzec = re.compile(r"`([0-9a-f]{7,40})`")
+        data_re = re.compile(r"\b(\d{2}\.\d{2})\b")
+
+        sprawdzone, rozjazdy = 0, []
+        for wzgledna in self.PLIKI:
+            plik = ROOT / wzgledna
+            if not plik.exists():
+                continue
+            for linia in plik.read_text(encoding="utf-8").splitlines():
+                daty = data_re.findall(linia)
+                if not daty:
+                    continue
+                for sha in wzorzec.findall(linia):
+                    prawdziwa = self._data_commita(sha)
+                    if prawdziwa is None:
+                        continue          # nie commit albo brak historii
+                    sprawdzone += 1
+                    if prawdziwa not in daty:
+                        rozjazdy.append(
+                            f"{wzgledna}: `{sha}` ma w gicie {prawdziwa}, "
+                            f"a w tekscie {daty}")
+        if sprawdzone == 0:
+            pytest.skip("brak historii gita albo zadnej pary SHA+data")
+        assert not rozjazdy, "daty rozjechane z gitem:\n  " + "\n  ".join(rozjazdy)

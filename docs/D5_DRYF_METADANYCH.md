@@ -995,7 +995,7 @@ zamknięta bez rozstrzygnięcia** — uzasadnienie i przyjęte ryzyko szczątkow
 
 ---
 
-## 5f. ⚠️ Pułapka w ścieżce zakupu — znaleziona 13.08, PRZED wydaniem pieniędzy
+## 5f. ⚠️ Pułapka w ścieżce zakupu — znaleziona 18.08, PRZED wydaniem pieniędzy
 
 Recenzja zapowiedziała, że bieg zakupowy będzie wymagał `--akceptuj-rozjazd`,
 „świadomie: archiwizacja manifestu + `przeniesione_wyniki` chronią pochodzenie
@@ -1036,7 +1036,14 @@ Cztery testy, w tym jeden pilnujący, że poprawka **nie przepuszcza plików
 uciętych w locie** — bo „cokolwiek innego niż bieżąca wycena" byłoby dokładnie
 tym błędem, dla którego `kompletny()` w ogóle powstał.
 
-### Poprawka miała lukę o tym samym kształcie — recenzja P2, 18.08
+> **Daty w tej sekcji poprawione 19.08 — trzeci nawrót tej samej klasy błędu.**
+> Pisałem „13.08" w trzech miejscach, bo pamiętałem dzień pierwszego
+> mikro-diffu, a nie sprawdzałem `git show`. Prawdziwe: `37ccfa2` = 18.08
+> 21:33Z, `e67c8ab` = 18.08 13:18Z, recenzja P2 = 19.08. Od tego commita
+> pilnuje tego strażnik `TestDatyPrzySHA` — data podana obok skrótu commita
+> musi zgadzać się z datą tego commita w gicie.
+
+### Poprawka miała lukę o tym samym kształcie — recenzja P2, 19.08
 
 Pierwsza wersja czytała opłacone liczby przez `rekordy_z_manifestu()`, czyli
 z `plan[]`. **Bieg zakupowy nadpisuje `plan[]` nowymi liczbami**, a zapis
@@ -1136,7 +1143,7 @@ co przy 07-03.
 (6 375 196 + 158 023 = 6 533 219; sumy typów po obu stronach; bilans
 przeniesienia; sumy `F_LAST`).
 
-> ### ✅ WERDYKT RECENZENTA: **PASS** (13.08, przy SHA `e67c8ab`)
+> ### ✅ WERDYKT RECENZENTA: **PASS** (18.08, przy SHA `e67c8ab`)
 >
 > Wszystkie cztery punkty kryterium spełnione. Recenzent zweryfikował
 > niezależnie w źródle: arytmetykę artefaktu, cross-check kryterium 2 z
@@ -1153,7 +1160,7 @@ przeniesienia; sumy `F_LAST`).
 
 ### Zarzut recenzji przyjęty: liczby rekonstrukcji żyły tylko w prozie
 
-Cztery liczby powyżej były do 13.08 **wyłącznie w tym dokumencie i w opisie
+Cztery liczby powyżej były do 18.08 **wyłącznie w tym dokumencie i w opisie
 commita**. Artefakt `reports/D5_mikro_diff_*.json` zapisuje diff rekordów —
 inne wielkości — więc strażnik dokument↔artefakt nie miał ich z czym porównać.
 Przy pomiarze, którego nie da się powtórzyć, rozjazd byłby niewykrywalny.

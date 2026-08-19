@@ -30,7 +30,7 @@ niezależnych audytach zewnętrznych) jest **jedynym źródłem prawdy** — kod
 a nie odwrotnie.
 
 Gotowe: fundament repo, silnik backtestowy, komplet aparatu walidacyjnego, strażnicy
-niezmienników, CI, golden baseline. **603 funkcji testowych (687 przypadków po parametryzacji), pokrycie 92%, ruff i mypy czyste.**
+niezmienników, CI, golden baseline. **604 funkcji testowych (688 przypadków po parametryzacji), pokrycie 92%, ruff i mypy czyste.**
 Liczbę pilnuje `tests/test_guards.py::test_handoff_podaje_aktualna_liczbe_testow` —
 bez tego rotowała dwa razy w ciągu doby, co jest dokładnie tym defektem, przed
 którym ostrzega reguła na górze tego pliku.
@@ -156,7 +156,7 @@ Decyzje właściciela z 11.08 zamknęły wszystko poza nią:
 | ✅ Wątek billingowy | zamknięty — żadnych dalszych maili |
 | ✅ Zgoda R1 na drugi mikro-diff | **udzielona**, limit 1,00 USD na okno |
 | ✅ Drugi mikro-diff | zgoda 11.08, **bieg 13.08**, koszt 0,6133 USD (limit 1,00). Cztery punkty kryterium spełnione — `D5_DRYF` §5e |
-| ✅ **Werdykt recenzenta** | **PASS** (13.08, SHA `e67c8ab`) — cztery punkty kryterium spełnione |
+| ✅ **Werdykt recenzenta** | **PASS** (18.08, SHA `e67c8ab`) — cztery punkty kryterium spełnione |
 | ✅ Artefakty rekonstrukcji | wygenerowane i zacommitowane dla obu okien (`3e3117d`); strażnik zielony |
 | ⚠️ **Zakup 17 sesji** | odblokowany werdyktem, ale **ścieżka `--akceptuj-rozjazd` miała pułapkę** — naprawiona 13.08, `D5_DRYF` §5f. **Przed biegiem: recenzja P2** |
 
