@@ -1036,6 +1036,39 @@ Cztery testy, w tym jeden pilnujący, że poprawka **nie przepuszcza plików
 uciętych w locie** — bo „cokolwiek innego niż bieżąca wycena" byłoby dokładnie
 tym błędem, dla którego `kompletny()` w ogóle powstał.
 
+### Poprawka miała lukę o tym samym kształcie — recenzja P2, 18.08
+
+Pierwsza wersja czytała opłacone liczby przez `rekordy_z_manifestu()`, czyli
+z `plan[]`. **Bieg zakupowy nadpisuje `plan[]` nowymi liczbami**, a zapis
+manifestu wykonuje się **także po `break`** — po braku miejsca, błędzie
+pobierania albo warunku 6.
+
+| stan | co zwracało `oplacone` dla starej sesji |
+|---|---|
+| przed pierwszym biegiem | **starą** liczbę — ochrona działa |
+| po dowolnym biegu, także przerwanym | **nową** liczbę — ochrona martwa |
+
+Obie linie obrony ginęły dokładnie w biegu, w którym są najbardziej
+potrzebne — **wznowieniowym**. To nie jest scenariusz teoretyczny: w historii
+projektu **2 z ~6 pobrań zostały przerwane**, a ten bieg ma ich 17.
+
+**Naprawa:** nowa funkcja `liczby_oplacone()` czyta w kolejności pierwszeństwa
+`wyniki[]` z wpisami `kompletny: true` (te opisują **plik**, nie oczekiwanie,
+i `przeniesione_wyniki()` przenosi je przez kolejne biegi), potem `plan[]` jako
+fallback na pierwszy bieg, a dla `2026-07-30` — `data/manifest_d5c.json`,
+śledzony w repo i nietykany przez bieg zakupowy.
+
+Dowód, że poprawka zmienia zachowanie, na manifeście w stanie „po biegu":
+
+```
+rekordy_z_manifestu (stara ścieżka): 40 286 094   ← nowa liczba, ochrona martwa
+liczby_oplacone     (nowa ścieżka): 39 297 265   ← liczba opłacona
+```
+
+Pięć testów odtwarzających ten stan, w tym jeden pilnujący, że wpis
+`kompletny: false` **nie** uwiarygodnia pliku — inaczej wrak 07-07
+(1 867 793 rek.) stałby się „opłaconą" liczbą i przeszedłby jako kompletny.
+
 ---
 
 ## 5e. Drugi mikro-diff — kryterium zapisane PRZED biegiem

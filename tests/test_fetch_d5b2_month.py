@@ -155,8 +155,14 @@ class TestWarunek4TrzecieNaliczenie:
     def test_sesja_d5c_na_liscie_przerywa(self):
         with pytest.raises(SystemExit) as e:
             f.sprawdz_sesje_d5c([{"sesja": f.SESJA_D5C}], pozwol=False)
-        assert "warunek 4" in str(e.value)
-        assert "trzeci raz" in str(e.value)
+        komunikat = str(e.value)
+        assert "warunek 4" in komunikat
+        # Intencja, nie dosłowne brzmienie: ma byc jasne, ze to TRZECI zakup.
+        assert "TRZECIE" in komunikat.upper()
+        # Od 18.08 komunikat ostrzega tez przed uzyciem flagi jako "odblokowania"
+        # sesji, ktorej plik pochodzi ze STAREJ normalizacji — recenzja P2.
+        assert "STAREJ normalizacji" in komunikat
+        assert "§5f" in komunikat
 
     def test_jawna_zgoda_pozwala_ale_ostrzega(self, capsys):
         f.sprawdz_sesje_d5c([{"sesja": f.SESJA_D5C}], pozwol=True)
@@ -618,3 +624,88 @@ class TestPlikZeStarejNormalizacji:
                                 staticmethod(lambda _, n=ile: range(n)))
             ok, _ = f.kompletny(Path(__file__), 9_999_999, oplacone=ile)
             assert ok, f"{sesja}: plik oplacony trafilby do ponownego zakupu"
+
+
+class TestOchronaPrzezywaNadpisanieManifestu:
+    """Ochrona starych plikow musi dzialac takze PO pierwszym biegu zakupowym.
+
+    ZARZUT RECENZJI P2, potwierdzony w zrodle. Poprawka z 37ccfa2 czytala
+    oplacone liczby przez `rekordy_z_manifestu()`, czyli z `plan[]`. Bieg
+    zakupowy nadpisuje `plan[]` nowymi liczbami, a zapis manifestu wykonuje sie
+    TAKZE PO `break` — po braku miejsca, bledzie pobierania albo warunku 6.
+
+    Skutek: po pierwszym biegu, chocby przerwanym, "oplacone" stawalo sie rowne
+    biezacej wycenie. Piec starych plikow znow wypadaloby jako niekompletne,
+    a obrona przy `unlink()` porownywalaby z nowa liczba i nie zadzialalaby.
+    Obie ochrony ginely dokladnie w biegu wznowieniowym — tym, w ktorym sa
+    najbardziej potrzebne. Historia projektu: 2 z ~6 pobran zostaly przerwane,
+    a ten bieg ma ich 17.
+    """
+
+    STARE = 39_297_265
+    NOWE = 40_286_094
+    SESJA = "2026-07-01"
+
+    def _manifest_po_biegu(self, tmp_path, monkeypatch):
+        """Manifest w stanie PO biegu: plan na nowych liczbach, stare wpisy
+        przeniesione w `wyniki` przez `przeniesione_wyniki()`."""
+        cel = tmp_path / "manifests" / f.MANIFEST
+        cel.parent.mkdir(parents=True, exist_ok=True)
+        cel.write_text(json.dumps({
+            "pobrano_utc": "2026-08-18T12:00:00+00:00",
+            "plan": [{"sesja": self.SESJA, "rekordow": self.NOWE},
+                     {"sesja": "2026-07-08", "rekordow": 46_050_560}],
+            "wyniki": [
+                {"sesja": self.SESJA, "rekordow": self.STARE,
+                 "kompletny": True, "z_poprzedniego_biegu": True,
+                 "normalizacja": "przed-2026-08-08"},
+                {"sesja": "2026-07-08", "rekordow": 46_050_560,
+                 "kompletny": True},
+            ]}), encoding="utf-8")
+        monkeypatch.setattr(f, "sciezka_manifestu", lambda: cel)
+        return cel
+
+    def test_wyniki_maja_pierwszenstwo_przed_planem(self, tmp_path, monkeypatch):
+        """Sedno naprawy: `wyniki[]` opisuje PLIK, `plan[]` tylko oczekiwanie."""
+        self._manifest_po_biegu(tmp_path, monkeypatch)
+        assert f.liczby_oplacone()[self.SESJA] == self.STARE, (
+            "po nadpisaniu planu ochrona czytalaby nowa liczbe — to jest "
+            "dokladnie ten blad, ktory zglosila recenzja P2")
+
+    def test_stary_plik_nadal_kompletny_po_biegu(self, tmp_path, monkeypatch):
+        """Warunek rozstrzygniecia recenzji: piec starych plikow kwalifikuje sie
+        jako kompletne takze w biegu wznowieniowym."""
+        self._manifest_po_biegu(tmp_path, monkeypatch)
+        monkeypatch.setattr(f.db.DBNStore, "from_file",
+                            staticmethod(lambda _: range(self.STARE)))
+        ok, powod = f.kompletny(Path(__file__), self.NOWE,
+                                f.liczby_oplacone().get(self.SESJA))
+        assert ok, f"wznowienie kupiloby oplacona sesje ponownie: {powod}"
+
+    def test_obrona_przy_unlink_nadal_rozpoznaje_oplacony_plik(
+            self, tmp_path, monkeypatch):
+        """Druga linia obrony porownuje z ta sama liczba, co kwalifikacja."""
+        self._manifest_po_biegu(tmp_path, monkeypatch)
+        assert f.liczby_oplacone().get(self.SESJA) == self.STARE
+
+    def test_sesja_d5c_bierze_liczbe_z_wlasnego_manifestu(
+            self, tmp_path, monkeypatch):
+        """07-30 nigdy nie trafia do `wyniki` kampanii — jej liczba pochodzi
+        z `data/manifest_d5c.json`, sledzonego w repo i nietykanego przez bieg."""
+        self._manifest_po_biegu(tmp_path, monkeypatch)
+        kanoniczny = json.loads(
+            (KORZEN / "data" / "manifest_d5c.json").read_text(encoding="utf-8"))
+        assert f.liczby_oplacone()[f.SESJA_D5C] == \
+            kanoniczny["rekordow_wg_metadata"]
+
+    def test_wpis_nieudanego_pobrania_nie_liczy_sie_jako_oplacony(
+            self, tmp_path, monkeypatch):
+        """`kompletny: false` to zapis PORAZKI — nie moze uwiarygodnic pliku."""
+        cel = tmp_path / "manifests" / f.MANIFEST
+        cel.parent.mkdir(parents=True, exist_ok=True)
+        cel.write_text(json.dumps({
+            "plan": [{"sesja": "2026-07-07", "rekordow": 48_848_835}],
+            "wyniki": [{"sesja": "2026-07-07", "rekordow": 1_867_793,
+                        "kompletny": False}]}), encoding="utf-8")
+        monkeypatch.setattr(f, "sciezka_manifestu", lambda: cel)
+        assert f.liczby_oplacone()["2026-07-07"] == 48_848_835

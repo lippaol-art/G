@@ -318,8 +318,14 @@ def sprawdz_sesje_d5c(do_pobrania: list[dict], pozwol: bool) -> None:
         f"  Ta doba byla juz kupiona dwa razy (D5-B i D5-C).\n"
         f"  Szukalem w: {raw_dir(KATALOG, nazwa_pliku(SESJA_D5C))}\n"
         f"          i : {raw_dir(KATALOG_D5C, nazwa_pliku(SESJA_D5C))}\n"
-        "  Sprawdz, czy plik istnieje i czy nie jest obciety. Jesli naprawde "
-        "chcesz zaplacic za nia trzeci raz, uruchom z --kup-ponownie-d5c.")
+        "  Sprawdz, czy plik istnieje i czy nie jest obciety.\n"
+        "\n"
+        "  UWAGA PRZED UZYCIEM --kup-ponownie-d5c: jesli ta sesja trafila tu\n"
+        "  dlatego, ze jej plik pochodzi ze STAREJ normalizacji (sprzed\n"
+        "  2026-08-08), to flaga NIE jest wlasciwa odpowiedzia. Plik jest\n"
+        "  kompletny w swojej epoce, a starej wersji nie da sie juz pobrac —\n"
+        "  patrz docs/D5_DRYF_METADANYCH.md §5f. Flaga sluzy wylacznie\n"
+        "  swiadomemu TRZECIEMU zakupowi tej doby.")
 
 
 def rekordy_z_manifestu() -> dict[str, int]:
@@ -333,6 +339,59 @@ def rekordy_z_manifestu() -> dict[str, int]:
         return {}
     return {w["sesja"]: int(w["rekordow"]) for w in stary.get("plan", [])
             if "rekordow" in w}
+
+
+def liczby_oplacone() -> dict[str, int]:
+    """Liczby rekordow plikow, ktore MAMY I ZA KTORE ZAPLACONO.
+
+    NIE to samo co `rekordy_z_manifestu()`. Tamta czyta `plan[]`, czyli
+    OCZEKIWANIA z ostatniej wyceny — i wlasnie dlatego nie nadaje sie tutaj:
+    **bieg zakupowy nadpisuje `plan[]` nowymi liczbami**, a zapis manifestu
+    wykonuje sie takze po `break` (brak miejsca, blad pobierania, warunek 6).
+
+    Skutek, gdyby zostawic tu `rekordy_z_manifestu()`: po PIERWSZYM biegu —
+    choćby przerwanym — "oplacone" staje sie rowne biezacej wycenie, wiec piec
+    starych plikow znow wypada z obu galezi `kompletny()`, a obrona przy
+    `unlink()` porownuje z nowa liczba i nie zadziala. Obie ochrony gina
+    dokladnie w biegu, w ktorym sa najbardziej potrzebne — wznowieniowym.
+    Zarzut recenzji P2, potwierdzony w zrodle.
+
+    Zrodla, w kolejnosci pierwszenstwa:
+
+    1. `wyniki[]` z wpisami `kompletny: true` — to zapis pliku, ktory realnie
+       pobrano i zweryfikowano. `przeniesione_wyniki()` przenosi te wpisy przez
+       kolejne biegi, wiec przezywaja nadpisanie `plan[]`,
+    2. `plan[]` — fallback na PIERWSZY bieg, zanim jakiekolwiek `wyniki`
+       powstana,
+    3. `data/manifest_d5c.json` dla `SESJA_D5C` — sledzony w repo i nietykany
+       przez bieg zakupowy, wiec dla tej doby jest zrodlem najtwardszym.
+
+    Bierzemy wylacznie wpisy `kompletny: true`. Wpis nieudanego pobrania niesie
+    liczbe OCZEKIWANA, nie liczbe pliku na dysku — dopuszczenie go nic by nie
+    zepsulo, ale "zaplacono za plik o tylu rekordach" ma znaczyc dokladnie to.
+    """
+    out: dict[str, int] = {}
+    cel = sciezka_manifestu()
+    if cel.exists():
+        try:
+            stary = json.loads(cel.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError):
+            stary = {}
+        for w in stary.get("plan", []):
+            if "rekordow" in w:
+                out[w["sesja"]] = int(w["rekordow"])
+        # `wyniki` NADPISUJE `plan` — opisuje plik, nie oczekiwanie.
+        for w in stary.get("wyniki", []):
+            if w.get("kompletny") and "rekordow" in w:
+                out[w["sesja"]] = int(w["rekordow"])
+    if KANONICZNY_D5C.exists():
+        try:
+            d5c = json.loads(KANONICZNY_D5C.read_text(encoding="utf-8"))
+            if "rekordow_wg_metadata" in d5c:
+                out[SESJA_D5C] = int(d5c["rekordow_wg_metadata"])
+        except (json.JSONDecodeError, OSError):
+            pass
+    return out
 
 
 def archiwizuj_manifest() -> Path | None:
@@ -612,7 +671,9 @@ def main() -> int:
     # ------------------------------------------------ stan przed zakupem --
     # Liczby rekordow, za ktore JUZ ZAPLACONO. Plik zgodny z ta liczba jest
     # kompletny w swojej epoce normalizacji — patrz `kompletny()`.
-    oplacone = rekordy_z_manifestu()
+    # NIE `rekordy_z_manifestu()`: tamta czyta `plan[]`, ktory bieg zakupowy
+    # nadpisuje nowymi liczbami, wiec ochrona ginelaby przy wznowieniu.
+    oplacone = liczby_oplacone()
 
     juz_mamy, do_pobrania, koszt_do_zaplaty = [], [], 0.0
     for w in plan:

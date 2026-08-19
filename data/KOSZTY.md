@@ -91,7 +91,7 @@ z konta i dlatego stoi tu osobno.
 
 | Pozycja | Koszt | Status |
 |---|---|---|
-| MBO, **17 pozostałych** sesji RTH lipca 2026 | **63,94 USD** | ⏳ **JEDNA BRAMKA** — wynik drugiego mikro-diffu (`D5_DRYF` §5e). Kwestia kont zamknięta 11.08 |
+| MBO, **17 pozostałych** sesji RTH lipca 2026 | **63,9335 USD** | ⏳ **JEDNA BRAMKA** — wynik drugiego mikro-diffu (`D5_DRYF` §5e). Kwestia kont zamknięta 11.08 |
 | Cała miesięczna próbka MBO (22 sesje, nowa normalizacja) | **80,68 USD** | limit zamrożony: **82,00 USD**, zapas 1,32 |
 
 **Stan pobrań: 5 z 22 sesji**, wszystkie w **starej** normalizacji —
@@ -100,6 +100,11 @@ z konta i dlatego stoi tu osobno.
 powodzeniem**: plik jest kompletny (32 369 900 rekordów, pokrycie
 13:30–19:59:59), a podwójne naliczenie rozliczone w §3a. Wcześniejszy wpis
 „pobrano 3 z 21, przerwane na 07-06" był nieaktualny od diagnostyki 08.08.
+
+**Kwota do wpisania po zakupie to 63,9335 USD**, nie zaokrąglone 63,94 —
+tyle rozliczy dostawca (80,6729 minus 16,7394 za pięć sesji, które już mamy).
+Zasada 2 tego rejestru: liczba w księdze ma być tą, którą naliczono, a nie tą,
+która wyszła z formatowania wydruku.
 
 Zostaje więc **17 sesji do dokupienia**, nie 18 i nie 21: 07-30 mamy z D5-C,
 a downloader **musi wykryć ją jako kompletną i pominąć** — inaczej naliczyłby
