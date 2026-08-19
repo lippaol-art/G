@@ -709,3 +709,104 @@ class TestOchronaPrzezywaNadpisanieManifestu:
                         "kompletny": False}]}), encoding="utf-8")
         monkeypatch.setattr(f, "sciezka_manifestu", lambda: cel)
         assert f.liczby_oplacone()["2026-07-07"] == 48_848_835
+
+
+class TestDiagnostykaWynikow:
+    """`scripts/diag_wyniki.py` — read-only odpowiedz na jedno pytanie: czy
+    ochrona piaciu starych plikow przezyje bieg zakupowy.
+
+    Skrypt istnieje po to, zeby wlasciciel nie musial czytac JSON-a recznie
+    i zeby werdykt nie zalezal od tego, czy ktos poprawnie zinterpretuje
+    `plan[]` kontra `wyniki[]`. Testy pilnuja, ze werdykt jest odwrotny
+    w dwoch stanach, ktore roznia sie dokladnie tym jednym.
+
+    Skrypt NIE moze siegac po `DATABENTO_API_KEY` ani po siec — dlatego
+    osobny test na sam import.
+    """
+
+    LIPCOWE = ("2026-07-01", "2026-07-02", "2026-07-03", "2026-07-06")
+
+    def _diag(self, monkeypatch, cel: Path):
+        from scripts import diag_wyniki as d
+        monkeypatch.setattr(f, "sciezka_manifestu", lambda: cel)
+        monkeypatch.setattr(d, "sciezka_manifestu", lambda: cel)
+        return d
+
+    def _zapisz(self, tmp_path, tresc: dict) -> Path:
+        cel = tmp_path / "manifests" / f.MANIFEST
+        cel.parent.mkdir(parents=True, exist_ok=True)
+        cel.write_text(json.dumps(tresc), encoding="utf-8")
+        return cel
+
+    def test_sam_plan_daje_werdykt_dosztukowki(self, tmp_path, monkeypatch,
+                                               capsys):
+        """Liczby wylacznie z `plan[]` — bieg zakupowy je nadpisze."""
+        cel = self._zapisz(tmp_path, {
+            "plan": [{"sesja": s, "rekordow": 100} for s in self.LIPCOWE],
+            "wyniki": []})
+        d = self._diag(monkeypatch, cel)
+        assert d.main() == 1
+        wyj = capsys.readouterr().out
+        assert "DOSZTUKOWKA POTRZEBNA" in wyj
+        for s in self.LIPCOWE:
+            assert s in wyj
+
+    def test_wyniki_kompletne_daja_zielone_swiatlo(self, tmp_path, monkeypatch,
+                                                  capsys):
+        """Te same sesje, ale liczba pochodzi z `wyniki[]` — przezyje bieg."""
+        cel = self._zapisz(tmp_path, {
+            "plan": [{"sesja": s, "rekordow": 999} for s in self.LIPCOWE],
+            "wyniki": [{"sesja": s, "rekordow": 100, "kompletny": True}
+                       for s in self.LIPCOWE]})
+        d = self._diag(monkeypatch, cel)
+        assert d.main() == 0
+        assert "ochrona trwala" in capsys.readouterr().out
+
+    def test_wpis_nieudany_nie_wystarcza(self, tmp_path, monkeypatch, capsys):
+        """`kompletny: false` to zapis porazki — nie moze dac zielonego."""
+        cel = self._zapisz(tmp_path, {
+            "plan": [{"sesja": s, "rekordow": 999} for s in self.LIPCOWE],
+            "wyniki": [{"sesja": s, "rekordow": 100, "kompletny": False}
+                       for s in self.LIPCOWE]})
+        d = self._diag(monkeypatch, cel)
+        assert d.main() == 1
+        assert "DOSZTUKOWKA POTRZEBNA" in capsys.readouterr().out
+
+    def test_brak_manifestu_nie_jest_zielony(self, tmp_path, monkeypatch,
+                                             capsys):
+        """Brak zapisu to brak dowodu, a nie dowod braku ryzyka."""
+        d = self._diag(monkeypatch, tmp_path / "nie_ma.json")
+        assert d.main() == 1
+        assert "BRAK MANIFESTU" in capsys.readouterr().out
+
+    def test_import_nie_czyta_klucza(self):
+        """Import modulu nie moze dotknac `DATABENTO_API_KEY` — inaczej
+        diagnostyka read-only wymagalaby sekretu, ktorego nie potrzebuje."""
+        zrodlo = (KORZEN / "scripts" / "diag_wyniki.py").read_text(
+            encoding="utf-8")
+        # Wystapienie dopuszczalne wylacznie w docstringu, nie w kodzie.
+        kod = [w for w in zrodlo.splitlines()
+               if "DATABENTO_API_KEY" in w and not w.lstrip().startswith("#")]
+        assert all("`DATABENTO_API_KEY`" in w for w in kod), \
+            f"klucz uzyty w kodzie diagnostyki: {kod}"
+
+    def test_skrypt_niczego_nie_zapisuje(self):
+        """Read-only znaczy read-only — zadnego zapisu ani kasowania.
+
+        Sprawdzane po drzewie skladniowym, nie po tekscie: dokumentacja tego
+        skryptu MUSI wymieniac `out.unlink()`, bo to jest wlasnie ta operacja,
+        przed ktora chroni. Straznik tekstowy zabranialby jej opisania.
+        """
+        import ast
+        zrodlo = (KORZEN / "scripts" / "diag_wyniki.py").read_text(
+            encoding="utf-8")
+        zakazane = {"write_text", "write_bytes", "unlink", "mkdir", "rmdir",
+                    "open", "rename", "replace", "touch"}
+        znalezione = [
+            w.func.attr if isinstance(w.func, ast.Attribute) else w.func.id
+            for w in ast.walk(ast.parse(zrodlo))
+            if isinstance(w, ast.Call)
+            and (isinstance(w.func, ast.Attribute) and w.func.attr in zakazane
+                 or isinstance(w.func, ast.Name) and w.func.id in zakazane)]
+        assert not znalezione, \
+            f"diagnostyka read-only wywoluje: {sorted(set(znalezione))}"
