@@ -1,0 +1,110 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  quality:
+    name: Jakość kodu i niezmienniki projektu
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          # Pin wg PLAN.pdf rozdz. 11.2 — ib_async ma problemy z nowszymi wersjami
+          python-version: "3.12"
+          cache: pip
+
+      - name: Instalacja zależności
+        # `validation` instalowane ŚWIADOMIE: bez `arch` i `scikit-learn` moduły
+        # spa.py i dsr.py cicho schodzą na ścieżkę zapasową, więc ich ścieżka
+        # główna nie byłaby wykonana ani razu — ani lokalnie, ani w CI.
+        #
+        # `data` z DOKŁADNIE TEGO SAMEGO POWODU, dopisane 06.08.2026. Bez
+        # `databento` skrypty zakupowe nie dają się nawet zaimportować, więc
+        # żaden ich test nie mógłby biec w CI — a to są jedyne skrypty, których
+        # błąd kosztuje realne pieniądze i jest nieodwracalny.
+        #
+        # Jak to wyszło: bramka lokalna była zielona, bo lokalnie `databento`
+        # jest zainstalowane. `scripts/check_all.sh` porównuje KOMENDY z CI,
+        # a ten rozjazd był w ZALEŻNOŚCIACH — czego z założenia nie wykryje.
+        # Stąd reguła: nowy test importujący moduł z extras wymaga sprawdzenia,
+        # czy CI ten extras instaluje.
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e '.[dev,validation,data]'
+          pip install ruff mypy
+
+      - name: Linter (ruff)
+        run: ruff check engine validation scripts tests research
+
+      - name: Kontrola typów (mypy)
+        # Blokujące od 01.08.2026 — wszystkie błędy usunięte, więc `continue-on-error`
+        # zamieniłoby kontrolę w ozdobę.
+        run: mypy engine validation --ignore-missing-imports
+
+      - name: Testy + pokrycie
+        # Bramka 5.6 świadomie wyłączona z pomiaru pokrycia: jej testy przepuszczają
+        # 2.5 mln barów przez pętlę Pythona, a instrumentacja coverage spowalnia to
+        # o rząd wielkości. Uruchamiana jest osobnym krokiem, bez `--cov`.
+        run: |
+          PYTHONPATH=. pytest -q \
+            --ignore=tests/test_engine_on_real_data.py \
+            --cov=engine --cov=validation \
+            --cov-report=term-missing \
+            --cov-fail-under=75
+
+      - name: Bramka silnika na realnych danych (rozdz. 5.6)
+        # Kryterium GO/NO-GO całego projektu: zerowa przewaga, znany efekt,
+        # symetria, determinizm. Osobny krok, żeby awaria była widoczna jako
+        # awaria BRAMKI, a nie jako jeden czerwony test wśród trzystu.
+        run: PYTHONPATH=. pytest tests/test_engine_on_real_data.py -v
+
+      - name: Strażnicy niezmienników projektu
+        # Uruchamiane osobno, żeby awaria była widoczna w logu jako odrębny krok:
+        # to nie są zwykłe testy, tylko kontrola zasad, na których stoi projekt.
+        run: PYTHONPATH=. pytest tests/test_guards.py -v
+
+  secrets:
+    name: Skan sekretów
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # pełna historia — klucz mógł wejść we wcześniejszym commicie
+
+      - name: Wzorce kluczy w historii repozytorium
+        # JEDEN JAWNY WYJĄTEK, opisany co do znaku — nie kategoria, nie wzorzec.
+        #
+        # Commit 8db698d dokumentował fałszywe alarmy strażnika sekretów na
+        # Windows i cytował w komunikacie fragment pliku `RECORD` z pakietu
+        # numpy. Base64url sumy SHA-256 używa znaku `-`, więc taki fragment
+        # potrafi przypadkiem zawierać `db-` i kilkadziesiąt znaków
+        # alfanumerycznych — czyli dokładnie wzorzec klucza Databento.
+        # Ciąg nie występuje w żadnym PLIKU, wyłącznie w tamtym komunikacie.
+        #
+        # Wyjątek filtruje po KONTEKŚCIE (`dist-info/RECORD`), a nie po samej
+        # wartości. Powód jest praktyczny i pouczający: pierwsza wersja tej
+        # poprawki wpisywała feralny ciąg wprost do tego pliku — czyli wnosiła
+        # wzorzec sekretu do repozytorium i wywalała strażnika działającego na
+        # plikach roboczych. Naprawa nie może wprowadzać tego, co naprawia.
+        #
+        # Dowolny inny ciąg pasujący do wzorca nadal wywala ten krok; zawężenie
+        # dotyczy wyłącznie linii cytujących manifest pakietu Pythona.
+        #
+        # Wniosek na przyszłość: nie cytujemy w komunikatach commitów ani
+        # w plikach ciągów pasujących do wzorców sekretów, nawet jako
+        # przykładów fałszywych alarmów.
+        run: |
+          echo "Szukam kluczy API w całej historii..."
+          if git log -p --all \
+             | grep -nE 'db-[A-Za-z0-9]{20,}' \
+             | grep -vF 'dist-info'; then
+            echo "::error::Znaleziono wzorzec klucza Databento w historii repozytorium"
+            exit 1
+          fi
+          echo "OK — brak wzorców kluczy"

@@ -1,0 +1,110 @@
+{
+ "zakres_dozwolony": {
+  "short_day": "False -> True",
+  "gap_kind": "anomaly -> expected"
+ },
+ "symbole": [
+  {
+   "symbol": "MNQ",
+   "wierszy": 2551265,
+   "kolumny_zabronione_bez_zmian": [
+    "ts_utc",
+    "open",
+    "high",
+    "low",
+    "close",
+    "volume",
+    "contract",
+    "trade_date",
+    "segment",
+    "px_raw",
+    "px_adj",
+    "halt_window",
+    "days_to_roll",
+    "dst_transition",
+    "data_condition"
+   ],
+   "short_day_false_na_true": 72206,
+   "short_day_dni": 64,
+   "gap_kind_anomaly_na_expected": 192,
+   "gap_kind_kierunki": [
+    {
+     "gap_kind": "anomaly",
+     "nowy": "expected",
+     "len": 192
+    }
+   ],
+   "sha256_stary": "7b9be5aa8cccb1e0debfcf8291bfd1c4c6a12138e723c074fdd4ffb31400f4c2",
+   "sha256_nowy": "d010b740247626fe08bcc4343f092ea4930f030eed343fe93f73d5e97bd8aa7d",
+   "plik": "mnq_1m_cont.parquet"
+  },
+  {
+   "symbol": "NQ",
+   "wierszy": 2573758,
+   "kolumny_zabronione_bez_zmian": [
+    "ts_utc",
+    "open",
+    "high",
+    "low",
+    "close",
+    "volume",
+    "contract",
+    "trade_date",
+    "segment",
+    "px_raw",
+    "px_adj",
+    "halt_window",
+    "days_to_roll",
+    "dst_transition",
+    "data_condition"
+   ],
+   "short_day_false_na_true": 72494,
+   "short_day_dni": 64,
+   "gap_kind_anomaly_na_expected": 113,
+   "gap_kind_kierunki": [
+    {
+     "gap_kind": "anomaly",
+     "nowy": "expected",
+     "len": 113
+    }
+   ],
+   "sha256_stary": "fd2d18d5c9acd5f640009ac41b60099a6f25150c2546ec038e86532f38ec0550",
+   "sha256_nowy": "9e207e4faa10bedf328d2c2dc11c8b6d764620cbd672b377cb2167350d0dfb72",
+   "plik": "nq_1m_cont.parquet"
+  },
+  {
+   "symbol": "ES",
+   "wierszy": 2573653,
+   "kolumny_zabronione_bez_zmian": [
+    "ts_utc",
+    "open",
+    "high",
+    "low",
+    "close",
+    "volume",
+    "contract",
+    "trade_date",
+    "segment",
+    "px_raw",
+    "px_adj",
+    "halt_window",
+    "days_to_roll",
+    "dst_transition",
+    "data_condition"
+   ],
+   "short_day_false_na_true": 72383,
+   "short_day_dni": 64,
+   "gap_kind_anomaly_na_expected": 178,
+   "gap_kind_kierunki": [
+    {
+     "gap_kind": "anomaly",
+     "nowy": "expected",
+     "len": 178
+    }
+   ],
+   "sha256_stary": "52c320b03562797f80c0d110dcf49dca7ccab7170202a33a03f8f5ed8bdef4c2",
+   "sha256_nowy": "e758573956df8f1e8682f133f6444c84cfb4194213bedd189a252d4b067757c9",
+   "plik": "es_1m_cont.parquet"
+  }
+ ]
+}

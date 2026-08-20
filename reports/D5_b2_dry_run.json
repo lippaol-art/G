@@ -1,0 +1,60 @@
+{
+ "sesja": "2026-07-30",
+ "akcji": 903116,
+ "kontrola": {
+  "rekordow": 38306877,
+  "koperty": 34810512,
+  "trade": 984113,
+  "fill": 1649924
+ },
+ "N1": {
+  "suma_trade": 984113,
+  "rekordow_trade": 984113,
+  "ok": true
+ },
+ "N2": {
+  "przypisan": 903116,
+  "ok": true
+ },
+ "N3": {
+  "zle": 0,
+  "ok": true
+ },
+ "N4": {
+  "niezgodne": 0,
+  "ok": true
+ },
+ "N5": {
+  "przecinajacych": 0,
+  "zle": 0,
+  "ok": true
+ },
+ "N6": {
+  "kopert_z_akcja": 842757,
+  "ok": true
+ },
+ "N7": {
+  "oczekiwanych": 390,
+  "z_akcjami": 390,
+  "pustych": 0,
+  "poza_rth": 0,
+  "ok": true
+ },
+ "N8": {
+  "ok": true
+ },
+ "opis": {
+  "strony": {
+   "B": 449661,
+   "A": 453455
+  },
+  "n_trade": {
+   "2": 54698,
+   "1": 838701,
+   "5": 1319,
+   "4": 1581,
+   "3": 6817
+  }
+ },
+ "bledy": []
+}

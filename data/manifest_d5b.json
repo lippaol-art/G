@@ -1,0 +1,234 @@
+{
+ "zapytanie": {
+  "dataset": "GLBX.MDP3",
+  "symbols": [
+   "MNQU6"
+  ],
+  "stype_in": "raw_symbol",
+  "schema": "trades"
+ },
+ "rth": "09:30-16:00 America/New_York (UTC wyprowadzone ze strefy)",
+ "sesji": 21,
+ "pobranych_teraz": 17,
+ "pominietych": 4,
+ "koszt_wyceny_usd": 26.406,
+ "rekordow": 21096133,
+ "bajtow": 386058626,
+ "pobrano_utc": "2026-08-03T20:51:38+00:00",
+ "databento": "0.82.0",
+ "pliki": [
+  {
+   "sesja": "2026-07-01",
+   "start_utc": "2026-07-01T13:30",
+   "end_utc": "2026-07-01T20:00",
+   "plik": "mnq_trades_rth_2026-07-01.dbn.zst",
+   "rekordow": 997325,
+   "bajtow": 18211679,
+   "koszt_usd": 1.2483,
+   "sha256": "827ac8c5c77210ca8cc3b165b86552b54ab1569f4540d66d407a72d0ac56aa78"
+  },
+  {
+   "sesja": "2026-07-02",
+   "start_utc": "2026-07-02T13:30",
+   "end_utc": "2026-07-02T20:00",
+   "plik": "mnq_trades_rth_2026-07-02.dbn.zst",
+   "rekordow": 1510673,
+   "bajtow": 27834851,
+   "koszt_usd": 1.8909,
+   "sha256": "4c6bbc9794a6d959a9d8833ddaff5a55d09b7ea83c81a38d171f603c38aee357"
+  },
+  {
+   "sesja": "2026-07-03",
+   "start_utc": "2026-07-03T13:30",
+   "end_utc": "2026-07-03T20:00",
+   "plik": "mnq_trades_rth_2026-07-03.dbn.zst",
+   "rekordow": 100882,
+   "bajtow": 1781161,
+   "koszt_usd": 0.1263,
+   "sha256": "86771b305110a0646b629b7039f65bda953a186efc5b5123954d7e702c1164f0"
+  },
+  {
+   "sesja": "2026-07-06",
+   "start_utc": "2026-07-06T13:30",
+   "end_utc": "2026-07-06T20:00",
+   "plik": "mnq_trades_rth_2026-07-06.dbn.zst",
+   "rekordow": 850668,
+   "bajtow": 15555418,
+   "koszt_usd": 1.0648,
+   "sha256": "a1ac6c9ad76b263028f83629c293a5383a48fc61adafee9ad3da7c7f6005bc30"
+  },
+  {
+   "sesja": "2026-07-07",
+   "start_utc": "2026-07-07T13:30",
+   "end_utc": "2026-07-07T20:00",
+   "plik": "mnq_trades_rth_2026-07-07.dbn.zst",
+   "rekordow": 1206227,
+   "bajtow": 22148267,
+   "koszt_usd": 1.5098,
+   "sha256": "572dc83b40114aa3112fa02562773247d7e71b3f9378240e7d6eb32b204455c6"
+  },
+  {
+   "sesja": "2026-07-08",
+   "start_utc": "2026-07-08T13:30",
+   "end_utc": "2026-07-08T20:00",
+   "plik": "mnq_trades_rth_2026-07-08.dbn.zst",
+   "rekordow": 1180262,
+   "bajtow": 21617596,
+   "koszt_usd": 1.4773,
+   "sha256": "9ce96b98e13847b05ffc60b876359ca347f65cc15f0fdb871fd1e2d1d3f781da"
+  },
+  {
+   "sesja": "2026-07-09",
+   "start_utc": "2026-07-09T13:30",
+   "end_utc": "2026-07-09T20:00",
+   "plik": "mnq_trades_rth_2026-07-09.dbn.zst",
+   "rekordow": 857646,
+   "bajtow": 15594954,
+   "koszt_usd": 1.0735,
+   "sha256": "dd631fc75afa602d90fe01823272838ae27975859d165c2c9a748d0a666a5354"
+  },
+  {
+   "sesja": "2026-07-10",
+   "start_utc": "2026-07-10T13:30",
+   "end_utc": "2026-07-10T20:00",
+   "plik": "mnq_trades_rth_2026-07-10.dbn.zst",
+   "rekordow": 876059,
+   "bajtow": 15884719,
+   "koszt_usd": 1.0966,
+   "sha256": "8703471a868b45315a865a5613399fc1481ac364c34302fa267e17023ea0f7c9"
+  },
+  {
+   "sesja": "2026-07-13",
+   "start_utc": "2026-07-13T13:30",
+   "end_utc": "2026-07-13T20:00",
+   "plik": "mnq_trades_rth_2026-07-13.dbn.zst",
+   "rekordow": 993001,
+   "bajtow": 18226465,
+   "koszt_usd": 1.2429,
+   "sha256": "bb157cf3d8eeae8ebe6ac9d7ef30b1947fa0b2f83142899238bbe4f5f2fe71dd"
+  },
+  {
+   "sesja": "2026-07-14",
+   "start_utc": "2026-07-14T13:30",
+   "end_utc": "2026-07-14T20:00",
+   "plik": "mnq_trades_rth_2026-07-14.dbn.zst",
+   "rekordow": 926686,
+   "bajtow": 16993487,
+   "koszt_usd": 1.1599,
+   "sha256": "216e1c7f4d6e4af3216c2ee4f94da41b91986525b2600d241032205f410e1789"
+  },
+  {
+   "sesja": "2026-07-15",
+   "start_utc": "2026-07-15T13:30",
+   "end_utc": "2026-07-15T20:00",
+   "plik": "mnq_trades_rth_2026-07-15.dbn.zst",
+   "rekordow": 1099399,
+   "bajtow": 20124893,
+   "koszt_usd": 1.3761,
+   "sha256": "24697fb99c549bdead5dca396dad1d6826dc1e0ed7d12854bac87be273cd3ac7"
+  },
+  {
+   "sesja": "2026-07-16",
+   "start_utc": "2026-07-16T13:30",
+   "end_utc": "2026-07-16T20:00",
+   "plik": "mnq_trades_rth_2026-07-16.dbn.zst",
+   "rekordow": 1045306,
+   "bajtow": 19103676,
+   "koszt_usd": 1.3084,
+   "sha256": "c298df787f534b572f3b6c6d0eb244a8976cb858e4c788e3d715d54fe1fb42ee"
+  },
+  {
+   "sesja": "2026-07-17",
+   "start_utc": "2026-07-17T13:30",
+   "end_utc": "2026-07-17T20:00",
+   "plik": "mnq_trades_rth_2026-07-17.dbn.zst",
+   "rekordow": 1211180,
+   "bajtow": 22320815,
+   "koszt_usd": 1.516,
+   "sha256": "436400ac7e69b8f89e1cee528349b1ff02f377326dd9ed1b90052a1cb7e88a6c"
+  },
+  {
+   "sesja": "2026-07-20",
+   "start_utc": "2026-07-20T13:30",
+   "end_utc": "2026-07-20T20:00",
+   "plik": "mnq_trades_rth_2026-07-20.dbn.zst",
+   "rekordow": 1001870,
+   "bajtow": 18425047,
+   "koszt_usd": 1.254,
+   "sha256": "4943f6cdf8b3c61d8b3825134fab6576bd2d5b1e50e01ad7d335833b28dc2de5"
+  },
+  {
+   "sesja": "2026-07-21",
+   "start_utc": "2026-07-21T13:30",
+   "end_utc": "2026-07-21T20:00",
+   "plik": "mnq_trades_rth_2026-07-21.dbn.zst",
+   "rekordow": 774942,
+   "bajtow": 13952930,
+   "koszt_usd": 0.97,
+   "sha256": "4b238055386ab904eb4e6d4afd8271ae85eb3f3eef25590884fc152e1273ddf2"
+  },
+  {
+   "sesja": "2026-07-22",
+   "start_utc": "2026-07-22T13:30",
+   "end_utc": "2026-07-22T20:00",
+   "plik": "mnq_trades_rth_2026-07-22.dbn.zst",
+   "rekordow": 743828,
+   "bajtow": 13461936,
+   "koszt_usd": 0.931,
+   "sha256": "d378b7c1b3193b148f5abcbc62ddf49f0a433fe09883c0d3fc331b929ea0db1e"
+  },
+  {
+   "sesja": "2026-07-23",
+   "start_utc": "2026-07-23T13:30",
+   "end_utc": "2026-07-23T20:00",
+   "plik": "mnq_trades_rth_2026-07-23.dbn.zst",
+   "rekordow": 1104849,
+   "bajtow": 20332036,
+   "koszt_usd": 1.3829,
+   "sha256": "4b93a5a5b1b27196b3a03c9ef1aed1dce7ca4d19a17051b7703788fbcab513de"
+  },
+  {
+   "sesja": "2026-07-24",
+   "start_utc": "2026-07-24T13:30",
+   "end_utc": "2026-07-24T20:00",
+   "plik": "mnq_trades_rth_2026-07-24.dbn.zst",
+   "rekordow": 1139663,
+   "bajtow": 20916552,
+   "koszt_usd": 1.4265,
+   "sha256": "09cf12a77a04e55991d240fbee572a157c5cafce4de0e191c1df969b8f7076ef"
+  },
+  {
+   "sesja": "2026-07-27",
+   "start_utc": "2026-07-27T13:30",
+   "end_utc": "2026-07-27T20:00",
+   "plik": "mnq_trades_rth_2026-07-27.dbn.zst",
+   "rekordow": 1207462,
+   "bajtow": 22249862,
+   "koszt_usd": 1.5114,
+   "sha256": "7daaa382bf9125cddefcc3ea0254cd9e1d159e2f433dc47333f659caf74d5377"
+  },
+  {
+   "sesja": "2026-07-28",
+   "start_utc": "2026-07-28T13:30",
+   "end_utc": "2026-07-28T20:00",
+   "plik": "mnq_trades_rth_2026-07-28.dbn.zst",
+   "rekordow": 1025089,
+   "bajtow": 18560365,
+   "koszt_usd": 1.2831,
+   "sha256": "9366fbca7bb046957b8d88f8b2e914d0ea03fb2485c3c47d7ccf54c7d91a3c11"
+  },
+  {
+   "sesja": "2026-07-29",
+   "start_utc": "2026-07-29T13:30",
+   "end_utc": "2026-07-29T20:00",
+   "plik": "mnq_trades_rth_2026-07-29.dbn.zst",
+   "rekordow": 1243116,
+   "bajtow": 22761917,
+   "koszt_usd": 1.556,
+   "sha256": "0dc6e2ba38f7438a680fba4017969755323f553506491efa700629ee168da505"
+  }
+ ],
+ "limit_usd_zamrozony": 30.0,
+ "koszt_gorna_granica_usd": 27.916,
+ "uwaga_koszt": "Wycena 26.406 USD obejmuje wszystkie 21 sesji. Pierwsze podejscie urwalo transfer sesji 2026-07-07 (koszt tej sesji 1.5098 USD) i ponowne pobranie moglo zostac naliczone drugi raz. Databento nie udostepnia w API endpointu rozliczeniowego, wiec podajemy GORNA GRANICE 27.916 USD zamiast liczby, ktorej nie zmierzylismy. Obie wartosci mieszcza sie w limicie 30.00 USD."
+}
