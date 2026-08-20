@@ -1076,6 +1076,58 @@ Pięć testów odtwarzających ten stan, w tym jeden pilnujący, że wpis
 `kompletny: false` **nie** uwiarygodnia pliku — inaczej wrak 07-07
 (1 867 793 rek.) stałby się „opłaconą" liczbą i przeszedłby jako kompletny.
 
+### Trzecie podejście: `wyniki[]` u właściciela było PUSTE — recenzja P1, 20.08
+
+Poprawka P2 oparła trwałość ochrony na `wyniki[]`. Recenzja P1 zażądała, żeby
+przed wydaniem komendy zakupu **sprawdzić, czy tam cokolwiek jest** — zamiast
+założyć, że jest. Diagnostyka `scripts/diag_wyniki.py` (read-only: bez sieci,
+bez klucza, bez zapisu — pilnują tego dwa testy, jeden po AST) dała odpowiedź:
+
+```
+plan[]   : 22 sesji
+wyniki[] :  0 wpisow
+```
+
+**Zero.** Manifest powstał w biegu, który niczego nie pobrał, więc cztery sesje
+lipcowe stały wyłącznie na `plan[]` — czyli na jedynym z trzech źródeł, które
+bieg zakupowy nadpisuje. Ochrona wyglądała na naprawioną i była martwa
+w praktyce; różnicy nie dało się zobaczyć bez zajrzenia do pliku.
+
+To trzeci nawrót tego samego kształtu błędu w tym wątku: **zabezpieczenie
+oparte na stanie, którego nie sprawdzono.** Za pierwszym razem był to plik
+uznany za kompletny bez policzenia rekordów, za drugim `plan[]` uznany za
+trwały bez prześledzenia zapisu, za trzecim `wyniki[]` uznane za niepuste.
+
+**Naprawa — `syntetyzuj_wyniki()`.** Przy zapisie manifestu, dla każdej sesji
+pominiętej jako kompletna, której poprzedni manifest nie opisuje w `wyniki[]`,
+powstaje wpis z liczbą rekordów, `kompletny: true` i jawnym polem
+`pochodzenie`. Przeniesienie z `plan[]` do `wyniki[]` — ze źródła ulotnego do
+trwałego — dzieje się **w tym samym zapisie, który nadpisuje `plan[]`**.
+
+Dwie decyzje warte odnotowania:
+
+- **Liczba jest zmierzona, nie założona.** `kompletny()` przyjęło opcjonalny,
+  keyword-only słownik `zmierzone`, do którego odkłada policzoną liczbę
+  rekordów. Nie zmienia to ani werdyktu, ani żadnej innej decyzji — istnieje
+  po to, żeby wpis `kompletny: true` opisywał **plik**, a nie jedną z dwóch
+  liczb dopuszczalnych, i żeby nie mielić tych samych 11,5 GB drugi raz.
+  Wpis „kompletny" z liczbą wziętą z założenia byłby dokładnie tym rodzajem
+  twierdzenia bez pomiaru, którego ten projekt zakazuje.
+- **`sha256` świadomie pominięty.** Policzenie go znaczy przeczytać te pliki
+  jeszcze raz, a wpis powstaje po to, żeby unieść liczbę rekordów, nie żeby
+  poświadczyć bajty. Pole nieobecne jest uczciwsze niż wypełnione czymkolwiek.
+
+Dziesięć testów, w tym regresja end-to-end odtwarzająca stan z maszyny
+właściciela (`wyniki[]` puste → zapis manifestu z nadpisanym `plan[]` →
+`liczby_oplacone()` nadal zwraca liczbę opłaconą) i kontrola przeciwna
+pokazująca, że **bez syntezy plik wypada jako niekompletny** — czyli trafia
+pod `out.unlink()`. Bez tej drugiej test nie dowodziłby, że poprawka
+cokolwiek robi.
+
+Po naprawie diagnostyka rozróżnia trzy stany zamiast dwóch: liczba w `wyniki[]`
+(trwała), liczba w `plan[]` (ulotna, ale synteza ją utrwali — **można kupować**),
+brak liczby (blokada, bo nie ma z czym porównać pliku).
+
 ---
 
 ## 5e. Drugi mikro-diff — kryterium zapisane PRZED biegiem

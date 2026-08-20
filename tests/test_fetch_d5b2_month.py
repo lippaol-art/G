@@ -738,16 +738,35 @@ class TestDiagnostykaWynikow:
         cel.write_text(json.dumps(tresc), encoding="utf-8")
         return cel
 
-    def test_sam_plan_daje_werdykt_dosztukowki(self, tmp_path, monkeypatch,
-                                               capsys):
-        """Liczby wylacznie z `plan[]` — bieg zakupowy je nadpisze."""
+    def test_sam_plan_przechodzi_bo_synteza_utrwali(self, tmp_path, monkeypatch,
+                                                    capsys):
+        """Stan zmierzony u wlasciciela: liczby wylacznie w `plan[]`.
+
+        Do czasu poprawki P1 byla to blokada. Po niej nie jest: `oplacone`
+        czyta stary `plan[]` PRZED petla zakupu, a `syntetyzuj_wyniki()`
+        przenosi te liczby do `wyniki[]` w tym samym zapisie manifestu,
+        ktory `plan[]` nadpisuje. Werdykt musi to odrozniac od braku liczby,
+        bo inaczej diagnostyka blokowalaby zakup, ktory jest juz bezpieczny.
+        """
         cel = self._zapisz(tmp_path, {
             "plan": [{"sesja": s, "rekordow": 100} for s in self.LIPCOWE],
             "wyniki": []})
         d = self._diag(monkeypatch, cel)
+        assert d.main() == 0
+        wyj = capsys.readouterr().out
+        assert "mozna uruchomic zakup" in wyj
+        assert "BLOKADA" not in wyj
+        for s in self.LIPCOWE:
+            assert s in wyj
+
+    def test_brak_liczby_to_blokada(self, tmp_path, monkeypatch, capsys):
+        """Sesja nieobecna ani w `plan[]`, ani w `wyniki[]` — nie ma z czym
+        porownac pliku, wiec zadna z dwoch ochron nie ma na czym stanac."""
+        cel = self._zapisz(tmp_path, {"plan": [], "wyniki": []})
+        d = self._diag(monkeypatch, cel)
         assert d.main() == 1
         wyj = capsys.readouterr().out
-        assert "DOSZTUKOWKA POTRZEBNA" in wyj
+        assert "BLOKADA" in wyj
         for s in self.LIPCOWE:
             assert s in wyj
 
@@ -762,15 +781,25 @@ class TestDiagnostykaWynikow:
         assert d.main() == 0
         assert "ochrona trwala" in capsys.readouterr().out
 
-    def test_wpis_nieudany_nie_wystarcza(self, tmp_path, monkeypatch, capsys):
-        """`kompletny: false` to zapis porazki — nie moze dac zielonego."""
+    def test_wpis_nieudany_nie_liczy_sie_jako_trwaly(self, tmp_path,
+                                                     monkeypatch, capsys):
+        """`kompletny: false` to zapis PORAZKI — nie moze uchodzic za trwale
+        zrodlo, mimo ze siedzi w `wyniki[]`.
+
+        Sesja ma wtedy spasc do `plan[]` (czyli do syntezy), a nie zostac
+        zaliczona jako "ochrona trwala" — bo wpis nieudanego pobrania niesie
+        liczbe OCZEKIWANA, nie liczbe pliku lezacego na dysku.
+        """
         cel = self._zapisz(tmp_path, {
             "plan": [{"sesja": s, "rekordow": 999} for s in self.LIPCOWE],
             "wyniki": [{"sesja": s, "rekordow": 100, "kompletny": False}
                        for s in self.LIPCOWE]})
         d = self._diag(monkeypatch, cel)
-        assert d.main() == 1
-        assert "DOSZTUKOWKA POTRZEBNA" in capsys.readouterr().out
+        assert d.main() == 0
+        wyj = capsys.readouterr().out
+        assert "ochrona trwala" not in wyj
+        assert "synteza go utrwali" in wyj
+        assert "999" in wyj, "liczba ma pochodzic z `plan[]`, nie z wpisu porazki"
 
     def test_brak_manifestu_nie_jest_zielony(self, tmp_path, monkeypatch,
                                              capsys):
@@ -810,3 +839,192 @@ class TestDiagnostykaWynikow:
                  or isinstance(w.func, ast.Name) and w.func.id in zakazane)]
         assert not znalezione, \
             f"diagnostyka read-only wywoluje: {sorted(set(znalezione))}"
+
+
+class TestSyntezaWynikow:
+    """Domkniecie luki P1: liczby oplacone przenoszone z `plan[]` do `wyniki[]`.
+
+    STAN, KTORY TO WYWOLAL — zmierzony na maszynie wlasciciela, nie zalozony:
+    manifest mial 22 wpisy w `plan[]` i **ZERO** w `wyniki[]`, bo powstal
+    w biegu, ktory niczego nie pobral. Cztery sesje lipcowe ze starej
+    normalizacji stały wiec wylacznie na `plan[]` — a bieg zakupowy `plan[]`
+    nadpisuje, takze po `break`.
+
+    Skutek bez tej poprawki, dokladnie w biegu wznowieniowym: `kompletny()`
+    przestaje uznawac te pliki, wiec trafiaja na liste do pobrania; druga linia
+    obrony przy `unlink()` porownuje z NOWA liczba, wiec nie zatrzymuje;
+    kasujemy jedyny egzemplarz starej normalizacji i placimy za niego drugi raz.
+    """
+
+    SESJA = "2026-07-01"
+    STARE = 39_297_265      # liczba oplacona, plik na dysku
+    NOWE = 40_286_094       # ta sama sesja wg wyceny po zmianie normalizacji
+    MANIFEST_UTC = "2026-08-06T22:05:38+00:00"
+
+    def _plan(self):
+        return [dict(sesja=self.SESJA, start_utc="2026-07-01T13:30:00Z",
+                     end_utc="2026-07-01T20:00:00Z", koszt_usd=1.2345,
+                     koszt_dokladny=1.2345, rekordow=self.NOWE)]
+
+    def _stary_manifest(self, tmp_path, monkeypatch, wyniki=None):
+        cel = tmp_path / "manifests" / f.MANIFEST
+        cel.parent.mkdir(parents=True, exist_ok=True)
+        cel.write_text(json.dumps({
+            "pobrano_utc": self.MANIFEST_UTC,
+            "plan": [{"sesja": self.SESJA, "rekordow": self.STARE}],
+            "wyniki": wyniki or []}), encoding="utf-8")
+        monkeypatch.setattr(f, "sciezka_manifestu", lambda: cel)
+        return cel
+
+    def _sciezka(self, tmp_path, monkeypatch) -> Path:
+        p = tmp_path / f"mnq_mbo_rth_{self.SESJA}.dbn.zst"
+        p.write_bytes(b"x")
+        monkeypatch.setattr(f, "sciezka_istniejaca", lambda _s: p)
+        return p
+
+    # ------------------------------------------------ pomiar w kompletny --
+
+    def test_kompletny_odklada_zmierzona_liczbe(self, tmp_path, monkeypatch):
+        """`zmierzone` niesie POMIAR — inaczej synteza musialaby zgadywac,
+        ktora z dwoch dopuszczalnych liczb pasowala do pliku."""
+        p = self._sciezka(tmp_path, monkeypatch)
+        monkeypatch.setattr(f.db.DBNStore, "from_file",
+                            staticmethod(lambda _: range(self.STARE)))
+        zm: dict[str, int] = {}
+        ok, _ = f.kompletny(p, self.NOWE, self.STARE, zmierzone=zm)
+        assert ok
+        assert zm[str(p)] == self.STARE
+
+    def test_zmierzone_nie_zmienia_werdyktu(self, tmp_path, monkeypatch):
+        """Parametr jest wylacznie obserwacyjny — nie wolno mu niczego uznac."""
+        p = self._sciezka(tmp_path, monkeypatch)
+        monkeypatch.setattr(f.db.DBNStore, "from_file",
+                            staticmethod(lambda _: range(123)))
+        bez = f.kompletny(p, self.NOWE, self.STARE)
+        z = f.kompletny(p, self.NOWE, self.STARE, zmierzone={})
+        assert bez == z
+        assert bez[0] is False
+
+    # ------------------------------------------------------- synteza -----
+
+    def test_syntetyzuje_wpis_gdy_wyniki_puste(self, tmp_path, monkeypatch):
+        """Wlasciwy stan z maszyny wlasciciela: `wyniki[]` puste."""
+        self._stary_manifest(tmp_path, monkeypatch)
+        p = self._sciezka(tmp_path, monkeypatch)
+        out = f.syntetyzuj_wyniki([self.SESJA], self._plan(),
+                                  {str(p): self.STARE}, [])
+        assert len(out) == 1
+        w = out[0]
+        assert w["sesja"] == self.SESJA
+        assert w["kompletny"] is True
+        assert w["rekordow"] == self.STARE, \
+            "wpis musi niesc liczbe ZMIERZONA w pliku"
+        assert w["pochodzenie"], "brak jawnego znacznika pochodzenia"
+
+    def test_zapisuje_pomiar_a_nie_liczbe_z_planu(self, tmp_path, monkeypatch):
+        """Trzy rozne liczby w grze — wpis musi wziac te z pliku.
+
+        `plan[]` niesie oczekiwanie biezacej wyceny, `oplacone` jedna z dwoch
+        liczb dopuszczalnych. Tylko pomiar opisuje plik, a wpis mowi
+        `kompletny: true` wlasnie o pliku.
+        """
+        self._stary_manifest(tmp_path, monkeypatch)
+        p = self._sciezka(tmp_path, monkeypatch)
+        out = f.syntetyzuj_wyniki([self.SESJA], self._plan(),
+                                  {str(p): self.STARE}, [])
+        assert out[0]["rekordow"] != self.NOWE
+
+    def test_nie_dubluje_sesji_opisanej_przez_przeniesienie(
+            self, tmp_path, monkeypatch):
+        """Gdy stary manifest ma juz wpis, synteza milczy."""
+        self._stary_manifest(tmp_path, monkeypatch)
+        p = self._sciezka(tmp_path, monkeypatch)
+        przeniesione = [{"sesja": self.SESJA, "rekordow": self.STARE,
+                         "kompletny": True}]
+        out = f.syntetyzuj_wyniki([self.SESJA], self._plan(),
+                                  {str(p): self.STARE}, przeniesione)
+        assert out == []
+
+    def test_brak_pomiaru_nie_produkuje_wpisu(self, tmp_path, monkeypatch,
+                                              capsys):
+        """Bez pomiaru NIE zmyslamy liczby — lepiej brak wpisu i ostrzezenie."""
+        self._stary_manifest(tmp_path, monkeypatch)
+        self._sciezka(tmp_path, monkeypatch)
+        out = f.syntetyzuj_wyniki([self.SESJA], self._plan(), {}, [])
+        assert out == []
+        assert "UWAGA" in capsys.readouterr().out
+
+    def test_backfill_normalizacji_z_manifestu(self, tmp_path, monkeypatch):
+        """Znacznik epoki bierzemy z `pobrano_utc` manifestu — nie zgadujemy."""
+        self._stary_manifest(tmp_path, monkeypatch)
+        p = self._sciezka(tmp_path, monkeypatch)
+        out = f.syntetyzuj_wyniki([self.SESJA], self._plan(),
+                                  {str(p): self.STARE}, [])
+        assert out[0]["normalizacja"] == "przed-2026-08-08"
+
+    def test_bez_pobrano_utc_epoka_nieustalona(self, tmp_path, monkeypatch):
+        """Brak znacznika to "NIEUSTALONA", a nie domysl."""
+        cel = tmp_path / "manifests" / f.MANIFEST
+        cel.parent.mkdir(parents=True, exist_ok=True)
+        cel.write_text(json.dumps({"plan": [], "wyniki": []}),
+                       encoding="utf-8")
+        monkeypatch.setattr(f, "sciezka_manifestu", lambda: cel)
+        p = self._sciezka(tmp_path, monkeypatch)
+        out = f.syntetyzuj_wyniki([self.SESJA], self._plan(),
+                                  {str(p): self.STARE}, [])
+        assert out[0]["normalizacja"] == "NIEUSTALONA"
+
+    # ------------------------------------------- regresja end-to-end -----
+
+    def test_po_syntezie_ochrona_przezywa_nadpisanie_planu(
+            self, tmp_path, monkeypatch):
+        """SEDNO. Manifest po biegu ma `plan[]` z NOWYMI liczbami — a ochrona
+        starego pliku ma nadal dzialac.
+
+        Odtwarza dokladnie stan z maszyny wlasciciela: `wyniki[]` puste,
+        liczba wylacznie w `plan[]`. Po zapisie manifestu z synteza liczba
+        siedzi w `wyniki[]` i nadpisany `plan[]` juz jej nie dotyczy.
+        """
+        cel = self._stary_manifest(tmp_path, monkeypatch)
+        p = self._sciezka(tmp_path, monkeypatch)
+
+        przeniesione = f.przeniesione_wyniki([self.SESJA])
+        assert przeniesione == [], "warunek wyjsciowy: stare `wyniki[]` puste"
+        syntetyczne = f.syntetyzuj_wyniki([self.SESJA], self._plan(),
+                                          {str(p): self.STARE}, przeniesione)
+
+        # Zapis manifestu tak, jak robi to bieg zakupowy: `plan[]` NADPISANY
+        # nowymi liczbami, `wyniki[]` = przeniesione + syntetyczne + pobrane.
+        cel.write_text(json.dumps({
+            "pobrano_utc": "2026-08-20T10:00:00+00:00",
+            "plan": [{"sesja": self.SESJA, "rekordow": self.NOWE}],
+            "wyniki": przeniesione + syntetyczne}), encoding="utf-8")
+
+        assert f.liczby_oplacone()[self.SESJA] == self.STARE, \
+            ("po nadpisaniu `plan[]` ochrona czytalaby nowa liczbe — to jest "
+             "dokladnie ta luka, ktora zglosila recenzja P1")
+
+        monkeypatch.setattr(f.db.DBNStore, "from_file",
+                            staticmethod(lambda _: range(self.STARE)))
+        ok, powod = f.kompletny(p, self.NOWE,
+                                f.liczby_oplacone().get(self.SESJA))
+        assert ok, f"bieg wznowieniowy kupilby oplacona sesje ponownie: {powod}"
+
+    def test_bez_syntezy_ochrona_ginie(self, tmp_path, monkeypatch):
+        """Kontrola przeciwna: poprawka realnie zmienia wynik.
+
+        Ten sam scenariusz z pustym `syntetyczne` — plik wypada jako
+        niekompletny, czyli trafia pod `out.unlink()`.
+        """
+        cel = self._stary_manifest(tmp_path, monkeypatch)
+        p = self._sciezka(tmp_path, monkeypatch)
+        cel.write_text(json.dumps({
+            "plan": [{"sesja": self.SESJA, "rekordow": self.NOWE}],
+            "wyniki": []}), encoding="utf-8")
+
+        assert f.liczby_oplacone()[self.SESJA] == self.NOWE
+        monkeypatch.setattr(f.db.DBNStore, "from_file",
+                            staticmethod(lambda _: range(self.STARE)))
+        ok, _ = f.kompletny(p, self.NOWE, f.liczby_oplacone().get(self.SESJA))
+        assert not ok, ("bez syntezy plik MUSI wypasc jako niekompletny — "
+                        "inaczej test nie dowodzi, ze poprawka cokolwiek robi")

@@ -54,10 +54,10 @@ def main() -> int:
     cel = sciezka_manifestu()
     print(f"manifest : {cel}")
     if not cel.exists():
-        print("\nBRAK MANIFESTU. To nie jest samo w sobie zle — znaczy tylko, ze")
-        print("nie bylo jeszcze biegu zapisujacego. Ale wtedy `wyniki[]` nie ma")
-        print("i ochrona stoi wylacznie na `plan[]` oraz na kanonicznym")
-        print("manifescie D5-C. Wynik: DOSZTUKOWKA POTRZEBNA.")
+        print("\nBRAK MANIFESTU — nie ma zadnej zapisanej liczby rekordow, wiec")
+        print("nie ma tez z czym porownac plikow na dysku. `kompletny()` uzna je")
+        print("za niekompletne, a obrona przy `unlink()` nie ma na czym stanac.")
+        print("WERDYKT: BLOKADA. Nie uruchamiaj zakupu.")
         return 1
 
     stary = json.loads(cel.read_text(encoding="utf-8"))
@@ -77,6 +77,7 @@ def main() -> int:
     print("-" * len(naglowek))
 
     braki: list[str] = []
+    do_syntezy: list[str] = []
     for sesja in SESJE_STARA_NORMALIZACJA:
         w = wyniki.get(sesja)
         ma_wynik = "tak" if w is not None else "NIE"
@@ -90,10 +91,10 @@ def main() -> int:
         elif w is not None and w.get("kompletny"):
             zrodlo = "wyniki[] (PRZEZYJE bieg zakupowy)"
         elif sesja in plan:
-            zrodlo = "plan[] — ZOSTANIE NADPISANY, ochrona zginie"
-            braki.append(sesja)
+            zrodlo = "plan[] — ulotny, ale synteza go utrwali"
+            do_syntezy.append(sesja)
         else:
-            zrodlo = "BRAK — plik bez ochrony"
+            zrodlo = "BRAK LICZBY — plik bez zadnej ochrony"
             braki.append(sesja)
 
         print(f"{sesja:<12} {ma_wynik:<12} {komplet:<10} "
@@ -112,16 +113,27 @@ def main() -> int:
 
     print()
     if braki:
-        print("WERDYKT: DOSZTUKOWKA POTRZEBNA przed komenda zakupu.")
-        print("Sesje bez trwalej ochrony: " + ", ".join(braki))
-        print("Ich liczby pochodza ze zrodla, ktore bieg zakupowy nadpisze —")
-        print("po pierwszym biegu `kompletny()` przestanie je uznawac, a druga")
-        print("linia obrony przy `unlink()` porowna z nowa liczba i przepusci.")
+        print("WERDYKT: BLOKADA. Sesje bez zadnej liczby: " + ", ".join(braki))
+        print("Nie ma z czym porownac pliku, wiec ani `kompletny()`, ani obrona")
+        print("przy `unlink()` nie maja na czym stanac. Nie uruchamiaj zakupu.")
         return 1
 
+    if do_syntezy:
+        print("WERDYKT: mozna uruchomic zakup. Ochrona w BIEGU jest pelna,")
+        print("a trwalosc zalatwia synteza przy zapisie manifestu.")
+        print("Sesje stojace jeszcze na `plan[]`: " + ", ".join(do_syntezy))
+        print()
+        print("Dlaczego to wystarcza — dwa kroki, oba w tym samym biegu:")
+        print("  1. `liczby_oplacone()` czyta STARY manifest PRZED petla zakupu,")
+        print("     wiec w tym biegu liczby z `plan[]` sa jeszcze poprawne,")
+        print("  2. `syntetyzuj_wyniki()` przy zapisie manifestu przenosi je")
+        print("     do `wyniki[]` — czyli ze zrodla ulotnego do trwalego,")
+        print("     w tym samym zapisie, ktory nadpisuje `plan[]`.")
+        print("Po tym biegu ta sama komenda pokaze juz `wyniki[]`.")
+        return 0
+
     print("WERDYKT: ochrona trwala dla wszystkich piaciu starych sesji.")
-    print("Zadna z liczb nie pochodzi z `plan[]`, wiec bieg zakupowy jej nie")
-    print("nadpisze. Komenda zakupu moze isc bez dodatkowej zmiany w kodzie.")
+    print("Zadna z liczb nie stoi na `plan[]` — nie ma nawet czego syntetyzowac.")
     return 0
 
 

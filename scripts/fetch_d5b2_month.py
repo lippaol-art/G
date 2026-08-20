@@ -532,6 +532,86 @@ def przeniesione_wyniki(pomijane: list[str]) -> list[dict]:
     return out
 
 
+def syntetyzuj_wyniki(pomijane: list[str], plan: list[dict],
+                      zmierzone: dict[str, int],
+                      przeniesione: list[dict]) -> list[dict]:
+    """Wpisy `wyniki[]` dla plikow kompletnych, ktorych manifest nie opisuje.
+
+    LUKA, KTORA TO ZAMYKA. `liczby_oplacone()` bierze liczbe rekordow z trzech
+    zrodel, ale tylko dwa przezywaja bieg zakupowy: `wyniki[]` (przenoszone
+    przez `przeniesione_wyniki`) i `data/manifest_d5c.json` (w repo). Trzecie —
+    `plan[]` — bieg **nadpisuje** nowa wycena, i robi to takze po `break`.
+
+    Na maszynie wlasciciela `wyniki[]` bylo PUSTE (0 wpisow przy 22 w `plan[]`),
+    bo manifest powstal w biegu, ktory niczego nie pobral. Cztery sesje
+    lipcowe ze starej normalizacji stalyby wiec wylacznie na `plan[]`:
+    po pierwszym biegu zakupowym `kompletny()` przestaloby je uznawac,
+    a druga linia obrony przy `unlink()` porownalaby z NOWA liczba
+    i przepuscila skasowanie. Obie ochrony gina w biegu wznowieniowym —
+    czyli tam, gdzie sa jedynym zabezpieczeniem.
+
+    Ta funkcja przenosi te sesje z `plan[]` do `wyniki[]` — czyli ze zrodla
+    ulotnego do trwalego — w tym samym zapisie manifestu, ktory nadpisuje plan.
+
+    LICZBA JEST ZMIERZONA, NIE ZALOZONA. Bierzemy `zmierzone`, czyli to, co
+    `kompletny()` policzylo w pliku przy kwalifikacji. Nie `plan[]` (to
+    oczekiwanie biezacej wyceny) ani `oplacone` (to jedna z dwoch liczb
+    dopuszczalnych) — bo wpis `kompletny: true` ma opisywac PLIK.
+
+    Czego swiadomie NIE ma we wpisie: `sha256`. Policzenie go znaczy przemielic
+    11,5 GB drugi raz, a wpis powstaje po to, by uniesc liczbe rekordow, nie by
+    poswiadczyc bajty. Wolimy pole nieobecne niz wypelnione czymkolwiek.
+
+    `normalizacja` backfillowana z `pobrano_utc` CALEGO starego manifestu — ta
+    sama regula co w `przeniesione_wyniki`. Gdy go brak, zostaje "NIEUSTALONA";
+    nie zgadujemy.
+    """
+    opisane = {w.get("sesja") for w in przeniesione}
+    wg_sesji = {w["sesja"]: w for w in plan}
+
+    manifest_utc = None
+    cel = sciezka_manifestu()
+    if cel.exists():
+        try:
+            manifest_utc = json.loads(
+                cel.read_text(encoding="utf-8")).get("pobrano_utc")
+        except (OSError, json.JSONDecodeError):
+            manifest_utc = None
+
+    try:
+        epoka = epoka_normalizacji(dt.datetime.fromisoformat(manifest_utc))
+    except (TypeError, ValueError):
+        epoka = "NIEUSTALONA"
+
+    out: list[dict] = []
+    for s in pomijane:
+        if s in opisane or s not in wg_sesji:
+            continue
+        p = sciezka_istniejaca(s)
+        n = zmierzone.get(str(p))
+        if n is None:
+            # Nie powinno wystapic: sesja jest w `pomijane`, wiec `kompletny()`
+            # ja policzylo. Gdyby jednak — milczace pominiecie byloby gorsze
+            # niz brak wpisu, bo ochrona zniknelaby bez sladu.
+            print(f"  UWAGA: brak zmierzonej liczby rekordow dla {s} — "
+                  "wpis syntetyczny NIE powstanie, ochrona tej sesji "
+                  "pozostaje nietrwala.")
+            continue
+        w = wg_sesji[s]
+        out.append(dict(
+            sesja=s, start_utc=w["start_utc"], end_utc=w["end_utc"],
+            koszt_usd=w["koszt_usd"], rekordow=n,
+            plik=p.name, sciezka=str(p), kompletny=True,
+            status=f"kompletny wg pliku ({n:,} rek.) — zmierzony przy "
+                   "kwalifikacji, nie pobierany w tym biegu",
+            pochodzenie="syntetyzowany przy zapisie manifestu: plik byl "
+                        "kompletny, ale poprzedni manifest nie mial go "
+                        "w `wyniki[]` (liczba stala tylko na `plan[]`)",
+            pobrano_utc=manifest_utc, normalizacja=epoka,
+            z_poprzedniego_biegu=True))
+    return out
+
+
 def epoka_normalizacji(kiedy: dt.datetime) -> str:
     """W ktorej wersji normalizacji GLBX.MDP3 jest plik pobrany o `kiedy`.
 
@@ -552,8 +632,8 @@ def epoka_normalizacji(kiedy: dt.datetime) -> str:
     return "NIEUSTALONA"
 
 
-def kompletny(p: Path, oczekiwane: int,
-              oplacone: int | None = None) -> tuple[bool, str]:
+def kompletny(p: Path, oczekiwane: int, oplacone: int | None = None, *,
+              zmierzone: dict[str, int] | None = None) -> tuple[bool, str]:
     """Czy plik jest kompletny. ISTNIENIE NIE WYSTARCZA.
 
     Ta regula powstala po tym, jak przerwany transfer zostawil obcieta sesje,
@@ -572,6 +652,15 @@ def kompletny(p: Path, oczekiwane: int,
     na niekompletny, wiec skrypt kasowalby je (`out.unlink()`) i kupowal
     ponownie — niszczac jedyny istniejacy egzemplarz starej normalizacji
     i placac drugi raz za to, co juz mamy.
+
+    `zmierzone` (opcjonalny, keyword-only) — slownik, do ktorego funkcja
+    odklada POLICZONA liczbe rekordow pod kluczem `str(p)`. Nie zmienia ani
+    zwracanej wartosci, ani zadnej decyzji; istnieje po to, zeby `main()`
+    mogl zapisac te liczbe w manifescie **bez ponownego czytania pliku**.
+    Bez tego synteza wpisu `wyniki[]` musialaby albo przemielic 11,5 GB
+    drugi raz, albo zgadywac, ktora z dwoch dopuszczalnych liczb pasowala —
+    a wpis `kompletny: true` z liczba wzieta z zalozenia byloby dokladnie
+    tym rodzajem twierdzenia bez pomiaru, ktorego ten projekt zakazuje.
     """
     if not p.exists():
         return False, "brak pliku"
@@ -581,6 +670,8 @@ def kompletny(p: Path, oczekiwane: int,
         n = sum(1 for _ in db.DBNStore.from_file(p))
     except Exception as e:                                    # noqa: BLE001
         return False, f"nie parsuje sie: {type(e).__name__}"
+    if zmierzone is not None:
+        zmierzone[str(p)] = n
     if n == oczekiwane:
         return True, "kompletny"
     if oplacone is not None and n == oplacone:
@@ -675,10 +766,16 @@ def main() -> int:
     # nadpisuje nowymi liczbami, wiec ochrona ginelaby przy wznowieniu.
     oplacone = liczby_oplacone()
 
+    # Liczby rekordow POLICZONE w plikach przy kwalifikacji. Zbierane po to,
+    # by `syntetyzuj_wyniki()` zapisalo w manifescie pomiar, a nie zalozenie —
+    # i zeby nie czytac tych samych 11,5 GB drugi raz.
+    zmierzone: dict[str, int] = {}
+
     juz_mamy, do_pobrania, koszt_do_zaplaty = [], [], 0.0
     for w in plan:
         p = sciezka_istniejaca(w["sesja"])
-        ok, powod = kompletny(p, w["rekordow"], oplacone.get(w["sesja"]))
+        ok, powod = kompletny(p, w["rekordow"], oplacone.get(w["sesja"]),
+                              zmierzone=zmierzone)
         if ok:
             juz_mamy.append(w["sesja"])
             komunikat = f"  MAM {w['sesja']}: {powod} ({p.parent.name})"
@@ -777,6 +874,19 @@ def main() -> int:
             break
 
     # -------------------------------------------------------- manifest ----
+    # KOLEJNOSC MA ZNACZENIE: oba wywolania czytaja STARY manifest, wiec musza
+    # sie wykonac PRZED `write_text` ponizej. `syntetyzuj_wyniki` dostaje
+    # `przeniesione`, zeby nie dublowac sesji, ktora stary manifest juz opisuje.
+    przeniesione = przeniesione_wyniki(juz_mamy)
+    syntetyczne = syntetyzuj_wyniki(juz_mamy, plan, zmierzone, przeniesione)
+    if syntetyczne:
+        print(f"\n  manifest: syntetyzuje {len(syntetyczne)} wpisow `wyniki[]` "
+              "dla plikow, ktorych stary manifest nie opisywal "
+              f"({', '.join(w['sesja'] for w in syntetyczne)}).")
+        print("  Bez tego ich liczby rekordow zniknelyby razem z nadpisanym "
+              "`plan[]`, a z nimi ochrona przed skasowaniem i ponownym "
+              "zakupem.")
+
     cel = sciezka_manifestu()
     cel.parent.mkdir(parents=True, exist_ok=True)
     cel.write_text(json.dumps(dict(
@@ -786,7 +896,7 @@ def main() -> int:
         sesji_planowanych=len(SESJE),
         kompletnych_przed=juz_mamy,
         pobranych_teraz=[w["sesja"] for w in wyniki if w["kompletny"]],
-        plan=plan, wyniki=przeniesione_wyniki(juz_mamy) + wyniki,
+        plan=plan, wyniki=przeniesione + syntetyczne + wyniki,
         wolne_gb_przed=round(wolne_start, 2),
         wolne_gb_po=round(wolne_gb(kat), 2),
         pobrano_utc=dt.datetime.now(dt.UTC).isoformat(timespec="seconds"),
