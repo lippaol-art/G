@@ -123,8 +123,9 @@ Sprawdziliśmy to pięcioma darmowymi testami i dwoma płatnymi pomiarami treśc
 Wynik: nasze pliki mają **komplet realnych zdarzeń**, a jednostka obserwacji
 jest po obu stronach identyczna.
 
-**Stan bramki: czekamy na werdykt recenzenta.** Po nim znana jest droga
-i koszt — obie mieszczą się w zamrożonym limicie.
+**Stan bramki:** werdykt recenzenta to **PASS**. Zakup blokuje już tylko
+zabezpieczenie ścieżki zakupowej: jej naprawa (`bafdd8c`) czeka na przyjęcie
+przez recenzenta. Droga i koszt mieszczą się w zamrożonym limicie.
 
 ### 4.4 Konsekwencja, która przeżyje ten incydent
 
@@ -242,13 +243,18 @@ kasują** — jeśli coś okazało się błędem, dopisujemy korektę obok.
 
 | # | Zadanie | Kto | Blokuje |
 |---|---|---|---|
-| 1 | **Werdykt PASS/FAIL** dla drugiego mikro-diffu | recenzent | zakup miesiąca |
-| 2 | Po PASS: zakup pozostałych sesji MBO | właściciel uruchamia | D5-B2 |
-| 3 | Po FAIL: decyzja wariantu z tabeli `D5_DRYF` §5d | właściciel | D5-B2 |
+| 1 | **Przyjęcie P1** dla `bafdd8c` (synteza `wyniki[]` przy zapisie manifestu) | recenzent | zakup miesiąca |
+| 2 | Po przyjęciu: zakup pozostałych sesji MBO | właściciel uruchamia, na swoim dysku | D5-B2 |
 
-**Bieg zakupowy będzie wymagał jawnej flagi `--akceptuj-rozjazd`** — świadomie:
-archiwizuje stary manifest zamiast go nadpisać, a pochodzenie starych sesji
-chroni osobny mechanizm.
+Dlaczego właściciel, a nie Wykonawca: pięć plików starej normalizacji leży
+**wyłącznie na dysku właściciela**. Uruchomiony z kontenera skrypt nie widziałby
+ich i kupiłby cały miesiąc od nowa, do ulotnego dysku.
+
+**Bieg zakupowy wymaga jawnej flagi `--akceptuj-rozjazd`** — świadomie:
+archiwizuje stary manifest zamiast go nadpisać. Przed biegiem
+`python scripts/diag_wyniki.py` (read-only) musi dać werdykt „można uruchomić
+zakup" — na maszynie właściciela dał 20.08, bo `wyniki[]` było puste, a
+poprawka P1 utrwala te liczby przy zapisie manifestu.
 
 ### 8.2 Zaraz po zakupie
 
