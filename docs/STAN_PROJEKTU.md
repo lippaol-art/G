@@ -152,6 +152,18 @@ Ten podział nie jest kurtuazją. Wykonawca ma systematyczną skłonność do
 uznawania własnej pracy za poprawną — w tym projekcie **trzy tezy Wykonawcy
 zostały obalone**, dwie przez własne pomiary, jedna przez dostawcę.
 
+> **Od 03.10.2026 rola Recenzenta jest nieobsadzona** — decyzja właściciela.
+> Wykonawca działa samodzielnie, a zakaz wystawiania werdyktu o własnej pracy
+> **nie znika, tylko zmienia nośnik**: zamiast drugiej pary oczu pilnują go
+> testy i strażniki (każdy powtarzający się błąd staje się testem), a o pieniądzach
+> i kierunku nadal decyduje wyłącznie właściciel (R1). Kroki 5 i 8 poniższego
+> cyklu zastępuje samodzielna weryfikacja w źródle plus test, który **czerwienieje
+> przy celowym zepsuciu** — bez tej próby test nie dowodzi niczego.
+>
+> To jest świadome obniżenie zabezpieczenia i trzeba je widzieć wprost:
+> recenzent złapał w tym wątku m.in. pułapkę `--akceptuj-rozjazd`, lukę w jej
+> naprawie i trzy błędy w tabeli decyzyjnej. Wykonawca sam ich nie znalazł.
+
 ### 5.2 Cykl jednej rundy
 
 ```
@@ -234,6 +246,8 @@ kasują** — jeśli coś okazało się błędem, dopisujemy korektę obok.
 | 11.08 | wątek billingowy u dostawcy **zamknięty**; żadnych dalszych maili |
 | 11.08 | zgoda R1 na **drugi mikro-diff**; limity 82,00 i 1,00 **bez zmian** |
 | 11.08 | **R9** — korespondencja z dostawcą prozą, po dwóch reprymendach |
+| 03.10 | **recenzent zakończył udział**; Wykonawca działa samodzielnie, pieniądze i kierunek nadal wyłącznie po stronie właściciela |
+| 03.10 | poprawka P1 przyjęta przez Wykonawcę **bez recenzji** — świadomie; dodany warunek 9 (brak starego pliku = STOP przed zakupem) |
 
 ---
 
@@ -243,18 +257,18 @@ kasują** — jeśli coś okazało się błędem, dopisujemy korektę obok.
 
 | # | Zadanie | Kto | Blokuje |
 |---|---|---|---|
-| 1 | **Przyjęcie P1** dla `bafdd8c` (synteza `wyniki[]` przy zapisie manifestu) | recenzent | zakup miesiąca |
-| 2 | Po przyjęciu: zakup pozostałych sesji MBO | właściciel uruchamia, na swoim dysku | D5-B2 |
+| 1 | Zakup pozostałych sesji MBO — **na dysku właściciela** | właściciel uruchamia | D5-B2 |
+| 2 | Wklejenie wyniku biegu | właściciel | rekonstrukcja miesiąca |
 
 Dlaczego właściciel, a nie Wykonawca: pięć plików starej normalizacji leży
 **wyłącznie na dysku właściciela**. Uruchomiony z kontenera skrypt nie widziałby
-ich i kupiłby cały miesiąc od nowa, do ulotnego dysku.
+ich i kupiłby cały miesiąc od nowa, do ulotnego dysku. Od 03.10 skrypt sam
+odmawia zakupu, gdy któregoś z tych plików nie rozpozna (warunek 9).
 
 **Bieg zakupowy wymaga jawnej flagi `--akceptuj-rozjazd`** — świadomie:
-archiwizuje stary manifest zamiast go nadpisać. Przed biegiem
-`python scripts/diag_wyniki.py` (read-only) musi dać werdykt „można uruchomić
-zakup" — na maszynie właściciela dał 20.08, bo `wyniki[]` było puste, a
-poprawka P1 utrwala te liczby przy zapisie manifestu.
+archiwizuje stary manifest zamiast go nadpisać. Poprawka P1 utrwala liczby
+opłaconych plików przy zapisie manifestu; diagnostyka `scripts/diag_wyniki.py`
+(read-only) potwierdziła u właściciela, że bez niej ochrona byłaby martwa.
 
 ### 8.2 Zaraz po zakupie
 

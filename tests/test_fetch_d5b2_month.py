@@ -1028,3 +1028,77 @@ class TestSyntezaWynikow:
         ok, _ = f.kompletny(p, self.NOWE, f.liczby_oplacone().get(self.SESJA))
         assert not ok, ("bez syntezy plik MUSI wypasc jako niekompletny — "
                         "inaczej test nie dowodzi, ze poprawka cokolwiek robi")
+
+
+class TestWarunek9StarePliki:
+    """Skrypt kupuje od razu — wiec brak starego pliku musi zatrzymac go PRZED.
+
+    Po `--akceptuj-rozjazd` nie ma pauzy na potwierdzenie. Zly katalog danych
+    (komputer bez kopii, `PROJECT_G_DATA_ROOT` wskazujacy gdzie indziej)
+    sprawilby, ze piec plikow starej normalizacji wygladaloby na brakujace
+    i zostaloby kupionych na nowo — za pieniadze i bez mozliwosci odtworzenia
+    tego, co bylo. Zatrzymanie kosztuje zero.
+    """
+
+    def test_komplet_przechodzi(self):
+        assert f.sprawdz_stare_pliki(list(f.SESJE_STARA_NORMALIZACJA)) is None
+
+    def test_brak_jednego_zatrzymuje(self):
+        z_brakiem = [s for s in f.SESJE_STARA_NORMALIZACJA if s != "2026-07-03"]
+        with pytest.raises(SystemExit) as e:
+            f.sprawdz_stare_pliki(z_brakiem)
+        assert "warunek 9" in str(e.value)
+        assert "2026-07-03" in str(e.value)
+
+    def test_pusta_lista_zatrzymuje_i_wymienia_wszystkie(self):
+        with pytest.raises(SystemExit) as e:
+            f.sprawdz_stare_pliki([])
+        for s in f.SESJE_STARA_NORMALIZACJA:
+            assert s in str(e.value)
+
+    def test_main_nie_wydaje_pieniedzy_gdy_brak_starych_plikow(
+            self, dane, monkeypatch):
+        """End-to-end: pusty katalog (jak komputer bez danych) -> STOP przed
+        jakimkolwiek `get_range`. Wywolanie platnego endpointu = test czerwony."""
+        wywolania = []
+
+        class Meta:
+            def get_cost(self, **kw):
+                return 0.01
+
+            def get_record_count(self, **kw):
+                return 1000
+
+        class TS:
+            def get_range(self, **kw):
+                wywolania.append(kw)
+                raise AssertionError("PLATNE POBRANIE mimo braku starych plikow")
+
+        class Klient:
+            metadata = Meta()
+            timeseries = TS()
+
+            def __init__(self, *_a, **_k):
+                pass
+
+        # Fixture `dane` wskazuje katalog NADRZEDNY tmp_path, wspolny dla calego
+        # przebiegu — manifest zapisany przez inny test wyciekalby tutaj.
+        # Dlatego sciezki manifestu i cache izolujemy jawnie.
+        monkeypatch.setattr(f, "sciezka_manifestu",
+                            lambda: dane / "izolowane" / f.MANIFEST)
+        monkeypatch.setattr(f, "sciezka_cache",
+                            lambda: dane / "izolowane" / f.CACHE_WYCENY)
+        monkeypatch.setenv("DATABENTO_API_KEY", "klucz-testowy-nie-prawdziwy")
+        monkeypatch.setattr(f.db, "Historical", Klient)
+        monkeypatch.setattr(f, "wolne_gb", lambda _p: 1000.0)
+        # Sesja D5-C "jest" (inaczej zatrzymalby ja warunek 4, a nie 9).
+        monkeypatch.setattr(
+            f, "kompletny",
+            lambda p, *a, **k: (True, "ok") if f.SESJA_D5C in str(p)
+            else (False, "brak pliku"))
+        monkeypatch.setattr(f, "sprawdz_sha_d5c", lambda _p: "sha ok")
+
+        with pytest.raises(SystemExit) as e:
+            _uruchom([])
+        assert "warunek 9" in str(e.value)
+        assert wywolania == [], "skrypt wydal pieniadze mimo braku starych plikow"

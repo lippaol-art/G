@@ -22,6 +22,9 @@ komunikacie `STOP (warunek N)`; jej odpowiednik w dokumentacji to
      kazdy juz oplacony plik wyglada wtedy na niekompletny i skrypt kupilby
      caly miesiac drugi raz. Jawna furtka: `--akceptuj-rozjazd`, ktora
      ARCHIWIZUJE stary manifest zamiast go nadpisywac.
+  9. ktorys z pieciu plikow STAREJ normalizacji (`SESJE_STARA_NORMALIZACJA`)
+     nie zostal rozpoznany jako kompletny — zly komputer lub katalog danych.
+     Skrypt kupuje bez pauzy, wiec taki plik zostalby kupiony na nowo.
 
 UWAGA NA DWIE ROZNE LISTY. Powyzsza numeracja opisuje ODMOWY SKRYPTU. Lista
 w `URUCHOMIENIE_LOKALNE.md` §7 to co innego — osiem WARUNKOW ZGODY wlasciciela
@@ -326,6 +329,32 @@ def sprawdz_sesje_d5c(do_pobrania: list[dict], pozwol: bool) -> None:
         "  kompletny w swojej epoce, a starej wersji nie da sie juz pobrac —\n"
         "  patrz docs/D5_DRYF_METADANYCH.md §5f. Flaga sluzy wylacznie\n"
         "  swiadomemu TRZECIEMU zakupowi tej doby.")
+
+
+def sprawdz_stare_pliki(juz_mamy: list[str]) -> None:
+    """WARUNEK 9 — kazdy z pieciu plikow STAREJ normalizacji musi byc znaleziony.
+
+    Skrypt po `--akceptuj-rozjazd` kupuje od razu, bez pauzy na potwierdzenie.
+    Gdyby ktorys z tych plikow nie zostal rozpoznany jako kompletny — zly
+    katalog danych (`PROJECT_G_DATA_ROOT`), dysk bez kopii, plik uszkodzony —
+    trafilby na liste zakupowa i zostalby kupiony NA NOWO, juz w nowej
+    normalizacji: za pieniadze i bez mozliwosci odtworzenia tego, co bylo.
+
+    To decyzja czlowieka, nie cichy zakup. Zatrzymanie kosztuje zero.
+    """
+    brak = [s for s in SESJE_STARA_NORMALIZACJA if s not in juz_mamy]
+    if not brak:
+        return
+    sys.exit(
+        "\nSTOP (warunek 9): nie rozpoznano jako kompletnych plikow starej "
+        f"normalizacji: {', '.join(brak)}.\n"
+        f"  Katalog danych: {raw_dir(KATALOG)}\n"
+        "  Te pliki sa jedynym egzemplarzem sprzed 2026-08-08 i na zakup NIE "
+        "ma tu zgody.\n"
+        "  Sprawdz, czy to wlasciwy komputer i katalog (PROJECT_G_DATA_ROOT) "
+        "oraz czy pliki nie zniknely.\n"
+        "  Dopiero gdy pliku naprawde nie ma, decyzje o jego zakupie na nowo "
+        "podejmuje wlasciciel.")
 
 
 def rekordy_z_manifestu() -> dict[str, int]:
@@ -804,6 +833,8 @@ def main() -> int:
     if not do_pobrania:
         print("\nWszystkie sesje kompletne — nie ma czego pobierac.")
         return 0
+
+    sprawdz_stare_pliki(juz_mamy)
 
     # ---------------------------------------------------------- zakup ----
     print("\n" + "=" * 64, flush=True)

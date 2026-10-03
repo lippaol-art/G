@@ -220,6 +220,7 @@ Lista poniżej odpowiada docstringowi `scripts/fetch_d5b2_month.py` i komunikato
 | 6 | **pobrana** sesja nie przeszła kontroli kompletności |
 | 7 | `2026-07-30` ma SHA-256 inny niż `data/manifest_d5c.json` |
 | 8 | liczba rekordów w metadanych rozjechała się z manifestem (jawna furtka: `--akceptuj-rozjazd`) |
+| 9 | którykolwiek z pięciu plików **starej normalizacji** nie został rozpoznany jako kompletny (zły komputer lub katalog danych) — skrypt kupuje bez pauzy, więc taki plik kupiłby na nowo |
 
 **Czego skryptu na tej liście NIE ma — i to jest celowe.** Niekompletny plik
 **istniejący przed uruchomieniem** nie przerywa pracy: zostaje skasowany

@@ -30,7 +30,7 @@ niezależnych audytach zewnętrznych) jest **jedynym źródłem prawdy** — kod
 a nie odwrotnie.
 
 Gotowe: fundament repo, silnik backtestowy, komplet aparatu walidacyjnego, strażnicy
-niezmienników, CI, golden baseline. **621 funkcji testowych (705 przypadków po parametryzacji), pokrycie 92%, ruff i mypy czyste.**
+niezmienników, CI, golden baseline. **625 funkcji testowych (709 przypadków po parametryzacji), pokrycie 92%, ruff i mypy czyste.**
 Liczbę pilnuje `tests/test_guards.py::test_handoff_podaje_aktualna_liczbe_testow` —
 bez tego rotowała dwa razy w ciągu doby, co jest dokładnie tym defektem, przed
 którym ostrzega reguła na górze tego pliku.
@@ -159,8 +159,9 @@ Decyzje właściciela z 11.08 zamknęły wszystko poza nią:
 | ✅ **Werdykt recenzenta** | **PASS** (18.08, SHA `e67c8ab`) — cztery punkty kryterium spełnione |
 | ✅ Artefakty rekonstrukcji | wygenerowane i zacommitowane dla obu okien (`3e3117d`); strażnik zielony |
 | ✅ Diagnostyka `diag_wyniki.py` | uruchomiona u właściciela: `wyniki[]` **puste** (0 z 22), cztery sesje lipcowe stały na `plan[]` — `D5_DRYF` §5f, trzecie podejście |
-| ✅ Naprawa P1 | `bafdd8c` — `syntetyzuj_wyniki()` utrwala liczby przy zapisie manifestu. **Czeka na przyjęcie przez recenzenta** |
-| ⏳ **Zakup 17 sesji** | po przyjęciu P1. Uruchamia właściciel **na swoim dysku** — pliki starej normalizacji są tylko tam. Przed biegiem `python scripts\diag_wyniki.py` musi dać „mozna uruchomic zakup"
+| ✅ Naprawa P1 | `bafdd8c` — `syntetyzuj_wyniki()` utrwala liczby przy zapisie manifestu |
+| ✅ Przyjęcie P1 | 03.10 przez Wykonawcę, bo recenzent zakończył udział; do tego warunek 9 (brak starego pliku = STOP przed zakupem) |
+| ⏳ **Zakup 17 sesji** | gotowy do uruchomienia. Uruchamia właściciel **na swoim dysku** — pliki starej normalizacji są tylko tam. Przed biegiem `python scripts\diag_wyniki.py` musi dać „mozna uruchomic zakup"
 
 **Limity bez zmian: 82,00 USD na miesiąc (R4) i 1,00 USD na okno.** Zamknięcie
 tematu kont **nie jest** zgodą na rozluźnianie czegokolwiek — obu limitów
