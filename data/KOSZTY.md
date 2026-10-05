@@ -23,9 +23,11 @@ kredytu należy weryfikować w panelu Databento.
 | 4 | D5-C | `mbo` MNQU6, RTH 2026-07-30 | **3,5961 USD** | limit 4,00 — dotrzymany |
 | 5 | D5 diagnostyka | `mbo` MNQU6, **30 min** 2026-07-03 13:30–14:00 | **0,0789 USD** | mikro-diff #1, limit 0,10 — dotrzymany |
 | 6 | D5 diagnostyka | `mbo` MNQU6, **30 min** 2026-07-06 13:30–14:00 | **0,6133 USD** | mikro-diff #2, limit 1,00 — dotrzymany |
+| 7 | D5-B2 | `mbo` MNQU6, **17 pozostałych** sesji RTH lipca 2026 | **63,9336 USD** | wydano wg podsumowania skryptu (suma dokładna); limit miesiąca 82,00 — dotrzymany; **nowa** normalizacja |
 
-**Suma zakupów unikalnych: 40,6383 USD** (przy górnej granicy pozycji 3:
-42,1483 USD). Na diagnostykę poszło łącznie **0,6922 USD** — dwie pozycje,
+**Suma zakupów unikalnych: 104,5719 USD** (przy górnej granicy pozycji 3:
+106,0819 USD). Do tego duplikacja z §2 (3,5961 USD) i przerwane pobrania z §3a,
+których dostawca nie rozbija. Na diagnostykę poszło łącznie **0,6922 USD** — dwie pozycje,
 obie z limitem zamrożonym w kodzie przed biegiem.
 
 ### Pozycja 5 — pierwszy mikro-diff, 09.08
@@ -87,28 +89,40 @@ z konta i dlatego stoi tu osobno.
 
 ---
 
-## 3. Planowane, jeszcze niewykonane
+## 3. Zakup miesiąca MBO — WYKONANY
 
 | Pozycja | Koszt | Status |
 |---|---|---|
-| MBO, **17 pozostałych** sesji RTH lipca 2026 | **63,9335 USD** | ⏳ **JEDNA BRAMKA** — wynik drugiego mikro-diffu (`D5_DRYF` §5e). Kwestia kont zamknięta 11.08 |
-| Cała miesięczna próbka MBO (22 sesje, nowa normalizacja) | **80,68 USD** | limit zamrożony: **82,00 USD**, zapas 1,32 |
+| MBO, **17 pozostałych** sesji RTH lipca 2026 | **63,9336 USD** | ✅ **WYKONANY** — 17 z 17 kompletnych, wolne po: 256,6 GB. Limit 82,00 dotrzymany |
 
-**Stan pobrań: 5 z 22 sesji**, wszystkie w **starej** normalizacji —
-2026-07-01, 07-02, 07-03, **07-06** i 07-30. Sesja 07-06 była raz przerwana
-(`Response ended prematurely`), ale drugie pobranie **zakończyło się
-powodzeniem**: plik jest kompletny (32 369 900 rekordów, pokrycie
-13:30–19:59:59), a podwójne naliczenie rozliczone w §3a. Wcześniejszy wpis
-„pobrano 3 z 21, przerwane na 07-06" był nieaktualny od diagnostyki 08.08.
+**Stan pobrań: 22 z 22 sesji.** Pięć w **starej** normalizacji (2026-07-01,
+07-02, 07-03, 07-06, 07-30), siedemnaście w **nowej** (po 08.08). Miesiąc jest
+więc **niejednorodny** i manifest oznacza to per sesja (`normalizacja`).
 
-**Kwota do wpisania po zakupie to 63,9335 USD**, nie zaokrąglone 63,94 —
-tyle rozliczy dostawca (80,6729 minus 16,7394 za pięć sesji, które już mamy).
-Zasada 2 tego rejestru: liczba w księdze ma być tą, którą naliczono, a nie tą,
-która wyszła z formatowania wydruku.
+**Kwota: 63,9336 USD**, nie 63,9335 z prognozy. Różnica 0,0001 USD to
+zaokrąglenie: skrypt sumuje wartości dokładne, a prognoza była odjęciem liczb
+już zaokrąglonych (80,6729 − 16,7394). Zasada 2 tego rejestru: w księdze jest
+liczba naliczona, nie prognozowana.
 
-Zostaje więc **17 sesji do dokupienia**, nie 18 i nie 21: 07-30 mamy z D5-C,
-a downloader **musi wykryć ją jako kompletną i pominąć** — inaczej naliczyłby
-ją trzeci raz.
+### Pozycja 7 — dlaczego przyjęto rozjazd metadanych
+
+Bieg wymagał flagi `--akceptuj-rozjazd`: po zmianie normalizacji GLBX.MDP3
+(08–09.08) wszystkie 22 sesje mają u dostawcy więcej rekordów niż przy
+poprzedniej wycenie. Przyjęcie jest uzasadnione pomiarem, nie wygodą:
+dodatkowe rekordy to wypełniacze `action=N` bez treści ekonomicznej, a
+jednostka obserwacji D5 jest po obu stronach **identyczna** (29 734 i 165 980
+akcji, wszystkie pola; `D5_DRYF` §3d i §5e). Starej normalizacji nie da się już
+pobrać, więc pięciu starych plików nie wolno było ani kasować, ani odkupić
+(`D5_DRYF` §5f).
+
+Przy tym biegu skrypt usunął obcięty plik 2026-07-07 (1 867 793 z 48 848 835
+rekordów, pozostałość urwanego pobrania opisanego w §3a) i pobrał go od nowa.
+Pięć wpisów `wyniki[]` dla starych sesji powstało z syntezy przy zapisie
+manifestu (liczba **zmierzona** w pliku, nie założona).
+
+**Nie zweryfikowane:** stan kredytu w panelu Databento. Księga nie ma dostępu
+do rozliczeń (§ na górze), więc wartość „kredyt po zakupie" należy odczytać
+z panelu ręcznie.
 
 ---
 

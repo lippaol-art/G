@@ -257,18 +257,15 @@ kasują** — jeśli coś okazało się błędem, dopisujemy korektę obok.
 
 | # | Zadanie | Kto | Blokuje |
 |---|---|---|---|
-| 1 | Zakup pozostałych sesji MBO — **na dysku właściciela** | właściciel uruchamia | D5-B2 |
-| 2 | Wklejenie wyniku biegu | właściciel | rekonstrukcja miesiąca |
+| 1 | ✅ Zakup pozostałych sesji MBO | właściciel | wykonany: 22 z 22 sesji |
+| 2 | **Kopia zapasowa nowych plików** | właściciel | analiza |
+| 3 | Decyzja: czy wolno mieszać pliki obu normalizacji w analizie przez rekonstrukcję (`D5_DRYF` §4 pkt 4) | właściciel | bramka |
+| 4 | Rekonstrukcja miesiąca i bramka GO/NO-GO | Wykonawca | D5-B2 |
 
-Dlaczego właściciel, a nie Wykonawca: pięć plików starej normalizacji leży
-**wyłącznie na dysku właściciela**. Uruchomiony z kontenera skrypt nie widziałby
-ich i kupiłby cały miesiąc od nowa, do ulotnego dysku. Od 03.10 skrypt sam
-odmawia zakupu, gdy któregoś z tych plików nie rozpozna (warunek 9).
-
-**Bieg zakupowy wymaga jawnej flagi `--akceptuj-rozjazd`** — świadomie:
-archiwizuje stary manifest zamiast go nadpisać. Poprawka P1 utrwala liczby
-opłaconych plików przy zapisie manifestu; diagnostyka `scripts/diag_wyniki.py`
-(read-only) potwierdziła u właściciela, że bez niej ochrona byłaby martwa.
+Miesiąc jest **niejednorodny**: pięć sesji w starej normalizacji, siedemnaście
+w nowej. Manifest oznacza to per sesja. Jednostka kanoniczna (agresywna akcja
+po `order_id`) jest po obu stronach identyczna na dwóch zmierzonych oknach,
+dla pozostałych sesji to uogólnienie, a nie pomiar.
 
 ### 8.2 Zaraz po zakupie
 

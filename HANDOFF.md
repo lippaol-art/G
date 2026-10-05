@@ -161,7 +161,9 @@ Decyzje właściciela z 11.08 zamknęły wszystko poza nią:
 | ✅ Diagnostyka `diag_wyniki.py` | uruchomiona u właściciela: `wyniki[]` **puste** (0 z 22), cztery sesje lipcowe stały na `plan[]` — `D5_DRYF` §5f, trzecie podejście |
 | ✅ Naprawa P1 | `bafdd8c` — `syntetyzuj_wyniki()` utrwala liczby przy zapisie manifestu |
 | ✅ Przyjęcie P1 | 03.10 przez Wykonawcę, bo recenzent zakończył udział; do tego warunek 9 (brak starego pliku = STOP przed zakupem) |
-| ⏳ **Zakup 17 sesji** | gotowy do uruchomienia. Uruchamia właściciel **na swoim dysku** — pliki starej normalizacji są tylko tam. Przed biegiem `python scripts\diag_wyniki.py` musi dać „mozna uruchomic zakup"
+| ✅ **Zakup 17 sesji** | **wykonany**: 17 z 17 kompletnych, koszt w `KOSZTY` §3 poz. 7. Miesiąc ma 22 sesje, w tym 5 starej i 17 nowej normalizacji |
+| ⏳ **Kopia zapasowa nowych plików** | przed jakąkolwiek analizą (`robocopy`, jak §Kopia zapasowa niżej) |
+| ⏳ **Bramka GO/NO-GO D5-B2** | rekonstrukcja miesiąca i sześć progów z `D5_ETAP4_SPEC` §5; progów nie ruszamy. Wymaga decyzji o mieszaniu plików z dwóch normalizacji (`D5_DRYF` §4 pkt 4) |
 
 **Limity bez zmian: 82,00 USD na miesiąc (R4) i 1,00 USD na okno.** Zamknięcie
 tematu kont **nie jest** zgodą na rozluźnianie czegokolwiek — obu limitów
