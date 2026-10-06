@@ -670,3 +670,31 @@ regułę 3 i było błędne; przyczyna została zmierzona, nie założona.
 
 **Wpływ na wnioski W001–W015: żaden.** Zero VIF, zero przyszłych zwrotów,
 zero P&L. **Licznik prób: 0.** H017 nie powstaje.
+
+## v15 — H017: pre-flight W016, `REJECTED (pre-flight)`
+
+```
+hash_wynikow  2395e566bab13fd67767c191b512d2c3bdf7019e423619f9e192dbe99f06651f
+           -> 6af727ceb287fe7582a38fecb4aab6854e6c55abb57b809e550f18b5c8b64f29
+hash_danych   BEZ ZMIANY
+```
+
+**Zmienione klucze — trzy:**
+
+| Klucz | Zmiana |
+|---|---|
+| `raporty.hashe.W016_H017_preflight.md` | NOWY |
+| `rejestr.kart_odrzuconych` | 8 → 9 |
+| `rejestr.statusy.H017` | NOWY: `REJECTED pre-flight` |
+
+Pierwsza wersja tego wpisu mówiła „dokładnie jeden" — na podstawie
+`--sprawdz` uruchomionego **przed** aktualizacją rejestru. Sprawdzone
+porównaniem `git diff golden/baseline.json`, nie założone.
+
+**Powód:** pre-flight karty H017 (zamrożonej w `efa4a8f`), kod zacommitowany
+przed uruchomieniem w `9042f3b`, jeden bieg na tabelach minutowych lipca
+(`data/clean/d5b2_okna/`). Werdykt `REJECTED (pre-flight)`, kategoria BRAK;
+P2, P5 i P6 padają niezależnie od granicznego P1.
+
+**Wpływ na wnioski W001–W015: żaden.** Dodaje wniosek W016. **Licznik prób: 0.**
+D5 zamknięte.

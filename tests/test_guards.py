@@ -906,3 +906,33 @@ class TestRaportBramkiD5B2:
         r = self._r()
         war = {int(k): v for k, v in r["warunki"].items()}
         assert werdykt(war, r["abc_zgodne"])[0] == r["werdykt"]
+
+
+class TestRaportW016:
+    """Liczby pre-flightu H017 w REGISTRY musza pochodzic z artefaktu W016."""
+
+    RAPORT = ROOT / "reports" / "W016_H017_preflight.json"
+
+    def test_rejestr_cytuje_liczby_z_artefaktu(self):
+        if not self.RAPORT.exists():
+            pytest.skip("brak artefaktu W016 (pre-flight nie uruchomiony)")
+        r = json.loads(self.RAPORT.read_text(encoding="utf-8"))
+        reg = (ROOT / "hypotheses" / "REGISTRY.md").read_text(encoding="utf-8")
+
+        def pl(x: float, n: int) -> str:
+            return f"{x:.{n}f}".replace(".", ",")
+
+        k = r["P3_P4_P5"]
+        wymagane = [r["status"], pl(r["P1"]["korelacja_pula"], 3),
+                    pl(r["P2"]["wsp"], 3), pl(r["P2"]["t"], 2),
+                    pl(k["rozpietosc_pkt"], 2),
+                    f"{r['P1']['sesji_dodatnich']}/22", f"{r['P6']['sesji_dodatnich']}/22"]
+        braki = [x for x in wymagane if x not in reg]
+        assert not braki, f"REGISTRY nie cytuje liczb z W016: {braki}"
+
+    def test_status_wynika_z_przewidywan(self):
+        if not self.RAPORT.exists():
+            pytest.skip("brak artefaktu W016 (pre-flight nie uruchomiony)")
+        from research.W016_H017_preflight import werdykt
+        r = json.loads(self.RAPORT.read_text(encoding="utf-8"))
+        assert werdykt(r["przewidywania"]) == (r["status"], r["kategoria"])

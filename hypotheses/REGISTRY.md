@@ -111,7 +111,7 @@ samoczyszczącą.
 | H013 | Rezydualny repricing po wynikach megacapów | K6 × K4 | ~~najwyższy~~ | **[REJECTED (pre-flight)](H013.md)** | **0/8** |
 | H014 | Dywergencja NQ–ES wokół szoków stóp | K6 × K4 | — | **[REJECTED (pre-flight)](H014.md)** | **0/6** |
 | H016 | Reżim dyspersji składników NDX | K6 × K3 | **straciła nosiciela** — czeka, zgodnie z sekcją 7 karty | [IDEA warunkowa](H016.md) | 0/6 |
-| H017 | Kontynuacja przepływu agresywnego w skali minuty | K5 | **jedyny aktywny** — po `D5-B2 GO` | **[CARD FROZEN](H017.md)**, pre-flight w toku | **0/6** |
+| H017 | Kontynuacja przepływu agresywnego w skali minuty | K5 | ~~jedyny aktywny~~ | **[REJECTED (pre-flight)](H017.md)** — W016 | **0/6** |
 
 ### Partia 2 — odrzucona w pre-flight (W006, W009)
 
@@ -250,6 +250,7 @@ Fakty o rynku i o procesie odkryte przy okazji badań. Zasilają projektowanie k
 |----|---------|--------|
 | **W010** | **Podział kubełkowy nie zastępuje kontroli ciągłej.** H001 dzieliła dolny tercyl zakresu medianą wolumenu i pytała, czy grupy różnią się charakterem sesji. Wewnątrz tercyla nadal są różnice zakresu, więc taki podział nie odpowiada na pytanie karty. Regresja `ER ~ percentyl_zakresu + percentyl_wolumenu` liczona wewnątrz kompresji dała jednoznaczne **t = −0.10** dla wolumenu. **Reguła: gdy karta twierdzi „X niesie informację przy kontrolowanym Y", pre-flight musi zawierać test, który Y kontroluje ciągle, a nie tylko kubełkiem.** Drugi wniosek z tej samej partii: **odsetek zdarzeń nie jest zwrotem** — H002 miała separację odsetka powrotów przeżywającą cztery kontrole i zerowy zwrot przy symetrycznych MFE/MAE. | W010 |
 | **W011** | **Model, którym odrzucamy kartę, musi być zwalidowany tak samo starannie jak model, którym byśmy ją przyjęli.** W007 walidował QQQ na zwrotach dziennych; W009 odrzucił H013 rezyduum z modelu NQ na zwrotach nocnych z ES i SOXX. To dwa różne estymatory, a jedyną podaną liczbą o jakości drugiego była statystyka **in-sample**. Osobna walidacja pokazała, że model nocny jest dobry (OOS R² 0.9753, γ = 1.013) — ale **wykryła obciążenie +3.05‱ w sesje zdarzeń**, przez które jedno z sześciu przewidywań zawiodło z powodu wewnętrznego dla modelu, nie własności rynku. Reguła: **przed zamknięciem karty waliduj dokładnie ten obiekt, który dał werdykt** — importowany, nie odtworzony. | W011 |
+| **W016** | **Identyfikowalność nie jest przewidywalnością.** Nierównowaga liczby akcji agresywnych przeszła bramkę D5-B2 z dużym zapasem — ruch ceny tej samej minuty tłumaczy tylko ok. 44% jej zmienności — a mimo to **nie przewiduje** minuty następnej: współczynnik -1,978 pkt (t = -0,77), przewaga skrajnych kwintyli 0,10 pkt wobec kosztu 1,10 pkt. Informacja, której cena nie zawiera **w tej chwili**, nie musi być informacją o **przyszłej** cenie. Wniosek procesowy: bramka równoczesna jest konieczna, ale nie jest przesłanką sukcesu — nie wolno jej wyniku przedstawiać jako „mamy sygnał". | H017 |
 | **W015** | **Trzy razy z rzedu "niezgodnosc danych" okazala sie wada mojej reguly zliczania.** W audycie MBO: (1) naiwna suma wszystkich `Fill` dawala 6 541 niezgodnosci, bo `Fill` dostaje takze zlecenie AGRESORA; (2) zbior agresorow budowany dla calego zdarzenia dawal kolejnych 8, bo zlecenie bedace agresorem w jednej transakcji potrafi byc strona PASYWNA w drugiej, w tym samym zdarzeniu `F_LAST`. Po obu poprawkach niezmiennik trzyma sie w **100,0000%** na 842 757 zdarzeniach. Wniosek procesowy: **zanim ogloszysz niezgodnosc w danych dostawcy, obejrzyj kilka konkretnych przypadkow** — zrzut szesciu rekordow rozstrzygal za kazdym razem w minute to, czego agregat nie pokazywal wcale. Drugi wniosek: metryka bez zapisanego MIANOWNIKA jest niepelna. 767 588 zgodnosci brzmi jak komplet, dopoki nie widac, ze zdarzen jest 842 757. | D5-C |
 | **W014** | **Zgodnosc empiryczna nie zastepuje semantyki protokolu zrodlowego.** Grupowanie `(ts_event, sequence, side)` wygladalo niemal idealnie: ceny w grupach monotoniczne, tylko **0,0037%** grup dwustronnych, a definicje A, B i C dawaly zgodny VIF. Interpretacja i tak byla bledna — `sequence` to numer sekwencyjny wiadomosci CME, a jedna wiadomosc moze zawierac wiele Trade Summaries, takze po przeciwnych stronach. **Ladny rozklad empiryczny jest przeslanka, nie dowodem, ze pole znaczy to, co nam pasuje.** Regula procesowa: zanim zmienna zostanie nazwana jednostka mechanizmu, jej znaczenie musi byc potwierdzone **dokumentacja albo przez dostawce**, nie sama zgodnoscia danych. Koszt zignorowania tej reguly w D5: caly Etap 2 zmierzyl poprawnie niewlasciwa jednostke. | D5-B |
 | **W013** | **Kolumna, ktorej nic nie konsumuje, nie ma jak sie zdemaskowac.** Flaga `short_day` byla `False` dla wszystkich **2 551 265** barow, bo produkcyjny pipeline tworzyl pusty kalendarz. Kolumna istniala w schemacie, przechodzila walidacje `REQUIRED_COLUMNS` i przez caly czas nie znaczyla nic — nie wykryl tego ani przeglad kodu, ani testy, bo **zaden modul badawczy jej nie czytal**. Wniosek procesowy: pole dodane na zapas jest dlugiem, nie zabezpieczeniem; kazda flaga w schemacie potrzebuje albo konsumenta, albo testu sprawdzajacego jej **rozklad**, a nie tylko obecnosc. Wykryte dopiero, gdy jedna sesja z probki D5-B zachowala sie niezgodnie z oczekiwaniem. | kalendarz CME |
@@ -1085,3 +1086,34 @@ policzeniem czegokolwiek, co łączy `I_t` z przyszłą ceną. Następny krok:
 pre-flight P1–P6 na lipcu (zero prób).
 
 **P&L nie mierzony. Przyszłe zwroty nietknięte. Licznik prób: 0.**
+
+---
+
+## H017 — pre-flight W016 (06.10.2026): `REJECTED (pre-flight)`
+
+Raport: **[`reports/W016_H017_preflight.md`](../reports/W016_H017_preflight.md)**,
+artefakt `reports/W016_H017_preflight.json`. Karta zamrożona w `efa4a8f`, kod
+pre-flightu w `9042f3b` — oba **przed** policzeniem czegokolwiek o przyszłej
+cenie; jeden bieg.
+
+| # | Wynik | Próg | |
+|---|---|---|---|
+| P1 trwałość znaku | 0,057; dodatnia w 17/22 | ≥ 18/22 | ❌ |
+| P2 przyrost ponad momentum | -1,978 pkt, t = -0,77 | > 0, t ≥ 2 | ❌ |
+| P3 monotoniczność | 2/4 kroków | ≥ 3/4 | ❌ |
+| P4 symetria | Q5 0,11, Q1 -0,09 | Q5 > 0, Q1 < 0 | ✅ |
+| P5 koszty | 0,10 pkt | ≥ 1,10 | ❌ |
+| P6 stabilność | 10/22; jackknife -3,108 … -0,655 | ≥ 15/22, > 0 | ❌ |
+
+Kategoria z tabeli karty: **BRAK** (P1 o jedną sesję). Odrzucenie od tego
+nie zależy — P2, P5 i P6 padają wyraźnie. Ablacje: wolumen (`C`) i rekordy
+`Trade` (`B`) dają to samo — **żadna wersja przepływu nie przewiduje minuty
+następnej**. Wniosek przekrojowy: **W016**.
+
+### D5 zamknięte. Zakupy danych zakończone.
+
+Zgodnie z regułą zapisaną przed bramką (`D5_ETAP4_SPEC` §12.2): porażka H017
+kończy kupowanie danych w D5. Ostatni otwarty kierunek projektu jest zamknięty.
+
+**Bilans projektu: 17 kart rozstrzygniętych, 0 strategii, licznik prób 0.**
+Jedyna bramka, która przeszła (D5-B2), dotyczyła informacji równoczesnej.

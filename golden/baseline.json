@@ -346,7 +346,7 @@
   }
  },
  "hash_danych": "595a3ab7e31b6fda362521bd786c2f1fa8cc998abf3c74d3dd43ebe4f2f34c36",
- "hash_wynikow": "2395e566bab13fd67767c191b512d2c3bdf7019e423619f9e192dbe99f06651f",
+ "hash_wynikow": "6af727ceb287fe7582a38fecb4aab6854e6c55abb57b809e550f18b5c8b64f29",
  "metryki": {
   "bramki": {
    "koncentracja": false,
@@ -390,6 +390,7 @@
    "W011_model_nocny_oos.md": "12f7e104e9d1692d0155072b5d15d3a28908742c6a140290d47c2922bb4313ff",
    "W012_H013_przekroje.md": "82a4bf904582c9104274d99193a335781706bc5b94e6f5654910b47d4efdcd5c",
    "W013_H003_preflight.md": "36d5fe8322f0d643341a5399b0c3e548ee19390e99e5cc11e6afa5edb14de707",
+   "W016_H017_preflight.md": "4a52f16f344f6819c8222b4c14f007b4e46b9024f6576c105f346165e727cfe1",
    "audyt_typy_i_kalendarz.md": "8c58654d3705eff9b057e64e3295330581dff02c753da7be9c1add2b45eb8c82",
    "data_quality_es.md": "5815a366396b1bfb4751c9cfcdb2a550dc18926a64ea4a47a528c340f734e076",
    "data_quality_mnq.md": "30162da38c710202d86f2473eff2434adf64ed7d3d15a78e68ab5b4b71fb728b",
@@ -411,7 +412,7 @@
   }
  },
  "rejestr": {
-  "kart_odrzuconych": 8,
+  "kart_odrzuconych": 9,
   "licznik_prob": 0,
   "statusy_kart": {
    "H001": "REJECTED pre-flightH001 → B02",
@@ -423,7 +424,8 @@
    "H011": "REJECTED pre-flight",
    "H013": "REJECTED pre-flightH013",
    "H014": "REJECTED pre-flightH014",
-   "H016": "IDEA warunkowaH016"
+   "H016": "IDEA warunkowaH016",
+   "H017": "REJECTED pre-flightH017 — W016"
   }
  },
  "schema_version": 1,

@@ -30,7 +30,7 @@ niezależnych audytach zewnętrznych) jest **jedynym źródłem prawdy** — kod
 a nie odwrotnie.
 
 Gotowe: fundament repo, silnik backtestowy, komplet aparatu walidacyjnego, strażnicy
-niezmienników, CI, golden baseline. **670 funkcji testowych (773 przypadków po parametryzacji), pokrycie 92%, ruff i mypy czyste.**
+niezmienników, CI, golden baseline. **672 funkcji testowych (775 przypadków po parametryzacji), pokrycie 92%, ruff i mypy czyste.**
 Liczbę pilnuje `tests/test_guards.py::test_handoff_podaje_aktualna_liczbe_testow` —
 bez tego rotowała dwa razy w ciągu doby, co jest dokładnie tym defektem, przed
 którym ostrzega reguła na górze tego pliku.
@@ -165,7 +165,8 @@ Decyzje właściciela z 11.08 zamknęły wszystko poza nią:
 | ✅ **Kopia zapasowa nowych plików** | wykonana przez właściciela 06.10 |
 | ✅ **Mieszanie normalizacji w analizie** | dozwolone przez rekonstrukcję jednostki, surowe liczniki nigdy — zgoda właściciela 06.10 (zinterpretowana, `D5_ETAP4_SPEC` §12.4) |
 | ✅ **Bramka GO/NO-GO D5-B2** | **GO** (06.10) — wszystkie sześć warunków, A/B/C zgodne, 0 niezgodności świec. Szczegóły i liczby: `REGISTRY`, artefakt `reports/D5_b2_wyniki.json` |
-| ⏳ **H017** | karta zamrożona (`hypotheses/H017.md`), pre-flight P1–P6 na lipcu — zero prób |
+| ❌ **H017** | **REJECTED (pre-flight)** 06.10 — przepływ nie przewiduje następnej minuty (raport `reports/W016_H017_preflight.md`) |
+| 🛑 **D5 zamknięte** | zakupy danych zakończone; dalszy kierunek albo pauza — decyzja właściciela |
 
 ### Uruchomienie bramki (u właściciela, venv aktywny)
 

@@ -33,9 +33,10 @@ metodę i progi.
 Projekt jest prowadzony przez **trzy modele i jednego człowieka**, z jawnym
 podziałem ról: Wykonawca nigdy nie wystawia werdyktu o własnej pracy (§5).
 
-**Licznik prób wynosi 0.** Szesnaście hipotez upadło na tanich bramkach
-wstępnych, zanim którakolwiek dotarła do backtestu. To jest wynik poprawny,
-nie zaległość.
+**Licznik prób wynosi 0.** Siedemnaście hipotez upadło na tanich bramkach
+wstępnych, zanim którakolwiek dotarła do backtestu. Jedna bramka przeszła
+(D5-B2, informacja równoczesna), ale karta na niej zbudowana (H017) upadła
+w pre-flight. To jest wynik poprawny, nie zaległość.
 
 ---
 
@@ -97,7 +98,7 @@ Pełna synteza: `docs/SYNTEZA_GEN1.md`.
 To jest najważniejsza rzecz, jaką projekt dotąd ustalił — i kosztowała zero
 prób, bo każda karta padła na bramce tańszej niż backtest.
 
-### 4.2 W toku — D5, przepływ agresywny na danych MBO
+### 4.2 Zamknięte — D5, przepływ agresywny na danych MBO
 
 Pytanie: czy **kto inicjuje transakcje** niesie informację o przyszłości,
 a nie tylko o sobie samym. Wymaga danych MBO, więc kupowanych etapami.
@@ -109,7 +110,7 @@ a nie tylko o sobie samym. Wymaga danych MBO, więc kupowanych etapami.
 | D5-C (jeden dzień MBO) | **GO** | znaleziona jednostka kanoniczna: akcja agresywna per `Trade`, po `order_id` |
 | Dry run D5-B2 | 8/8 niezmienników | rekonstrukcja działa |
 | **D5-B2 — miesiąc MBO** | ✅ **GO** (06.10) | nierównowaga akcji agresywnych nie jest przebranym ruchem ceny; nic nie mówi o przyszłości (`REGISTRY`) |
-| **H017** — kontynuacja przepływu | 🔄 karta zamrożona, pre-flight w toku | jedyny aktywny kierunek |
+| **H017** — kontynuacja przepływu | ❌ **REJECTED (pre-flight)** (06.10) | przepływ nie przewiduje następnej minuty; **D5 zamknięte** (`REGISTRY`, wniosek W016) |
 
 ### 4.3 Co dokładnie blokuje zakup miesiąca
 
@@ -258,13 +259,12 @@ kasują** — jeśli coś okazało się błędem, dopisujemy korektę obok.
 
 | # | Zadanie | Kto | Blokuje |
 |---|---|---|---|
-| 1 | ✅ Zakup miesiąca MBO, kopia zapasowa, bramka D5-B2: **GO** | — | — |
-| 2 | ✅ Karta H017 zamrożona przed jakimkolwiek pomiarem przyszłej ceny | Wykonawca | — |
-| 3 | **Pre-flight H017 (P1–P6) na lipcu** — zero prób, zero kosztów | Wykonawca | decyzja o danych OOS |
-| 4 | Tylko po `PASSED (pre-flight)`: wycena nowych miesięcy MBO wg R1 | właściciel | test właściwy |
+| 1 | ✅ Bramka D5-B2: GO | — | — |
+| 2 | ✅ Pre-flight H017: **REJECTED** — D5 zamknięte | — | — |
+| 3 | **Decyzja właściciela: pauza projektu albo nowy kierunek na posiadanych danych** | właściciel | wszystko dalej |
 
-Lipiec jest **zbiorem deweloperskim** i niczego nie certyfikuje. Pre-flight
-odpowiada wyłącznie na pytanie, czy jest sens kupować dalej.
+**Zakupy danych są zakończone** (reguła zapisana przed bramką). Nie ma
+żadnego otwartego zadania płatnego. Kredyt u dostawcy zostaje nietknięty.
 
 ### 8.2 Zaraz po zakupie
 
@@ -281,7 +281,7 @@ odpowiada wyłącznie na pytanie, czy jest sens kupować dalej.
 | Zakaz mieszania plików z obu okresów normalizacji | obowiązuje; propozycja **zawężenia** czeka na decyzję właściciela |
 | Przecięcie populacji „koperty wielopakietowe" vs „≥2 agresorów" | obserwacja **niezmierzona**, sprawdzalna lokalnie za darmo |
 | Symulator zasad kont fundowanych | odłożony świadomie do czasu GO/NO-GO |
-| Gen2 — nowa generacja kart | brief i kandydaci gotowi (`docs/GEN2_BRIEF.md`, `docs/GEN2_KANDYDACI.md`); start po D5 |
+| Gen2 — nowa generacja kart | D1 niewykonalny, D5 zamknięte (H017 REJECTED); D2–D4 odradzane w briefie. Dalszy kierunek — decyzja właściciela |
 
 ---
 
