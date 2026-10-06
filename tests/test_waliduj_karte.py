@@ -147,13 +147,19 @@ class TestZakresObowiazywania:
         from waliduj_karte import WZORZEC_SHA, waliduj
         objete = [p for p in sorted((KORZEN / "hypotheses").glob("H0*.md"))
                   if p.name >= "H017.md"]
+        # CI robi PLYTKI checkout (tylko HEAD) — starszego commitu zamrozenia
+        # nie da sie tam zweryfikowac. Linter sprawdzamy zawsze; istnienie
+        # commitu tylko z pelna historia (jak `TestDatyPrzySHA`).
+        plytkie = subprocess.run(
+            ["git", "rev-parse", "--is-shallow-repository"], cwd=KORZEN,
+            capture_output=True, text=True).stdout.strip() != "false"
         for p in objete:
             braki = waliduj(p, przed_zamrozeniem=True)
             assert not braki, f"{p.name}: {braki}"
             m = WZORZEC_SHA.search(p.read_text(encoding="utf-8"))
             assert m is not None
             sha = m.group(1)
-            if sha.upper() != "PENDING":
+            if sha.upper() != "PENDING" and not plytkie:
                 r = subprocess.run(
                     ["git", "cat-file", "-e", f"{sha}:hypotheses/{p.name}"],
                     cwd=KORZEN, capture_output=True)
