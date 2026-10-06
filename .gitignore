@@ -6,6 +6,8 @@ secrets/
 
 # === Dane surowe — odtwarzalne z manifestu, za duże dla gita ===
 data/raw/
+# pochodne (cache okien bramki D5-B2) — odtwarzalne z danych surowych
+data/pochodne/
 *.dbn
 *.dbn.zst
 

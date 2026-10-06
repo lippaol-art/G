@@ -258,9 +258,10 @@ kasują** — jeśli coś okazało się błędem, dopisujemy korektę obok.
 | # | Zadanie | Kto | Blokuje |
 |---|---|---|---|
 | 1 | ✅ Zakup pozostałych sesji MBO | właściciel | wykonany: 22 z 22 sesji |
-| 2 | **Kopia zapasowa nowych plików** | właściciel | analiza |
-| 3 | Decyzja: czy wolno mieszać pliki obu normalizacji w analizie przez rekonstrukcję (`D5_DRYF` §4 pkt 4) | właściciel | bramka |
-| 4 | Rekonstrukcja miesiąca i bramka GO/NO-GO | Wykonawca | D5-B2 |
+| 2 | ✅ Kopia zapasowa nowych plików | właściciel | — |
+| 3 | ✅ Mieszanie normalizacji: tak, przez rekonstrukcję jednostki (`D5_ETAP4_SPEC` §12.4) | właściciel | — |
+| 4 | ✅ Skrypt bramki i operacjonalizacja zapisana *ex ante* (`D5_ETAP4_SPEC` §12) | Wykonawca | — |
+| 5 | **Próba generalna, potem pełny bieg bramki** (`HANDOFF`, „Uruchomienie bramki") | właściciel | werdykt D5-B2 |
 
 Miesiąc jest **niejednorodny**: pięć sesji w starej normalizacji, siedemnaście
 w nowej. Manifest oznacza to per sesja. Jednostka kanoniczna (agresywna akcja

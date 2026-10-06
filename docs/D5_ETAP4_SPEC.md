@@ -281,3 +281,120 @@ biblioteki, kontrola braku duplikatów na granicach sesji.
 
 **Pliki `.dbn.zst` nie trafiają do repozytorium.** Commitujemy manifest,
 parametry, SHA-256, raport i kod rekonstrukcji.
+
+---
+
+## 12. Uzupełnienie *ex ante* — operacjonalizacja bramki (06.10.2026)
+
+**Zapisane PO pobraniu miesiąca i PRZED jakąkolwiek analizą.** Do chwili tego
+zapisu nikt — ani Wykonawca, ani właściciel — nie widział żadnej wielkości,
+z której liczy się bramka: ani `I_count`, ani VIF, ani rozkładu stron. Jedyne
+liczby znane z pobrania to liczby rekordów i koszty sesji.
+
+Powód zapisu jest ten sam co w §2.3: spec nazywa sześć progów, ale kilka
+decyzji wykonawczych zostawia otwartych. Rozstrzygnięte po zobaczeniu wyniku
+byłyby wyborem, nie regułą. **Żaden próg z §5 się nie zmienia.** Implementacja:
+`engine/d5b2.py` (logika), `scripts/d5b2_bramka.py` (I/O); każda reguła poniżej
+ma test w `tests/test_d5b2.py` lub `tests/test_d5b2_bramka.py`.
+
+Od 03.10 projekt nie ma recenzenta (decyzja właściciela), więc tę rolę pełni
+ten zapis i testy: mapowanie werdyktu jest tabelą testową, progi są
+porównywane z tekstem §5 przez test, a kluczowe reguły (kolejność cen,
+przypisanie okna, brakujące okna, strona N, reguła INCONCLUSIVE) zostały
+sprawdzone celowym zepsuciem kodu — każde zepsucie dało czerwony test.
+
+### 12.1 Źródła wielkości w oknie
+
+| Wielkość | Z czego | Uzasadnienie |
+|---|---|---|
+| `N_buy`, `N_sell` (A) | kanoniczne akcje §1, okno wg `ts_recv` ostatniego rekordu | §1.5, §2.1 |
+| `P_first`, `P_last`, `volume` | wszystkie rekordy `T` w oknie, **także strona N** | odpowiednik wierszy schematu `trades` z Etapu 2 |
+| kolejność cen | jawnie `(ts_recv, sequence)`; remis rozstrzyga kolejność pliku | §4 — liczona, nie zakładana z pliku |
+| kontrola B | liczba rekordów `T` po stronie B / A | Etap 2: „surowe wypełnienia" |
+| kontrola C | wolumen rekordów `T` po stronie B / A | Etap 2: `I_volume` |
+| strona N akcji | raportowana osobno, **wykluczona** ze znaku | Etap 2 §4 |
+
+Obserwacją jest okno, które ma jednocześnie cenę, stronę dla B/C i stronę dla
+A (`inner join` z implementacji Etapu 2). Każde inne okno jest **brakujące**
+(§2.2), nie zerowe.
+
+### 12.2 Mapowanie werdyktu
+
+| Układ | Werdykt | Źródło |
+|---|---|---|
+| wszystkie sześć warunków + A/B/C zgodne co do pooled VIF | **GO** | §5 |
+| wszystkie sześć, ale A/B/C niezgodne | **INCONCLUSIVE** | Etap 2 §4a: „A daje GO, B/C nie" |
+| warunek 1 spełniony, a **wszystkie** niespełnione należą do {2, 3, 4, 6} | **INCONCLUSIVE** | §5: „identyfikacja pochodzi głównie z różnic między sesjami (2, 3, 6) albo z pór dnia (4)" |
+| każdy inny układ, w tym niespełniony warunek 1 albo 5 | **NO-GO** | §5 |
+
+Warunek 5 (obie strony agresji) nie jest pytaniem o **źródło** identyfikacji,
+tylko o to, czy pomiar w ogóle widzi obie strony — dlatego jego niespełnienie
+daje NO-GO, nie INCONCLUSIVE.
+
+**INCONCLUSIVE nie uprawnia do żadnego zakupu danych.** Wyjaśnienie pomiaru
+odbywa się wyłącznie na posiadanym miesiącu. Reguła właściciela z 03.10:
+NO-GO albo porażka H017 kończy kupowanie danych w D5.
+
+### 12.3 Kompletność sesji (§6) dla miesiąca niejednorodnego
+
+| Punkt §6 | Implementacja |
+|---|---|
+| 1. parsuje się | wyjątek przy odczycie = STOP |
+| 2. liczba rekordów | liczba **wszystkich** rekordów pliku = `rekordow` z wpisu `wyniki[]` z `kompletny: true` (dla 07-30 rezerwowo manifest D5-C) |
+| 3. SHA-256 | gdy manifest go ma — musi się zgadzać; **cztery stare sesje (07-01, 07-02, 07-03, 07-06) go nie mają** (wpisy z syntezy, `D5_DRYF` §5f), więc SHA jest liczony przy analizie i zapisany w raporcie jako `zapisany_teraz` |
+| 4. koszt i zakres UTC | wpis planu manifestu; zakres musi być równy RTH wyprowadzonemu ze strefy |
+| 5. rekonstrukcja `ohlcv-1m` | bary z rekordów `T` po `ts_recv` = bary dostawcy z `data/clean` (MNQU6, ceny surowe), **zgodność dokładna** co do open/high/low/close/volume i zbioru minut |
+
+Uzasadnienie punktu 3: SHA z dnia analizy nie poświadcza pliku z dnia
+pobrania — i nie udajemy, że tak jest. Te pliki mają za to liczbę rekordów
+równą co do rekordu liczbie opłaconej (sprawdzone przez bieg zakupowy, który
+je rozpoznał i pominął) oraz kopię zapasową z 11.08.
+
+**Niespełnienie któregokolwiek punktu = STOP bez werdyktu**, a nie wykluczenie
+sesji. Wykluczanie sesji po zobaczeniu, że „coś z nią nie tak", byłoby
+selekcją. STOP nic nie kosztuje: dane są na dysku, bramka nie zostaje zużyta.
+STOP dają też: suma `n_trade` różna od liczby rekordów `T` (N1), akcja poza
+RTH, rekord `T` bez ceny, więcej niż jeden instrument w pliku, niedeterministyczny
+wynik powtórnego przeliczenia sesji 07-03.
+
+Tylko raportowane: rozjazd pasywnych `Fill` z rozmiarem akcji (N4, osobno na
+brzegach RTH), rekordy spoza RTH, cofnięcia `ts_recv` w pliku, akcje strony N.
+
+### 12.4 Miesiąc z dwóch normalizacji
+
+Pięć sesji jest w starej normalizacji, siedemnaście w nowej (`KOSZTY` §3).
+Bramka liczy się na **całym miesiącu**, przez rekonstrukcję jednostki §1 —
+jednostka jest po obu stronach identyczna na dwóch zmierzonych oknach
+(`D5_DRYF` §3d, §5e). Surowe liczniki rekordów **nigdy** nie są mieszane.
+
+Zgoda właściciela: 06.10, odpowiedź „zrobione wszystko" na pytanie o to
+mieszanie — **zinterpretowana jako „tak"** i zapisana tu jako interpretacja,
+nie jako cytat jednoznacznej zgody.
+
+Raport podaje dodatkowo pooled VIF dla A osobno dla sesji starej i nowej
+normalizacji. **Ta liczba jest opisowa i NIE wchodzi do werdyktu.**
+
+### 12.5 Operacjonalizacje odziedziczone z Etapu 2
+
+Przeniesione 1:1 z jedynej dotychczasowej implementacji
+(`scripts/audit_d5_etap2.py`), bez zmiany:
+
+- efekty pory dnia: kubełki 30-minutowe, 13 w sesji pełnej, jeden jako baza;
+  liczone od otwarcia RTH (w lipcu identyczne z podziałem tamtej
+  implementacji po zegarze UTC — cały miesiąc w EDT),
+- dzienny VIF tylko dla sesji kompletnych z **≥ 50 oknami**; mianownik
+  warunku 3 to liczba takich sesji,
+- „udział w zmienności" = udział sesji / kubełka w sumie kwadratów odchyleń
+  `I_count` od średniej **globalnej**,
+- warunek 5 liczony na **najsłabszej** sesji (z sesją skróconą włącznie),
+- VIF = 1/(1 − R²) regresji z wyrazem wolnym; VIF nieokreślony (stałe `I`)
+  **nie** jest poniżej progu.
+
+### 12.6 Kolejność uruchomienia
+
+1. `python scripts/d5b2_bramka.py --sesja 2026-07-03` — próba generalna: jedna
+   sesja, wszystkie kontrole i test determinizmu, **bez werdyktu**,
+2. dopiero po zielonej próbie pełny bieg, jednorazowo.
+
+**Licznik prób pozostaje 0** niezależnie od wyniku — bramka nie mierzy
+przyszłych zwrotów ani P&L.

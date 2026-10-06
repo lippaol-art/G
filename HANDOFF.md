@@ -30,7 +30,7 @@ niezależnych audytach zewnętrznych) jest **jedynym źródłem prawdy** — kod
 a nie odwrotnie.
 
 Gotowe: fundament repo, silnik backtestowy, komplet aparatu walidacyjnego, strażnicy
-niezmienników, CI, golden baseline. **625 funkcji testowych (709 przypadków po parametryzacji), pokrycie 92%, ruff i mypy czyste.**
+niezmienników, CI, golden baseline. **656 funkcji testowych (751 przypadków po parametryzacji), pokrycie 92%, ruff i mypy czyste.**
 Liczbę pilnuje `tests/test_guards.py::test_handoff_podaje_aktualna_liczbe_testow` —
 bez tego rotowała dwa razy w ciągu doby, co jest dokładnie tym defektem, przed
 którym ostrzega reguła na górze tego pliku.
@@ -162,8 +162,32 @@ Decyzje właściciela z 11.08 zamknęły wszystko poza nią:
 | ✅ Naprawa P1 | `bafdd8c` — `syntetyzuj_wyniki()` utrwala liczby przy zapisie manifestu |
 | ✅ Przyjęcie P1 | 03.10 przez Wykonawcę, bo recenzent zakończył udział; do tego warunek 9 (brak starego pliku = STOP przed zakupem) |
 | ✅ **Zakup 17 sesji** | **wykonany**: 17 z 17 kompletnych, koszt w `KOSZTY` §3 poz. 7. Miesiąc ma 22 sesje, w tym 5 starej i 17 nowej normalizacji |
-| ⏳ **Kopia zapasowa nowych plików** | przed jakąkolwiek analizą (`robocopy`, jak §Kopia zapasowa niżej) |
-| ⏳ **Bramka GO/NO-GO D5-B2** | rekonstrukcja miesiąca i sześć progów z `D5_ETAP4_SPEC` §5; progów nie ruszamy. Wymaga decyzji o mieszaniu plików z dwóch normalizacji (`D5_DRYF` §4 pkt 4) |
+| ✅ **Kopia zapasowa nowych plików** | wykonana przez właściciela 06.10 |
+| ✅ **Mieszanie normalizacji w analizie** | dozwolone przez rekonstrukcję jednostki, surowe liczniki nigdy — zgoda właściciela 06.10 (zinterpretowana, `D5_ETAP4_SPEC` §12.4) |
+| ⏳ **Bramka GO/NO-GO D5-B2** | **skrypt gotowy**: `scripts/d5b2_bramka.py`, logika `engine/d5b2.py`, operacjonalizacja zapisana *ex ante* w `D5_ETAP4_SPEC` §12. Uruchamia właściciel — dane są tylko u niego |
+
+### Uruchomienie bramki (u właściciela, venv aktywny)
+
+```powershell
+git pull origin claude/financial-market-strategy-8mb1y1
+python scripts\d5b2_bramka.py --sesja 2026-07-03
+python scripts\d5b2_bramka.py
+```
+
+Pierwsza komenda to **próba generalna**: jedna sesja, wszystkie kontrole §6
+i test determinizmu, **bez werdyktu**, kilkanaście sekund. Druga — pełny bieg,
+**jednorazowy**, rzędu 1–2 godzin (pomiar: ~5 µs na rekord). Bieg jest
+wznawialny: po przerwaniu ta sama komenda pomija sesje już policzone.
+Kod wyjścia 2 = STOP na kontroli danych, werdyktu brak, bramka nie zużyta.
+
+Po biegu raport do repozytorium:
+
+```powershell
+git add reports/D5_b2_wyniki.json
+git commit -m "reports: wynik bramki D5-B2"
+git push
+```
+
 
 **Limity bez zmian: 82,00 USD na miesiąc (R4) i 1,00 USD na okno.** Zamknięcie
 tematu kont **nie jest** zgodą na rozluźnianie czegokolwiek — obu limitów
