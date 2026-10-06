@@ -131,10 +131,35 @@ class TestZakresObowiazywania:
         """
         stare = sorted((KORZEN / "hypotheses").glob("H0*.md"))
         assert stare, "brak kart Gen1 — czy nie zostaly usuniete?"
-        objete = [p.name for p in stare if p.name >= "H017.md"]
-        assert not objete, (
-            f"karty {objete} sa >= H017 i podlegaja linterowi — uruchom "
-            "scripts/waliduj_karte.py przed ich zamrozeniem")
+        assert any(p.name < "H017.md" for p in stare)
+
+    def test_karty_od_H017_przechodza_linter(self):
+        """Karty od H017 w gore PODLEGAJA linterowi — kazda, zawsze.
+
+        Ten test zastapil wczesniejsza asercje „zadna karta >= H017 nie istnieje",
+        ktora byla przypomnieniem na chwile pojawienia sie pierwszej takiej
+        karty. Przypomnienie zadzialalo: H017 zostala zacommitowana przed
+        linterem i ten test to wykazal.
+        """
+        import subprocess
+        import sys
+        sys.path.insert(0, str(KORZEN / "scripts"))
+        from waliduj_karte import WZORZEC_SHA, waliduj
+        objete = [p for p in sorted((KORZEN / "hypotheses").glob("H0*.md"))
+                  if p.name >= "H017.md"]
+        for p in objete:
+            braki = waliduj(p, przed_zamrozeniem=True)
+            assert not braki, f"{p.name}: {braki}"
+            m = WZORZEC_SHA.search(p.read_text(encoding="utf-8"))
+            assert m is not None
+            sha = m.group(1)
+            if sha.upper() != "PENDING":
+                r = subprocess.run(
+                    ["git", "cat-file", "-e", f"{sha}:hypotheses/{p.name}"],
+                    cwd=KORZEN, capture_output=True)
+                assert r.returncode == 0, (
+                    f"{p.name}: SHA zamrozenia {sha} nie jest commitem "
+                    "zawierajacym te karte")
 
 
 class TestSpojnoscZRejestratorem:
