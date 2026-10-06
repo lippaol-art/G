@@ -1,0 +1,27 @@
+{
+ "etap": "D5-C",
+ "sesja": "2026-07-30",
+ "zapytanie": {
+  "dataset": "GLBX.MDP3",
+  "symbols": [
+   "MNQU6"
+  ],
+  "stype_in": "raw_symbol",
+  "schema": "mbo"
+ },
+ "rth": "09:30-16:00 America/New_York (UTC wyprowadzone ze strefy)",
+ "start_utc": "2026-07-30T13:30",
+ "end_utc": "2026-07-30T20:00",
+ "limit_usd": 4.0,
+ "koszt_usd": 3.5961,
+ "rekordow_wg_metadata": 38306877,
+ "rozmiar_rozliczeniowy_b": 2145185112,
+ "plik": "mnq_mbo_rth_2026-07-30.dbn.zst",
+ "sciezka": "/home/user/G/data/raw/d5c_mbo/mnq_mbo_rth_2026-07-30.dbn.zst",
+ "bajtow_na_dysku": 677537066,
+ "sha256": "3e6f023d3d6978a23af9a49256f68dd2862420b32eadab80c7b23abf0974ac42",
+ "wolne_gb_przed": 28.32,
+ "wolne_gb_po": 27.64,
+ "pobrano_utc": "2026-08-04T11:47:39+00:00",
+ "databento": "0.82.0"
+}

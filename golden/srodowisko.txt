@@ -1,0 +1,20 @@
+# Środowisko, w którym powstał golden baseline Gen1.
+# Rejestr, nie plik instalacyjny — pyproject celowo trzyma dolne ograniczenia,
+# a to jest zapis KONKRETNYCH wersji, które wyprodukowały zapisane hashe.
+# Rozbieżność wersji przy niezgodnym --sprawdz jest pierwszą rzeczą do sprawdzenia.
+
+# Python 3.11.15
+# platforma: Linux 6.18.5
+
+arch==8.0.0
+databento==0.82.0
+matplotlib==3.11.1
+mypy==2.3.0
+numpy==2.4.6
+polars==1.43.1
+pyarrow==25.0.0
+pytest==9.1.1
+pytest-cov==7.1.0
+ruff==0.16.1
+scikit-learn==1.9.0
+scipy==1.17.1

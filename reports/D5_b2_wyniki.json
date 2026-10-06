@@ -1,0 +1,1060 @@
+{
+ "werdykt": "D5-B2 GO",
+ "powod": "wszystkie szesc warunkow i A/B/C zgodne",
+ "warunki": {
+  "1": true,
+  "2": true,
+  "3": true,
+  "4": true,
+  "5": true,
+  "6": true
+ },
+ "abc_pooled_ponizej_progu": {
+  "A_count": true,
+  "B_fill": true,
+  "C_volume": true
+ },
+ "abc_zgodne": true,
+ "wyniki": {
+  "A_count": {
+   "pooled_vif": 1.7979758632621385,
+   "pooled_r2": 0.4438190075668421,
+   "pooled_vif_bez_pory": 1.7847678777498488,
+   "pooled_r2_bez_pory": 0.4397030490817927,
+   "dzienne_vif": {
+    "2026-07-01": 2.5098040147880054,
+    "2026-07-02": 2.154211629283368,
+    "2026-07-06": 2.334588557781063,
+    "2026-07-07": 2.2190876867538774,
+    "2026-07-08": 2.0818298479092823,
+    "2026-07-09": 1.987150009536225,
+    "2026-07-10": 2.016071176570473,
+    "2026-07-13": 2.0398596281883083,
+    "2026-07-14": 1.8720034614050418,
+    "2026-07-15": 2.7895082569486207,
+    "2026-07-16": 2.2977337738511254,
+    "2026-07-17": 1.9440970060225855,
+    "2026-07-20": 2.270897323965668,
+    "2026-07-21": 2.198547677697054,
+    "2026-07-22": 2.4718929688490476,
+    "2026-07-23": 2.2860312861098837,
+    "2026-07-24": 2.0250803208008836,
+    "2026-07-27": 2.012013106822599,
+    "2026-07-28": 1.9938400876974507,
+    "2026-07-29": 2.0818391794653373,
+    "2026-07-30": 2.05655745608999
+   },
+   "mediana_dzienna": 2.0818391794653373,
+   "p10": 1.987150009536225,
+   "p90": 2.4718929688490476,
+   "udzial_ponizej": 1.0,
+   "sesji_dziennych": 21,
+   "max_koncentracja_sesji": 0.09211772201809333,
+   "okien": 8400
+  },
+  "B_fill": {
+   "pooled_vif": 1.9705670186533049,
+   "pooled_r2": 0.4925318496990755,
+   "pooled_vif_bez_pory": 1.9566019557074399,
+   "pooled_r2_bez_pory": 0.48890984337259624,
+   "dzienne_vif": {
+    "2026-07-01": 2.638154694097801,
+    "2026-07-02": 2.516614284828538,
+    "2026-07-06": 2.4569634652808605,
+    "2026-07-07": 2.4493067708316625,
+    "2026-07-08": 2.3738446757124714,
+    "2026-07-09": 2.1328065275966805,
+    "2026-07-10": 2.110169784363782,
+    "2026-07-13": 2.3035418862368493,
+    "2026-07-14": 2.0148820992712637,
+    "2026-07-15": 3.0457768629022506,
+    "2026-07-16": 2.6098440683479813,
+    "2026-07-17": 2.3270091162851094,
+    "2026-07-20": 2.5650132348983568,
+    "2026-07-21": 2.262774758213881,
+    "2026-07-22": 2.6241731978752196,
+    "2026-07-23": 2.555755110540126,
+    "2026-07-24": 2.2160573041540585,
+    "2026-07-27": 2.2202932188722384,
+    "2026-07-28": 2.3236643583318703,
+    "2026-07-29": 2.493531314550795,
+    "2026-07-30": 2.274851143600139
+   },
+   "mediana_dzienna": 2.3738446757124714,
+   "p10": 2.1328065275966805,
+   "p90": 2.6241731978752196,
+   "udzial_ponizej": 1.0,
+   "sesji_dziennych": 21,
+   "max_koncentracja_sesji": 0.08365942785619217,
+   "okien": 8400
+  },
+  "C_volume": {
+   "pooled_vif": 2.291021474924594,
+   "pooled_r2": 0.5635134759996461,
+   "pooled_vif_bez_pory": 2.283229959524598,
+   "pooled_r2_bez_pory": 0.5620239670435059,
+   "dzienne_vif": {
+    "2026-07-01": 2.772743140761743,
+    "2026-07-02": 3.1017643125081658,
+    "2026-07-06": 2.545679530904453,
+    "2026-07-07": 2.6696336321886283,
+    "2026-07-08": 2.9426824156240032,
+    "2026-07-09": 2.2556249699662323,
+    "2026-07-10": 2.0320981427365057,
+    "2026-07-13": 3.0818246712800135,
+    "2026-07-14": 2.31861018185181,
+    "2026-07-15": 3.420254699124239,
+    "2026-07-16": 3.317872544218728,
+    "2026-07-17": 3.176943420294736,
+    "2026-07-20": 3.467892444901839,
+    "2026-07-21": 2.2899003793312267,
+    "2026-07-22": 3.0088902086840785,
+    "2026-07-23": 2.8615759619852916,
+    "2026-07-24": 2.7147484799015404,
+    "2026-07-27": 2.6186692073006816,
+    "2026-07-28": 2.6784455632751456,
+    "2026-07-29": 2.93992602029107,
+    "2026-07-30": 2.4769072886012817
+   },
+   "mediana_dzienna": 2.772743140761743,
+   "p10": 2.2899003793312267,
+   "p90": 3.317872544218728,
+   "udzial_ponizej": 1.0,
+   "sesji_dziennych": 21,
+   "max_koncentracja_sesji": 0.07033223795977593,
+   "okien": 8400
+  }
+ },
+ "koncentracja_pory_dnia": 0.09840831115941547,
+ "min_strona_sesji": 0.441025641025641,
+ "strony_sesji": {
+  "2026-07-01": {
+   "dod": 0.4666666666666667,
+   "uje": 0.5333333333333333
+  },
+  "2026-07-02": {
+   "dod": 0.541025641025641,
+   "uje": 0.4564102564102564
+  },
+  "2026-07-03": {
+   "dod": 0.47619047619047616,
+   "uje": 0.5190476190476191
+  },
+  "2026-07-06": {
+   "dod": 0.47692307692307695,
+   "uje": 0.517948717948718
+  },
+  "2026-07-07": {
+   "dod": 0.5435897435897435,
+   "uje": 0.4564102564102564
+  },
+  "2026-07-08": {
+   "dod": 0.4794871794871795,
+   "uje": 0.5128205128205128
+  },
+  "2026-07-09": {
+   "dod": 0.4794871794871795,
+   "uje": 0.517948717948718
+  },
+  "2026-07-10": {
+   "dod": 0.441025641025641,
+   "uje": 0.5538461538461539
+  },
+  "2026-07-13": {
+   "dod": 0.5307692307692308,
+   "uje": 0.46153846153846156
+  },
+  "2026-07-14": {
+   "dod": 0.5461538461538461,
+   "uje": 0.4461538461538462
+  },
+  "2026-07-15": {
+   "dod": 0.5205128205128206,
+   "uje": 0.4794871794871795
+  },
+  "2026-07-16": {
+   "dod": 0.5435897435897435,
+   "uje": 0.4564102564102564
+  },
+  "2026-07-17": {
+   "dod": 0.5282051282051282,
+   "uje": 0.46923076923076923
+  },
+  "2026-07-20": {
+   "dod": 0.4897435897435897,
+   "uje": 0.5102564102564102
+  },
+  "2026-07-21": {
+   "dod": 0.47435897435897434,
+   "uje": 0.5230769230769231
+  },
+  "2026-07-22": {
+   "dod": 0.5025641025641026,
+   "uje": 0.4897435897435897
+  },
+  "2026-07-23": {
+   "dod": 0.5307692307692308,
+   "uje": 0.46923076923076923
+  },
+  "2026-07-24": {
+   "dod": 0.5076923076923077,
+   "uje": 0.4846153846153846
+  },
+  "2026-07-27": {
+   "dod": 0.5051282051282051,
+   "uje": 0.49230769230769234
+  },
+  "2026-07-28": {
+   "dod": 0.517948717948718,
+   "uje": 0.46923076923076923
+  },
+  "2026-07-29": {
+   "dod": 0.5102564102564102,
+   "uje": 0.48205128205128206
+  },
+  "2026-07-30": {
+   "dod": 0.45384615384615384,
+   "uje": 0.5435897435897435
+  }
+ },
+ "okien_na_sesje": {
+  "2026-07-01": 390,
+  "2026-07-02": 390,
+  "2026-07-03": 210,
+  "2026-07-06": 390,
+  "2026-07-07": 390,
+  "2026-07-08": 390,
+  "2026-07-09": 390,
+  "2026-07-10": 390,
+  "2026-07-13": 390,
+  "2026-07-14": 390,
+  "2026-07-15": 390,
+  "2026-07-16": 390,
+  "2026-07-17": 390,
+  "2026-07-20": 390,
+  "2026-07-21": 390,
+  "2026-07-22": 390,
+  "2026-07-23": 390,
+  "2026-07-24": 390,
+  "2026-07-27": 390,
+  "2026-07-28": 390,
+  "2026-07-29": 390,
+  "2026-07-30": 390
+ },
+ "udzial_dodatnich": 0.5035714285714286,
+ "udzial_ujemnych": 0.49238095238095236,
+ "udzial_zerowych": 0.004047619047619047,
+ "opis_normalizacji": {
+  "stara": {
+   "sesji": 5,
+   "okien": 1770,
+   "pooled_vif_A": 1.7780450211798913
+  },
+  "nowa": {
+   "sesji": 17,
+   "okien": 6630,
+   "pooled_vif_A": 1.8440436190923395
+  }
+ },
+ "sesje": {
+  "2026-07-01": {
+   "sha256": "cc56aa8f364792db82c613781f0450a130e0c332ca4b50614a28c8e8c99c36bb",
+   "sha_zrodlo": "zapisany_teraz",
+   "bary": {
+    "wspolnych": 390,
+    "tylko_nasze": 0,
+    "tylko_dostawcy": 0,
+    "open": 0,
+    "high": 0,
+    "low": 0,
+    "close": 0,
+    "volume": 0,
+    "niezgodnych": 0
+   },
+   "rekordow_w_pliku": 39297265,
+   "rekordow_manifest": 39297265,
+   "pochodzenie_wpisu": "syntetyzowany przy zapisie manifestu: plik byl kompletny, ale poprzedni manifest nie mial go w `wyniki[]` (liczba stala tylko na `plan[]`)",
+   "normalizacja": "stara",
+   "kontrola": {
+    "rekordow": 39297265,
+    "rekordow_rth": 39297265,
+    "poza_rth": 0,
+    "ts_recv_wstecz": 0,
+    "trade": 997325,
+    "trade_cena_niezdefiniowana": 0,
+    "akcji": 927848,
+    "akcji_strona_N": 0,
+    "suma_n_trade": 997325,
+    "n4_niezgodnych": 0,
+    "n4_niezgodnych_brzeg": 0,
+    "akcji_poza_rth": 0
+   },
+   "stop": [],
+   "okien": 390,
+   "z_cache": false
+  },
+  "2026-07-02": {
+   "sha256": "c9a5d34c9941b13fb94bfa21481e11b38b127989c9905074f460ee8b09580186",
+   "sha_zrodlo": "zapisany_teraz",
+   "bary": {
+    "wspolnych": 390,
+    "tylko_nasze": 0,
+    "tylko_dostawcy": 0,
+    "open": 0,
+    "high": 0,
+    "low": 0,
+    "close": 0,
+    "volume": 0,
+    "niezgodnych": 0
+   },
+   "rekordow_w_pliku": 61279315,
+   "rekordow_manifest": 61279315,
+   "pochodzenie_wpisu": "syntetyzowany przy zapisie manifestu: plik byl kompletny, ale poprzedni manifest nie mial go w `wyniki[]` (liczba stala tylko na `plan[]`)",
+   "normalizacja": "stara",
+   "kontrola": {
+    "rekordow": 61279315,
+    "rekordow_rth": 61279315,
+    "poza_rth": 0,
+    "ts_recv_wstecz": 0,
+    "trade": 1510673,
+    "trade_cena_niezdefiniowana": 0,
+    "akcji": 1399650,
+    "akcji_strona_N": 0,
+    "suma_n_trade": 1510673,
+    "n4_niezgodnych": 0,
+    "n4_niezgodnych_brzeg": 0,
+    "akcji_poza_rth": 0
+   },
+   "stop": [],
+   "okien": 390,
+   "z_cache": false
+  },
+  "2026-07-03": {
+   "sha256": "a496adbc7dc46a29d9337deba3d8f1bd2593381f1641d8879fd848b15f7113eb",
+   "sha_zrodlo": "zapisany_teraz",
+   "bary": {
+    "wspolnych": 210,
+    "tylko_nasze": 0,
+    "tylko_dostawcy": 0,
+    "open": 0,
+    "high": 0,
+    "low": 0,
+    "close": 0,
+    "volume": 0,
+    "niezgodnych": 0
+   },
+   "rekordow_w_pliku": 2660629,
+   "rekordow_manifest": 2660629,
+   "pochodzenie_wpisu": "syntetyzowany przy zapisie manifestu: plik byl kompletny, ale poprzedni manifest nie mial go w `wyniki[]` (liczba stala tylko na `plan[]`)",
+   "normalizacja": "stara",
+   "kontrola": {
+    "rekordow": 2660629,
+    "rekordow_rth": 2660629,
+    "poza_rth": 0,
+    "ts_recv_wstecz": 0,
+    "trade": 100882,
+    "trade_cena_niezdefiniowana": 0,
+    "akcji": 90338,
+    "akcji_strona_N": 0,
+    "suma_n_trade": 100882,
+    "n4_niezgodnych": 0,
+    "n4_niezgodnych_brzeg": 0,
+    "akcji_poza_rth": 0
+   },
+   "stop": [],
+   "okien": 210,
+   "z_cache": true
+  },
+  "2026-07-06": {
+   "sha256": "bf6c8636d15408fdc966936660d8ca4106e197fef1af104a943be819903b010c",
+   "sha_zrodlo": "zapisany_teraz",
+   "bary": {
+    "wspolnych": 390,
+    "tylko_nasze": 0,
+    "tylko_dostawcy": 0,
+    "open": 0,
+    "high": 0,
+    "low": 0,
+    "close": 0,
+    "volume": 0,
+    "niezgodnych": 0
+   },
+   "rekordow_w_pliku": 32369900,
+   "rekordow_manifest": 32369900,
+   "pochodzenie_wpisu": "syntetyzowany przy zapisie manifestu: plik byl kompletny, ale poprzedni manifest nie mial go w `wyniki[]` (liczba stala tylko na `plan[]`)",
+   "normalizacja": "stara",
+   "kontrola": {
+    "rekordow": 32369900,
+    "rekordow_rth": 32369900,
+    "poza_rth": 0,
+    "ts_recv_wstecz": 0,
+    "trade": 850668,
+    "trade_cena_niezdefiniowana": 0,
+    "akcji": 788187,
+    "akcji_strona_N": 0,
+    "suma_n_trade": 850668,
+    "n4_niezgodnych": 0,
+    "n4_niezgodnych_brzeg": 0,
+    "akcji_poza_rth": 0
+   },
+   "stop": [],
+   "okien": 390,
+   "z_cache": false
+  },
+  "2026-07-07": {
+   "sha256": "b355e2217c848a2f8a3439f24946f6bdbcd2b91eb709b33923f075d2d7d069b0",
+   "sha_zrodlo": "manifest",
+   "bary": {
+    "wspolnych": 390,
+    "tylko_nasze": 0,
+    "tylko_dostawcy": 0,
+    "open": 0,
+    "high": 0,
+    "low": 0,
+    "close": 0,
+    "volume": 0,
+    "niezgodnych": 0
+   },
+   "rekordow_w_pliku": 48848835,
+   "rekordow_manifest": 48848835,
+   "pochodzenie_wpisu": null,
+   "normalizacja": "nowa",
+   "kontrola": {
+    "rekordow": 48848835,
+    "rekordow_rth": 48848835,
+    "poza_rth": 0,
+    "ts_recv_wstecz": 0,
+    "trade": 1206227,
+    "trade_cena_niezdefiniowana": 0,
+    "akcji": 1127155,
+    "akcji_strona_N": 0,
+    "suma_n_trade": 1206227,
+    "n4_niezgodnych": 0,
+    "n4_niezgodnych_brzeg": 0,
+    "akcji_poza_rth": 0
+   },
+   "stop": [],
+   "okien": 390,
+   "z_cache": false
+  },
+  "2026-07-08": {
+   "sha256": "a1b134241e434815c3bc2d3f0d0f66eaca1e2f15f882644da676b01c032811c1",
+   "sha_zrodlo": "manifest",
+   "bary": {
+    "wspolnych": 390,
+    "tylko_nasze": 0,
+    "tylko_dostawcy": 0,
+    "open": 0,
+    "high": 0,
+    "low": 0,
+    "close": 0,
+    "volume": 0,
+    "niezgodnych": 0
+   },
+   "rekordow_w_pliku": 46050560,
+   "rekordow_manifest": 46050560,
+   "pochodzenie_wpisu": null,
+   "normalizacja": "nowa",
+   "kontrola": {
+    "rekordow": 46050560,
+    "rekordow_rth": 46050560,
+    "poza_rth": 0,
+    "ts_recv_wstecz": 0,
+    "trade": 1180262,
+    "trade_cena_niezdefiniowana": 0,
+    "akcji": 1086353,
+    "akcji_strona_N": 0,
+    "suma_n_trade": 1180262,
+    "n4_niezgodnych": 0,
+    "n4_niezgodnych_brzeg": 0,
+    "akcji_poza_rth": 0
+   },
+   "stop": [],
+   "okien": 390,
+   "z_cache": false
+  },
+  "2026-07-09": {
+   "sha256": "8b500da555273c1ef7351a5237d74015b1a349cf0d94324060dfe0d5a3fc360a",
+   "sha_zrodlo": "manifest",
+   "bary": {
+    "wspolnych": 390,
+    "tylko_nasze": 0,
+    "tylko_dostawcy": 0,
+    "open": 0,
+    "high": 0,
+    "low": 0,
+    "close": 0,
+    "volume": 0,
+    "niezgodnych": 0
+   },
+   "rekordow_w_pliku": 32063628,
+   "rekordow_manifest": 32063628,
+   "pochodzenie_wpisu": null,
+   "normalizacja": "nowa",
+   "kontrola": {
+    "rekordow": 32063628,
+    "rekordow_rth": 32063628,
+    "poza_rth": 0,
+    "ts_recv_wstecz": 0,
+    "trade": 857646,
+    "trade_cena_niezdefiniowana": 0,
+    "akcji": 798390,
+    "akcji_strona_N": 0,
+    "suma_n_trade": 857646,
+    "n4_niezgodnych": 0,
+    "n4_niezgodnych_brzeg": 0,
+    "akcji_poza_rth": 0
+   },
+   "stop": [],
+   "okien": 390,
+   "z_cache": false
+  },
+  "2026-07-10": {
+   "sha256": "f32c42d9671657e8540e0abbdc1cd6aa5a3e5831701bb6c6ecb94fcd94e8a265",
+   "sha_zrodlo": "manifest",
+   "bary": {
+    "wspolnych": 390,
+    "tylko_nasze": 0,
+    "tylko_dostawcy": 0,
+    "open": 0,
+    "high": 0,
+    "low": 0,
+    "close": 0,
+    "volume": 0,
+    "niezgodnych": 0
+   },
+   "rekordow_w_pliku": 32533406,
+   "rekordow_manifest": 32533406,
+   "pochodzenie_wpisu": null,
+   "normalizacja": "nowa",
+   "kontrola": {
+    "rekordow": 32533406,
+    "rekordow_rth": 32533406,
+    "poza_rth": 0,
+    "ts_recv_wstecz": 0,
+    "trade": 876059,
+    "trade_cena_niezdefiniowana": 0,
+    "akcji": 811194,
+    "akcji_strona_N": 2,
+    "suma_n_trade": 876059,
+    "n4_niezgodnych": 2,
+    "n4_niezgodnych_brzeg": 0,
+    "akcji_poza_rth": 0
+   },
+   "stop": [],
+   "okien": 390,
+   "z_cache": false
+  },
+  "2026-07-13": {
+   "sha256": "fc5cfb87f9d773ef70e2a63a8243bb261f71cb6df49846dd6b816ecbd81204cc",
+   "sha_zrodlo": "manifest",
+   "bary": {
+    "wspolnych": 390,
+    "tylko_nasze": 0,
+    "tylko_dostawcy": 0,
+    "open": 0,
+    "high": 0,
+    "low": 0,
+    "close": 0,
+    "volume": 0,
+    "niezgodnych": 0
+   },
+   "rekordow_w_pliku": 37927155,
+   "rekordow_manifest": 37927155,
+   "pochodzenie_wpisu": null,
+   "normalizacja": "nowa",
+   "kontrola": {
+    "rekordow": 37927155,
+    "rekordow_rth": 37927155,
+    "poza_rth": 0,
+    "ts_recv_wstecz": 0,
+    "trade": 993001,
+    "trade_cena_niezdefiniowana": 0,
+    "akcji": 922908,
+    "akcji_strona_N": 1,
+    "suma_n_trade": 993001,
+    "n4_niezgodnych": 1,
+    "n4_niezgodnych_brzeg": 0,
+    "akcji_poza_rth": 0
+   },
+   "stop": [],
+   "okien": 390,
+   "z_cache": false
+  },
+  "2026-07-14": {
+   "sha256": "cccde0ebe1fd40f7920b00f715a7bba67ef4f1b30c7c1f5d53f91c879ec592ed",
+   "sha_zrodlo": "manifest",
+   "bary": {
+    "wspolnych": 390,
+    "tylko_nasze": 0,
+    "tylko_dostawcy": 0,
+    "open": 0,
+    "high": 0,
+    "low": 0,
+    "close": 0,
+    "volume": 0,
+    "niezgodnych": 0
+   },
+   "rekordow_w_pliku": 37012042,
+   "rekordow_manifest": 37012042,
+   "pochodzenie_wpisu": null,
+   "normalizacja": "nowa",
+   "kontrola": {
+    "rekordow": 37012042,
+    "rekordow_rth": 37012042,
+    "poza_rth": 0,
+    "ts_recv_wstecz": 0,
+    "trade": 926686,
+    "trade_cena_niezdefiniowana": 0,
+    "akcji": 859406,
+    "akcji_strona_N": 1,
+    "suma_n_trade": 926686,
+    "n4_niezgodnych": 1,
+    "n4_niezgodnych_brzeg": 0,
+    "akcji_poza_rth": 0
+   },
+   "stop": [],
+   "okien": 390,
+   "z_cache": false
+  },
+  "2026-07-15": {
+   "sha256": "fd0cc94a54705e4b8b7e2d0c8f103ae54d4c6a0ebfcf145517c3065131b51de8",
+   "sha_zrodlo": "manifest",
+   "bary": {
+    "wspolnych": 390,
+    "tylko_nasze": 0,
+    "tylko_dostawcy": 0,
+    "open": 0,
+    "high": 0,
+    "low": 0,
+    "close": 0,
+    "volume": 0,
+    "niezgodnych": 0
+   },
+   "rekordow_w_pliku": 45030234,
+   "rekordow_manifest": 45030234,
+   "pochodzenie_wpisu": null,
+   "normalizacja": "nowa",
+   "kontrola": {
+    "rekordow": 45030234,
+    "rekordow_rth": 45030234,
+    "poza_rth": 0,
+    "ts_recv_wstecz": 0,
+    "trade": 1099399,
+    "trade_cena_niezdefiniowana": 0,
+    "akcji": 1026777,
+    "akcji_strona_N": 0,
+    "suma_n_trade": 1099399,
+    "n4_niezgodnych": 0,
+    "n4_niezgodnych_brzeg": 0,
+    "akcji_poza_rth": 0
+   },
+   "stop": [],
+   "okien": 390,
+   "z_cache": false
+  },
+  "2026-07-16": {
+   "sha256": "ca9692405747e6127e7c9d3eda0f7c39e14d133ffdcd7e3926c9473da72db904",
+   "sha_zrodlo": "manifest",
+   "bary": {
+    "wspolnych": 390,
+    "tylko_nasze": 0,
+    "tylko_dostawcy": 0,
+    "open": 0,
+    "high": 0,
+    "low": 0,
+    "close": 0,
+    "volume": 0,
+    "niezgodnych": 0
+   },
+   "rekordow_w_pliku": 41290788,
+   "rekordow_manifest": 41290788,
+   "pochodzenie_wpisu": null,
+   "normalizacja": "nowa",
+   "kontrola": {
+    "rekordow": 41290788,
+    "rekordow_rth": 41290788,
+    "poza_rth": 0,
+    "ts_recv_wstecz": 0,
+    "trade": 1045306,
+    "trade_cena_niezdefiniowana": 0,
+    "akcji": 969598,
+    "akcji_strona_N": 0,
+    "suma_n_trade": 1045306,
+    "n4_niezgodnych": 0,
+    "n4_niezgodnych_brzeg": 0,
+    "akcji_poza_rth": 0
+   },
+   "stop": [],
+   "okien": 390,
+   "z_cache": false
+  },
+  "2026-07-17": {
+   "sha256": "ae176a44811fd326a8d3d3f8f702ebb8eb822385aa08b3866090cda033bbdc42",
+   "sha_zrodlo": "manifest",
+   "bary": {
+    "wspolnych": 390,
+    "tylko_nasze": 0,
+    "tylko_dostawcy": 0,
+    "open": 0,
+    "high": 0,
+    "low": 0,
+    "close": 0,
+    "volume": 0,
+    "niezgodnych": 0
+   },
+   "rekordow_w_pliku": 48184396,
+   "rekordow_manifest": 48184396,
+   "pochodzenie_wpisu": null,
+   "normalizacja": "nowa",
+   "kontrola": {
+    "rekordow": 48184396,
+    "rekordow_rth": 48184396,
+    "poza_rth": 0,
+    "ts_recv_wstecz": 0,
+    "trade": 1211180,
+    "trade_cena_niezdefiniowana": 0,
+    "akcji": 1121043,
+    "akcji_strona_N": 0,
+    "suma_n_trade": 1211180,
+    "n4_niezgodnych": 0,
+    "n4_niezgodnych_brzeg": 0,
+    "akcji_poza_rth": 0
+   },
+   "stop": [],
+   "okien": 390,
+   "z_cache": false
+  },
+  "2026-07-20": {
+   "sha256": "612359e535c8ed9165b6c4c705afcc6e0c3fc98f2e49c6dec9f23915f76d29a1",
+   "sha_zrodlo": "manifest",
+   "bary": {
+    "wspolnych": 390,
+    "tylko_nasze": 0,
+    "tylko_dostawcy": 0,
+    "open": 0,
+    "high": 0,
+    "low": 0,
+    "close": 0,
+    "volume": 0,
+    "niezgodnych": 0
+   },
+   "rekordow_w_pliku": 38272577,
+   "rekordow_manifest": 38272577,
+   "pochodzenie_wpisu": null,
+   "normalizacja": "nowa",
+   "kontrola": {
+    "rekordow": 38272577,
+    "rekordow_rth": 38272577,
+    "poza_rth": 0,
+    "ts_recv_wstecz": 0,
+    "trade": 1001870,
+    "trade_cena_niezdefiniowana": 0,
+    "akcji": 935741,
+    "akcji_strona_N": 0,
+    "suma_n_trade": 1001870,
+    "n4_niezgodnych": 0,
+    "n4_niezgodnych_brzeg": 0,
+    "akcji_poza_rth": 0
+   },
+   "stop": [],
+   "okien": 390,
+   "z_cache": false
+  },
+  "2026-07-21": {
+   "sha256": "cc64dd9301cf2430bf5e75a21849320389d2e9be91de3945ff8becfa06d0f216",
+   "sha_zrodlo": "manifest",
+   "bary": {
+    "wspolnych": 390,
+    "tylko_nasze": 0,
+    "tylko_dostawcy": 0,
+    "open": 0,
+    "high": 0,
+    "low": 0,
+    "close": 0,
+    "volume": 0,
+    "niezgodnych": 0
+   },
+   "rekordow_w_pliku": 26005248,
+   "rekordow_manifest": 26005248,
+   "pochodzenie_wpisu": null,
+   "normalizacja": "nowa",
+   "kontrola": {
+    "rekordow": 26005248,
+    "rekordow_rth": 26005248,
+    "poza_rth": 0,
+    "ts_recv_wstecz": 0,
+    "trade": 774942,
+    "trade_cena_niezdefiniowana": 0,
+    "akcji": 719135,
+    "akcji_strona_N": 0,
+    "suma_n_trade": 774942,
+    "n4_niezgodnych": 0,
+    "n4_niezgodnych_brzeg": 0,
+    "akcji_poza_rth": 0
+   },
+   "stop": [],
+   "okien": 390,
+   "z_cache": false
+  },
+  "2026-07-22": {
+   "sha256": "493a6ae9ea114e88ea226195ce83ff46aad2a14f520aebff3283449df6a794b6",
+   "sha_zrodlo": "manifest",
+   "bary": {
+    "wspolnych": 390,
+    "tylko_nasze": 0,
+    "tylko_dostawcy": 0,
+    "open": 0,
+    "high": 0,
+    "low": 0,
+    "close": 0,
+    "volume": 0,
+    "niezgodnych": 0
+   },
+   "rekordow_w_pliku": 25734547,
+   "rekordow_manifest": 25734547,
+   "pochodzenie_wpisu": null,
+   "normalizacja": "nowa",
+   "kontrola": {
+    "rekordow": 25734547,
+    "rekordow_rth": 25734547,
+    "poza_rth": 0,
+    "ts_recv_wstecz": 0,
+    "trade": 743828,
+    "trade_cena_niezdefiniowana": 0,
+    "akcji": 694268,
+    "akcji_strona_N": 0,
+    "suma_n_trade": 743828,
+    "n4_niezgodnych": 0,
+    "n4_niezgodnych_brzeg": 0,
+    "akcji_poza_rth": 0
+   },
+   "stop": [],
+   "okien": 390,
+   "z_cache": false
+  },
+  "2026-07-23": {
+   "sha256": "8c433440751d7b8faf0a85fa2f4f6aac9be68f4277b79f7909c4d9b8ca5f977d",
+   "sha_zrodlo": "manifest",
+   "bary": {
+    "wspolnych": 390,
+    "tylko_nasze": 0,
+    "tylko_dostawcy": 0,
+    "open": 0,
+    "high": 0,
+    "low": 0,
+    "close": 0,
+    "volume": 0,
+    "niezgodnych": 0
+   },
+   "rekordow_w_pliku": 44844144,
+   "rekordow_manifest": 44844144,
+   "pochodzenie_wpisu": null,
+   "normalizacja": "nowa",
+   "kontrola": {
+    "rekordow": 44844144,
+    "rekordow_rth": 44844144,
+    "poza_rth": 0,
+    "ts_recv_wstecz": 0,
+    "trade": 1104849,
+    "trade_cena_niezdefiniowana": 0,
+    "akcji": 1028016,
+    "akcji_strona_N": 0,
+    "suma_n_trade": 1104849,
+    "n4_niezgodnych": 0,
+    "n4_niezgodnych_brzeg": 0,
+    "akcji_poza_rth": 0
+   },
+   "stop": [],
+   "okien": 390,
+   "z_cache": false
+  },
+  "2026-07-24": {
+   "sha256": "af069fa396525e8cfcf496b88f90e57351252fd459162f51fdf36125728bc6b1",
+   "sha_zrodlo": "manifest",
+   "bary": {
+    "wspolnych": 390,
+    "tylko_nasze": 0,
+    "tylko_dostawcy": 0,
+    "open": 0,
+    "high": 0,
+    "low": 0,
+    "close": 0,
+    "volume": 0,
+    "niezgodnych": 0
+   },
+   "rekordow_w_pliku": 43003047,
+   "rekordow_manifest": 43003047,
+   "pochodzenie_wpisu": null,
+   "normalizacja": "nowa",
+   "kontrola": {
+    "rekordow": 43003047,
+    "rekordow_rth": 43003047,
+    "poza_rth": 0,
+    "ts_recv_wstecz": 0,
+    "trade": 1139663,
+    "trade_cena_niezdefiniowana": 0,
+    "akcji": 1056961,
+    "akcji_strona_N": 0,
+    "suma_n_trade": 1139663,
+    "n4_niezgodnych": 0,
+    "n4_niezgodnych_brzeg": 0,
+    "akcji_poza_rth": 0
+   },
+   "stop": [],
+   "okien": 390,
+   "z_cache": false
+  },
+  "2026-07-27": {
+   "sha256": "f9f69e88055dda7322a9a96c9b9f2ed9dec7c7cae4a0e272d94e5c3c25af4374",
+   "sha_zrodlo": "manifest",
+   "bary": {
+    "wspolnych": 390,
+    "tylko_nasze": 0,
+    "tylko_dostawcy": 0,
+    "open": 0,
+    "high": 0,
+    "low": 0,
+    "close": 0,
+    "volume": 0,
+    "niezgodnych": 0
+   },
+   "rekordow_w_pliku": 47481981,
+   "rekordow_manifest": 47481981,
+   "pochodzenie_wpisu": null,
+   "normalizacja": "nowa",
+   "kontrola": {
+    "rekordow": 47481981,
+    "rekordow_rth": 47481981,
+    "poza_rth": 0,
+    "ts_recv_wstecz": 0,
+    "trade": 1207462,
+    "trade_cena_niezdefiniowana": 0,
+    "akcji": 1121433,
+    "akcji_strona_N": 0,
+    "suma_n_trade": 1207462,
+    "n4_niezgodnych": 0,
+    "n4_niezgodnych_brzeg": 0,
+    "akcji_poza_rth": 0
+   },
+   "stop": [],
+   "okien": 390,
+   "z_cache": false
+  },
+  "2026-07-28": {
+   "sha256": "342e2c4c15544669f31ca0d3b92843d7dfd4a9072d1396f17c7d34372c8c4964",
+   "sha_zrodlo": "manifest",
+   "bary": {
+    "wspolnych": 390,
+    "tylko_nasze": 0,
+    "tylko_dostawcy": 0,
+    "open": 0,
+    "high": 0,
+    "low": 0,
+    "close": 0,
+    "volume": 0,
+    "niezgodnych": 0
+   },
+   "rekordow_w_pliku": 36695855,
+   "rekordow_manifest": 36695855,
+   "pochodzenie_wpisu": null,
+   "normalizacja": "nowa",
+   "kontrola": {
+    "rekordow": 36695855,
+    "rekordow_rth": 36695855,
+    "poza_rth": 0,
+    "ts_recv_wstecz": 0,
+    "trade": 1025089,
+    "trade_cena_niezdefiniowana": 0,
+    "akcji": 930799,
+    "akcji_strona_N": 0,
+    "suma_n_trade": 1025089,
+    "n4_niezgodnych": 0,
+    "n4_niezgodnych_brzeg": 0,
+    "akcji_poza_rth": 0
+   },
+   "stop": [],
+   "okien": 390,
+   "z_cache": false
+  },
+  "2026-07-29": {
+   "sha256": "b3396a543419ee8b70cbec1adb23a97c6699abb953f7f493f7ee456637c22275",
+   "sha_zrodlo": "manifest",
+   "bary": {
+    "wspolnych": 390,
+    "tylko_nasze": 0,
+    "tylko_dostawcy": 0,
+    "open": 0,
+    "high": 0,
+    "low": 0,
+    "close": 0,
+    "volume": 0,
+    "niezgodnych": 0
+   },
+   "rekordow_w_pliku": 50054691,
+   "rekordow_manifest": 50054691,
+   "pochodzenie_wpisu": null,
+   "normalizacja": "nowa",
+   "kontrola": {
+    "rekordow": 50054691,
+    "rekordow_rth": 50054691,
+    "poza_rth": 0,
+    "ts_recv_wstecz": 0,
+    "trade": 1243116,
+    "trade_cena_niezdefiniowana": 0,
+    "akcji": 1119472,
+    "akcji_strona_N": 0,
+    "suma_n_trade": 1243116,
+    "n4_niezgodnych": 0,
+    "n4_niezgodnych_brzeg": 0,
+    "akcji_poza_rth": 0
+   },
+   "stop": [],
+   "okien": 390,
+   "z_cache": false
+  },
+  "2026-07-30": {
+   "sha256": "3e6f023d3d6978a23af9a49256f68dd2862420b32eadab80c7b23abf0974ac42",
+   "sha_zrodlo": "manifest",
+   "bary": {
+    "wspolnych": 390,
+    "tylko_nasze": 0,
+    "tylko_dostawcy": 0,
+    "open": 0,
+    "high": 0,
+    "low": 0,
+    "close": 0,
+    "volume": 0,
+    "niezgodnych": 0
+   },
+   "rekordow_w_pliku": 38306877,
+   "rekordow_manifest": 38306877,
+   "pochodzenie_wpisu": "syntetyzowany przy zapisie manifestu: plik byl kompletny, ale poprzedni manifest nie mial go w `wyniki[]` (liczba stala tylko na `plan[]`)",
+   "normalizacja": "stara",
+   "kontrola": {
+    "rekordow": 38306877,
+    "rekordow_rth": 38306877,
+    "poza_rth": 0,
+    "ts_recv_wstecz": 0,
+    "trade": 984113,
+    "trade_cena_niezdefiniowana": 0,
+    "akcji": 903116,
+    "akcji_strona_N": 0,
+    "suma_n_trade": 984113,
+    "n4_niezgodnych": 0,
+    "n4_niezgodnych_brzeg": 0,
+    "akcji_poza_rth": 0
+   },
+   "stop": [],
+   "okien": 390,
+   "z_cache": false
+  }
+ },
+ "meta": {
+  "wersja_kodu": "dfda4bfbe45f8974",
+  "git": "63d895a",
+  "utc": "2026-10-06T14:18:30+00:00",
+  "databento": "0.82.0",
+  "sesji": 22
+ }
+}

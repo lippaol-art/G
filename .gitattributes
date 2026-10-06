@@ -1,0 +1,30 @@
+# Wymuszone LF dla plikow tekstowych, niezaleznie od systemu operacyjnego.
+#
+# DLACZEGO TO ISTNIEJE. Bez tego pliku Git na Windows domyslnie konwertuje
+# LF -> CRLF przy checkout (`core.autocrlf`). Zmienia to bajty plikow
+# tekstowych — a `scripts/golden_baseline.py` liczy hash_danych z surowych
+# bajtow `data/manifest*.md` (`Path.read_bytes()`, bez normalizacji). Skutek:
+# swiezy klon na Windows daje inny hash_danych niz Linux, mimo identycznej
+# tresci merytorycznej. Zlapane przy pierwszym uruchomieniu bramki na maszynie
+# lokalnej wlasciciela projektu.
+
+* text=auto eol=lf
+
+*.py     text eol=lf
+*.md     text eol=lf
+*.json   text eol=lf
+*.csv    text eol=lf
+*.sh     text eol=lf
+*.yml    text eol=lf
+*.yaml   text eol=lf
+*.toml   text eol=lf
+*.cfg    text eol=lf
+*.txt    text eol=lf
+
+# Binarne — Git NIE probuje ich normalizowac, ale jawny wpis jest tansza
+# gwarancja niz automatyczne wykrywanie po zawartosci.
+*.parquet  binary
+*.zst      binary
+*.dbn      binary
+*.png      binary
+*.pdf      binary

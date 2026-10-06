@@ -1,0 +1,11 @@
+{
+ "_comment": "Dziennik otwarc sejfu OOS. Lockbox to ostatnie 6 miesiecy danych, ktorych nie wolno ogladac az do finalnej weryfikacji. Regula: JEDNO SPOJRZENIE = ZUZYCIE SEJFU, bo po zobaczeniu wyniku nie da sie go odzobaczyc, a kazda pozniejsza decyzja jest juz nim skazona. Bez tego dziennika regula istnieje tylko w docstringu validation/walkforward.py i po fakcie nie da sie stwierdzic, ile razy sejf otwarto.",
+ "_zasada": "Wpis powstaje PRZED odczytem, nie po. Wpis po fakcie nie jest kontrola, tylko relacja.",
+ "_pola_wymagane": [
+  "utc",
+  "hipoteza",
+  "powod",
+  "sha"
+ ],
+ "wpisy": []
+}
