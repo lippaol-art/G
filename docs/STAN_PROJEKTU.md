@@ -108,7 +108,8 @@ a nie tylko o sobie samym. Wymaga danych MBO, więc kupowanych etapami.
 | D5-B (`trades`) | ~~GO~~ → **INCONCLUSIVE** | werdykt **cofnięty**: `sequence` to numer wiadomości CME, nie identyfikator zdarzenia. Potwierdzone przez dostawcę |
 | D5-C (jeden dzień MBO) | **GO** | znaleziona jednostka kanoniczna: akcja agresywna per `Trade`, po `order_id` |
 | Dry run D5-B2 | 8/8 niezmienników | rekonstrukcja działa |
-| **D5-B2 — miesiąc MBO** | 🔄 **zakup wstrzymany** | patrz §4.3 |
+| **D5-B2 — miesiąc MBO** | ✅ **GO** (06.10) | nierównowaga akcji agresywnych nie jest przebranym ruchem ceny; nic nie mówi o przyszłości (`REGISTRY`) |
+| **H017** — kontynuacja przepływu | 🔄 karta zamrożona, pre-flight w toku | jedyny aktywny kierunek |
 
 ### 4.3 Co dokładnie blokuje zakup miesiąca
 
@@ -257,16 +258,13 @@ kasują** — jeśli coś okazało się błędem, dopisujemy korektę obok.
 
 | # | Zadanie | Kto | Blokuje |
 |---|---|---|---|
-| 1 | ✅ Zakup pozostałych sesji MBO | właściciel | wykonany: 22 z 22 sesji |
-| 2 | ✅ Kopia zapasowa nowych plików | właściciel | — |
-| 3 | ✅ Mieszanie normalizacji: tak, przez rekonstrukcję jednostki (`D5_ETAP4_SPEC` §12.4) | właściciel | — |
-| 4 | ✅ Skrypt bramki i operacjonalizacja zapisana *ex ante* (`D5_ETAP4_SPEC` §12) | Wykonawca | — |
-| 5 | **Próba generalna, potem pełny bieg bramki** (`HANDOFF`, „Uruchomienie bramki") | właściciel | werdykt D5-B2 |
+| 1 | ✅ Zakup miesiąca MBO, kopia zapasowa, bramka D5-B2: **GO** | — | — |
+| 2 | ✅ Karta H017 zamrożona przed jakimkolwiek pomiarem przyszłej ceny | Wykonawca | — |
+| 3 | **Pre-flight H017 (P1–P6) na lipcu** — zero prób, zero kosztów | Wykonawca | decyzja o danych OOS |
+| 4 | Tylko po `PASSED (pre-flight)`: wycena nowych miesięcy MBO wg R1 | właściciel | test właściwy |
 
-Miesiąc jest **niejednorodny**: pięć sesji w starej normalizacji, siedemnaście
-w nowej. Manifest oznacza to per sesja. Jednostka kanoniczna (agresywna akcja
-po `order_id`) jest po obu stronach identyczna na dwóch zmierzonych oknach,
-dla pozostałych sesji to uogólnienie, a nie pomiar.
+Lipiec jest **zbiorem deweloperskim** i niczego nie certyfikuje. Pre-flight
+odpowiada wyłącznie na pytanie, czy jest sens kupować dalej.
 
 ### 8.2 Zaraz po zakupie
 

@@ -861,3 +861,48 @@ class TestDatyPrzySHA:
         if sprawdzone == 0:
             pytest.skip("brak historii gita albo zadnej pary SHA+data")
         assert not rozjazdy, "daty rozjechane z gitem:\n  " + "\n  ".join(rozjazdy)
+
+
+class TestRaportBramkiD5B2:
+    """Liczby bramki D5-B2 w REGISTRY musza pochodzic z artefaktu.
+
+    Wynik bramki jest jednorazowy i nie da sie go powtorzyc bez danych
+    wlasciciela — jedynym trwalym zapisem jest `reports/D5_b2_wyniki.json`.
+    Dokument cytujacy inne liczby niz artefakt bylby niewykrywalnym bledem.
+    """
+
+    RAPORT = ROOT / "reports" / "D5_b2_wyniki.json"
+
+    def _r(self):
+        if not self.RAPORT.exists():
+            pytest.skip("brak artefaktu bramki D5-B2 (bieg nie wykonany)")
+        return json.loads(self.RAPORT.read_text(encoding="utf-8"))
+
+    @staticmethod
+    def _pl(x: float, miejsc: int) -> str:
+        return f"{x:.{miejsc}f}".replace(".", ",")
+
+    def test_rejestr_cytuje_liczby_z_artefaktu(self):
+        r = self._r()
+        reg = (ROOT / "hypotheses" / "REGISTRY.md").read_text(encoding="utf-8")
+        a, w = r["wyniki"]["A_count"], r["wyniki"]
+        wymagane = [
+            r["werdykt"],
+            self._pl(a["pooled_vif"], 3), self._pl(a["mediana_dzienna"], 3),
+            self._pl(100 * r["koncentracja_pory_dnia"], 2) + "%",
+            self._pl(100 * a["max_koncentracja_sesji"], 2) + "%",
+            self._pl(100 * r["min_strona_sesji"], 1) + "%",
+            self._pl(w["B_fill"]["pooled_vif"], 3), self._pl(w["C_volume"]["pooled_vif"], 3),
+            self._pl(r["opis_normalizacji"]["stara"]["pooled_vif_A"], 3),
+            self._pl(r["opis_normalizacji"]["nowa"]["pooled_vif_A"], 3),
+            f"{a['okien']:,}".replace(",", " "),
+        ]
+        braki = [x for x in wymagane if x not in reg]
+        assert not braki, f"REGISTRY nie cytuje liczb z artefaktu: {braki}"
+
+    def test_werdykt_wynika_z_warunkow(self):
+        """Werdykt w artefakcie musi dac sie odtworzyc z jego warunkow."""
+        from engine.d5b2 import werdykt
+        r = self._r()
+        war = {int(k): v for k, v in r["warunki"].items()}
+        assert werdykt(war, r["abc_zgodne"])[0] == r["werdykt"]

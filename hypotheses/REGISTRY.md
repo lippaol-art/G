@@ -111,6 +111,7 @@ samoczyszczącą.
 | H013 | Rezydualny repricing po wynikach megacapów | K6 × K4 | ~~najwyższy~~ | **[REJECTED (pre-flight)](H013.md)** | **0/8** |
 | H014 | Dywergencja NQ–ES wokół szoków stóp | K6 × K4 | — | **[REJECTED (pre-flight)](H014.md)** | **0/6** |
 | H016 | Reżim dyspersji składników NDX | K6 × K3 | **straciła nosiciela** — czeka, zgodnie z sekcją 7 karty | [IDEA warunkowa](H016.md) | 0/6 |
+| H017 | Kontynuacja przepływu agresywnego w skali minuty | K5 | **jedyny aktywny** — po `D5-B2 GO` | **[CARD FROZEN](H017.md)**, pre-flight w toku | **0/6** |
 
 ### Partia 2 — odrzucona w pre-flight (W006, W009)
 
@@ -1040,5 +1041,47 @@ wystarczającej do testu identyfikowalności na poprawnej jednostce"**.
 Następny etap to **D5-B2**: powtórzenie testu identyfikowalności przy
 **niezmienionych progach** z §8 specyfikacji Etapu 2, na nierównowadze liczonej
 po `order_id` agresora.
+
+**P&L nie mierzony. Przyszłe zwroty nietknięte. Licznik prób: 0.**
+
+---
+
+## D5-B2 — wykonany (06.10.2026): `D5-B2 GO`
+
+Bramka identyfikowalności na kanonicznej jednostce, całym miesiącu MBO
+(22 sesje RTH lipca 2026, 8 400 okien). Implementacja `engine/d5b2.py` +
+`scripts/d5b2_bramka.py`, operacjonalizacja zapisana *ex ante* w
+`docs/D5_ETAP4_SPEC.md` §12. Bieg u właściciela, artefakt:
+**[`reports/D5_b2_wyniki.json`](../reports/D5_b2_wyniki.json)**.
+
+**Kontrole danych:** 22/22 sesji kompletne; liczby rekordów zgodne
+z manifestem; **8 400 świec odtworzonych z MBO identycznych ze świecami
+dostawcy, 0 niezgodności**; powtórne przeliczenie sesji 07-03 identyczne.
+
+| Warunek §5 | Wynik | Próg |
+|---|---|---|
+| 1. pooled VIF | **1,798** (R² 0,444) | < 5 |
+| 2. mediana dziennego VIF | **2,082** | < 5 |
+| 3. sesje z VIF < 5 | **21/21 (100%)** | ≥ 75% |
+| 4. max udział pory dnia | **9,84%** | ≤ 20% |
+| 5. najsłabsza sesja, mniejsza strona | **44,1%** okien | ≥ 20% |
+| 6. max udział jednej sesji | **9,21%** | ≤ 20% |
+| A/B/C zgodne | **tak** (B 1,971; C 2,291) | — |
+
+Opisowo (poza werdyktem): pooled VIF A dla 5 sesji starej normalizacji
+1,778, dla 17 nowej 1,844 — mieszanie normalizacji wyniku nie wytworzyło.
+
+**Co to znaczy:** nierównowaga liczby akcji agresywnych **nie jest**
+przebranym ruchem ceny tej samej minuty — ruch ceny tłumaczy ok. 44% jej
+zmienności. **Czego to NIE znaczy:** nic o przyszłej cenie ani o zysku.
+
+**Korekta własnej prognozy:** przed biegiem oceniałem NO-GO jako
+prawdopodobne (na podstawie literatury o OFI). Dane rozstrzygnęły inaczej.
+
+### H017 — powstaje
+
+Zgodnie z `D5_ETAP4_SPEC` §10: karta **[H017](H017.md)** zamrożona przed
+policzeniem czegokolwiek, co łączy `I_t` z przyszłą ceną. Następny krok:
+pre-flight P1–P6 na lipcu (zero prób).
 
 **P&L nie mierzony. Przyszłe zwroty nietknięte. Licznik prób: 0.**

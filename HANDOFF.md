@@ -30,7 +30,7 @@ niezależnych audytach zewnętrznych) jest **jedynym źródłem prawdy** — kod
 a nie odwrotnie.
 
 Gotowe: fundament repo, silnik backtestowy, komplet aparatu walidacyjnego, strażnicy
-niezmienników, CI, golden baseline. **656 funkcji testowych (751 przypadków po parametryzacji), pokrycie 92%, ruff i mypy czyste.**
+niezmienników, CI, golden baseline. **658 funkcji testowych (753 przypadków po parametryzacji), pokrycie 92%, ruff i mypy czyste.**
 Liczbę pilnuje `tests/test_guards.py::test_handoff_podaje_aktualna_liczbe_testow` —
 bez tego rotowała dwa razy w ciągu doby, co jest dokładnie tym defektem, przed
 którym ostrzega reguła na górze tego pliku.
@@ -164,7 +164,8 @@ Decyzje właściciela z 11.08 zamknęły wszystko poza nią:
 | ✅ **Zakup 17 sesji** | **wykonany**: 17 z 17 kompletnych, koszt w `KOSZTY` §3 poz. 7. Miesiąc ma 22 sesje, w tym 5 starej i 17 nowej normalizacji |
 | ✅ **Kopia zapasowa nowych plików** | wykonana przez właściciela 06.10 |
 | ✅ **Mieszanie normalizacji w analizie** | dozwolone przez rekonstrukcję jednostki, surowe liczniki nigdy — zgoda właściciela 06.10 (zinterpretowana, `D5_ETAP4_SPEC` §12.4) |
-| ⏳ **Bramka GO/NO-GO D5-B2** | **skrypt gotowy**: `scripts/d5b2_bramka.py`, logika `engine/d5b2.py`, operacjonalizacja zapisana *ex ante* w `D5_ETAP4_SPEC` §12. Uruchamia właściciel — dane są tylko u niego |
+| ✅ **Bramka GO/NO-GO D5-B2** | **GO** (06.10) — wszystkie sześć warunków, A/B/C zgodne, 0 niezgodności świec. Szczegóły i liczby: `REGISTRY`, artefakt `reports/D5_b2_wyniki.json` |
+| ⏳ **H017** | karta zamrożona (`hypotheses/H017.md`), pre-flight P1–P6 na lipcu — zero prób |
 
 ### Uruchomienie bramki (u właściciela, venv aktywny)
 
